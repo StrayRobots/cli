@@ -5,7 +5,9 @@ echo Copyright Stray Robots, 2021
 echo \
 
 #IDEA: export $STRAY_PATH in basrc that contains all source files (scripts/LabelStudio), also add $STRAY_PATH/cli/bin to $PATH
-#echo $STRAY_PATH 
+#i.e
+#export STRAY_PATH=/<absolute_path_to_stray>
+#export PATH="$STRAY_PATH/cli/bin:$PATH"
 
 
 if [ "$1" = "generate" ]
