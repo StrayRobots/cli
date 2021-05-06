@@ -1,0 +1,34 @@
+#!/bin/bash
+set -e
+
+echo Copyright Stray Robots, 2021 
+echo \
+
+#IDEA: export $STRAY_PATH in basrc that contains all source files (scripts/LabelStudio), also add $STRAY_PATH/cli/bin to $PATH
+#echo $STRAY_PATH 
+
+
+if [ "$1" = "generate" ]
+then
+    echo "Stray Generate"
+    if [ $# != 3 ]
+    then
+        echo "Not enough arguments supplied"
+        exit 1
+    fi
+
+    if [ "$2" = "keypoints" ]
+    then
+        echo "Generating keypoints in folder" $3
+    else
+        echo "Bad primitive type"
+    fi
+
+
+elif [ "$1" = "studio" ]
+then
+    echo "Stray Studio"
+else
+    echo "No command supplied"
+fi
+
