@@ -1,0 +1,44 @@
+#!/bin/bash
+set -e
+
+#Add the following lines to your shell initializing script (i.e. .bashrc or .bash_profile etc)
+#export STRAY_PATH=<absolute_path_to_stray_source>
+#export PATH="$STRAY_PATH/CLI/bin:$PATH"
+echo Stray Robots CLI
+echo \
+
+if [ "$1" = "generate" ]
+then
+    if [ $# != 3 ]
+    then
+        echo "Not enough arguments supplied"
+        exit 1
+    fi
+
+    if [ "$2" = "keypoints" ]
+    then
+        python3 $STRAY_PATH/Labeling/labeling/generate.py $3 --keypoints --generate-images
+    elif [ "$2" = "bbox_2d" ]
+    then
+        python3 $STRAY_PATH/Labeling/labeling/generate.py $3 --bbox_2d --generate-images
+    else
+        echo "Bad primitive type"
+    fi
+
+
+elif [ "$1" = "studio" ]
+then
+    if [ $# != 2 ]
+    then
+        echo "Not enough arguments supplied"
+        exit 1
+    fi
+
+    pushd $STRAY_PATH/LabelStudio/build/
+        ./main $2
+    popd
+
+else
+    echo "No command supplied"
+fi
+
