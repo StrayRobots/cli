@@ -99,6 +99,9 @@ class Scene:
         for keypoint in self.annotations.get('keypoints', []):
             self.keypoints.append(Keypoint(keypoint))
 
+    def __len__(self):
+        return len(self.poses)
+
     def objects(self):
         objects = []
         for bbox in self.bounding_boxes:
@@ -151,7 +154,7 @@ class Renderer:
         If colors is set to true, will return a HxWx3 colored image instead of a HxW pixel to instance id matrix.
         """
         camera_pose = self.scene.poses[frame_index]
-        self.update_camera_position(T_ogl_cv @ camera_pose)
+        self.update_camera_position(camera_pose @ T_ogl_cv)
         segmentation = {
             self.bg_node: (0.0, 0.0, 0.0),
         }
@@ -167,7 +170,6 @@ class Renderer:
             out[seg == 0, :] = np.array([0, 0, 0])
             for bbox in self.scene.bounding_boxes:
                 out[seg == (1 + bbox.instance_id), :] = segmentation_colors[bbox.instance_id]
-            return out
 
-
+            return (out * 255.0).round().astype(np.uint8)
 

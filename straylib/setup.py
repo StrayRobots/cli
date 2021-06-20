@@ -12,4 +12,7 @@ setup(
     ],
     packages=['straylib'],
     python_requires=">=3.6",
+    entry_points={
+        'console_scripts': ['stray-segment=scripts.segmentation:main']
+    }
 )
