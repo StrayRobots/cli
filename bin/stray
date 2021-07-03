@@ -30,7 +30,7 @@ then
 elif [ "$1" = "preview" ]
 then
     shift
-    straylib-preview --show $@
+    straylib-preview $@
 elif [ "$1" = "studio" ]
 then
     if [ $# != 2 ]

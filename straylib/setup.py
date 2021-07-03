@@ -15,7 +15,8 @@ setup(
     entry_points={
         'console_scripts': [
             'straylib-segment=scripts.segmentation:main',
-            'straylib-preview=scripts.generate:main'
+            'straylib-generate=scripts.generate:main',
+            'straylib-preview=scripts.preview:main'
         ]
     }
 )
