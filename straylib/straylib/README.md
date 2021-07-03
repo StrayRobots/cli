@@ -1,7 +1,7 @@
 
 # straylib
 
-A library for working with Stray Studio data and anything
+A library for working with Stray Studio data and anything related.
 
 ## Setup and testing
 

@@ -3,8 +3,10 @@ import json
 import numpy as np
 import trimesh
 import pyrender
+from PIL import Image
 from matplotlib import cm
 from scipy.spatial.transform import Rotation
+from straylib import camera
 
 R_ogl_cv = np.array([[1.0, 0.0, 0.0],
     [0.0, -1.0, 0.0],
@@ -64,25 +66,26 @@ class Scene:
         self.scene_path = path
         mesh_file = os.path.join(path, 'scene', 'integrated.ply')
         self.mesh = trimesh.load(mesh_file)
-        self._read_annotations(path)
-        self._read_trajectory()
+        self._read_annotations()
+        self._bounding_boxes = None
+        self._keypoints = None
+        self._poses = None
         self._read_intrinsics()
-        self._process_annotations()
 
-    def _read_annotations(self, path):
-        annotation_file = os.path.join(path, 'annotations.json')
+    def _read_annotations(self):
+        annotation_file = os.path.join(self.scene_path, 'annotations.json')
         if not os.path.exists(annotation_file):
             self.annotations = {}
         with open(annotation_file, 'rt') as f:
             self.annotations = json.load(f)
 
     def _read_trajectory(self):
-        self.poses = []
+        self._poses = []
         with open(os.path.join(self.scene_path, 'scene', 'trajectory.log'), 'rt') as f:
             lines = f.readlines()
             for i in range(0, len(lines), 5):
                 rows = [np.fromstring(l, count=4, sep=' ') for l in lines[i+1:i+5]]
-                self.poses.append(np.stack(rows))
+                self._poses.append(np.stack(rows))
 
     def _read_intrinsics(self):
         with open(os.path.join(self.scene_path, 'camera_intrinsics.json')) as f:
@@ -92,17 +95,45 @@ class Scene:
         self.frame_height = camera_data['height']
 
     def _process_annotations(self):
-        self.bounding_boxes = []
+        self._bounding_boxes = []
         for bbox in self.annotations.get('bounding_boxes', []):
-            self.bounding_boxes.append(BoundingBox(bbox))
-        self.keypoints = []
+            self._bounding_boxes.append(BoundingBox(bbox))
+        self._keypoints = []
         for keypoint in self.annotations.get('keypoints', []):
-            self.keypoints.append(Keypoint(keypoint))
+            self._keypoints.append(Keypoint(keypoint))
 
     def __len__(self):
         return len(self.poses)
 
+    def camera(self):
+        return camera.Camera(self.camera_matrix, np.zeros(4))
+
+    @property
+    def poses(self):
+        if self._poses is None:
+            self._read_trajectory()
+        return self._poses
+
+    @property
+    def bounding_boxes(self):
+        if self._bounding_boxes is None:
+            self._process_annotations()
+        return self._bounding_boxes
+
+    def image_filepaths(self):
+        paths = os.listdir(os.path.join(self.scene_path, 'color'))
+        paths.sort()
+        return list(map(lambda p: os.path.join(self.scene_path, 'color', p), paths))
+
+    def image_size(self):
+        images = self.image_filepaths()
+        return Image.open(images[0]).size
+
     def objects(self):
+        """
+        Returns a trimesh for each bounding box in the scene.
+        returns: list[trimesh.Mesh]
+        """
         objects = []
         for bbox in self.bounding_boxes:
             object_mesh = bbox.cut(self.mesh)
