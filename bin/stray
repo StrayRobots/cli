@@ -4,8 +4,6 @@ set -e
 #Add the following lines to your shell initializing script (i.e. .bashrc or .bash_profile etc)
 #export STRAY_PATH=<absolute_path_to_stray_source>
 #export PATH="$STRAY_PATH/CLI/bin:$PATH"
-echo Stray Robots CLI
-echo \
 
 if [ "$1" = "generate" ]
 then
@@ -21,10 +19,13 @@ then
     elif [ "$2" = "bbox_2d" ]
     then
         python3 $STRAY_PATH/Labeling/labeling/generate.py $3 --bbox_2d --generate-images
+    elif [ "$2" = "semantic" ]
+    then
+        shift 2
+        stray-segment $@
     else
         echo "Bad primitive type"
     fi
-
 
 elif [ "$1" = "studio" ]
 then
