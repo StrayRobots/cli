@@ -18,7 +18,7 @@ def main():
         print(f"Processing frame {i:06}", end='\r')
         seg = renderer.render_segmentation(i)
         path = os.path.join(flags.scene, folder_name, f"{i:06}.png")
-        image = Image.fromarray(seg)
+        image = Image.fromarray(seg*255)
         image.save(path)
 
 if __name__ == "__main__":
