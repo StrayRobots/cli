@@ -35,7 +35,7 @@ then
         exit 1
     fi
 
-    pushd $STRAY_PATH/LabelStudio/build/
+    pushd $STRAY_PATH/Studio/build/
         ./main $2
     popd
 
