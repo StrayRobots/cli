@@ -120,6 +120,10 @@ class Scene:
             self._process_annotations()
         return self._bounding_boxes
 
+    @property
+    def num_instances(self):
+        return max([b.instance_id for b in self.bounding_boxes])
+
     def image_filepaths(self):
         paths = os.listdir(os.path.join(self.scene_path, 'color'))
         paths.sort()
