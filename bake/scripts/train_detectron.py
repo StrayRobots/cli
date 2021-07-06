@@ -2,12 +2,10 @@ import argparse
 import logging
 import os
 from collections import OrderedDict
-import torch
 
 from detectron2 import model_zoo
 from straylib.export import detectron2_dataset_function, scene_dataset_metadata
 from detectron2.data import DatasetCatalog
-import detectron2.utils.comm as comm
 from detectron2.checkpoint import DetectionCheckpointer
 from detectron2.engine import DefaultTrainer, default_setup, hooks, launch
 from detectron2.evaluation import COCOEvaluator, DatasetEvaluators
