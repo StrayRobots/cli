@@ -4,8 +4,8 @@ set -e
 
 branch="main"
 if [[ $1 ]]; then
-  branch="$1"
-  shift
+	branch="$1"
+	shift
 fi
 scenes=$@
 
@@ -31,17 +31,17 @@ dvc remote modify --global spaces access_key_id "$SPACES_ACCESS_KEY"
 dvc remote modify --global spaces secret_access_key "$SPACES_SECRET_ACCESS_KEY"
 
 for scene_subpath in $scenes; do
-  scene="/root/data/$scene_subpath"
+	scene="/root/data/$scene_subpath"
 
-  if [ ! -d $scene ]; then
-    echo "$scene not a directory"
-    continue
-  fi
+	if [ ! -d $scene ]; then
+		echo "$scene not a directory"
+		continue
+	fi
 
 	dvc pull -R "$scene"
 
-  if [[ -f "$scene/scene/integrated.ply.dvc" ]]; then
-    echo "$(basename $scene) has already been integrated. Skipping integration."
+	if [[ -f "$scene/scene/integrated.ply.dvc" ]]; then
+		echo "$(basename $scene) has already been integrated. Skipping integration."
 		continue
 	fi
 
@@ -57,8 +57,8 @@ for scene_subpath in $scenes; do
 	python3.8 run_system.py /root/workspace/config.json --refine
 	echo "Integrating scene."
 	python3.8 run_system.py /root/workspace/config.json --integrate
-	# echo "Running simultaneous localization and calibration."
-	# python3.8 run_system.py /root/workspace/config.json --slac --slac_integrate
+	echo "Running simultaneous localization and calibration."
+	python3.8 run_system.py /root/workspace/config.json --slac --slac_integrate
 	popd
 
 	dvc add $scene/scene/integrated.ply
@@ -66,6 +66,7 @@ for scene_subpath in $scenes; do
 	dvc push
 
 	git add $scene/scene/integrated.ply.dvc
+	git add $scene/scene/trajectory.log.dvc
 	git add $scene/scene/.gitignore
 	git commit -m "Integrate scene $(basename $scene)"
 
