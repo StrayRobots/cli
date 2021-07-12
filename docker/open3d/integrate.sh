@@ -57,8 +57,8 @@ for scene_subpath in $scenes; do
 	python3.8 run_system.py /root/workspace/config.json --refine
 	echo "Integrating scene."
 	python3.8 run_system.py /root/workspace/config.json --integrate
-	echo "Running simultaneous localization and calibration."
-	python3.8 run_system.py /root/workspace/config.json --slac --slac_integrate
+	# echo "Running simultaneous localization and calibration."
+	# python3.8 run_system.py /root/workspace/config.json --slac --slac_integrate
 	popd
 
 	dvc add $scene/scene/integrated.ply
