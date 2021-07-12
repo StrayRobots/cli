@@ -19,7 +19,8 @@ def main():
         "path_intrinsic": intrinsics_path,
         "depth_scale": 1000.0,
         "max_depth": 10.0,
-        "min_depth": 0.05
+        "min_depth": 0.05,
+        "debug_mode": False
     }
     with open(os.path.join(flags.out), 'w') as f:
         f.write(json.dumps(config, indent=4, sort_keys=True))
