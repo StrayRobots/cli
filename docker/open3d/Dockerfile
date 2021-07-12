@@ -18,7 +18,7 @@ RUN wget https://bootstrap.pypa.io/get-pip.py
 RUN python3.8 get-pip.py
 RUN rm get-pip.py
 
-RUN pip3 install dvc[s3] open3d
+RUN pip3 install dvc[s3] open3d opencv-python
 
 RUN git clone https://github.com/intel-isl/Open3D /tmp/open3d && cd /tmp/open3d/ && git checkout v0.13.0
 RUN mv /tmp/open3d/examples/python/ /root/open3d/
