@@ -61,10 +61,14 @@ for scene_subpath in $scenes; do
 	python3.8 run_system.py /root/workspace/config.json --slac --slac_integrate
 	popd
 
+	dvc add $scene/slac/0.050/optimized_trajectory_slac.log
+	dvc add $scene/slac/0.050/output_slac_mesh.ply
 	dvc add $scene/scene/integrated.ply
 	dvc add $scene/scene/trajectory.log
 	dvc push
 
+	git add $scene/slac/0.050/optimized_trajectory_slac.log.dvc
+	git add $scene/slac/0.050/output_slac_mesh.ply.dvc
 	git add $scene/scene/integrated.ply.dvc
 	git add $scene/scene/trajectory.log.dvc
 	git add $scene/scene/.gitignore
