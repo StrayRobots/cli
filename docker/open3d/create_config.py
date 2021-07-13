@@ -12,6 +12,9 @@ def main():
     flags = read_args()
 
     dataset_path = os.path.abspath(os.path.expanduser(flags.dataset))
+    # Slac integrate script needs trailing slash.
+    if dataset_path[-1] != os.sep:
+        dataset_path += os.sep
     intrinsics_path = os.path.join(dataset_path, 'camera_intrinsics.json')
     config = {
         "name": "Stray Scanner dataset",
