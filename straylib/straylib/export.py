@@ -25,10 +25,15 @@ def scene_dataset_metadata(scenes_folder):
         'num_classes': num_instances + 2, # instance ids start with 0 + background
     }
 
-def detectron2_dataset_function(scenes_folder):
+def get_detectron2_dataset_function(scenes_folder):
     def inner():
-        scenes = os.listdir(scenes_folder)
-        scenes.sort()
+        if os.path.exists(os.path.join(scenes_folder, 'scene', 'integrated.ply')):
+            # This is a single scene.
+            scenes = [scenes_folder]
+        else:
+            # This is a dataset folder.
+            scenes = os.listdir(scenes_folder)
+            scenes.sort()
         examples = []
         for scene_dir in scenes:
             scene_path = os.path.join(scenes_folder, scene_dir)

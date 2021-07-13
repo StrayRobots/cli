@@ -4,24 +4,24 @@ import json
 import cv2
 import numpy as np
 import time
-from straylib.export import detectron2_dataset_function
+from straylib.export import get_detectron2_dataset_function
 
 def read_args():
-    parser = argparse.ArgumentParser(description="Convert Stray Scene datasets into a detectron2 dataset")
-    parser.add_argument('scenes_folder', help="The directory where you keep your scenes.")
+    parser = argparse.ArgumentParser(description="A small program to preview 2d bounding box labels.")
+    parser.add_argument('dataset_folder', help="The directory where you keep your scenes or a path to a single scene.")
     parser.add_argument('--label', type=str, default="bbox_2d", help="The type of label to visualize.")
     parser.add_argument('--rate', '-r', default=30.0, type=float, help="Frames per second to show frames.")
     return parser.parse_args()
 
 def main():
     flags = read_args()
-    examples = detectron2_dataset_function(flags.scenes_folder)()
+    examples = get_detectron2_dataset_function(flags.dataset_folder)()
 
     if flags.label != 'bbox_2d':
         raise NotImplementedError(f"Unknown label type {flags.label}.")
 
     title = "Bounding Boxes"
-    window = cv2.namedWindow(title, cv2.WINDOW_AUTOSIZE)
+    cv2.namedWindow(title, cv2.WINDOW_AUTOSIZE)
     cv2.setWindowProperty(title, cv2.WND_PROP_TOPMOST, 1)
 
     print("Playing through images.", end="\r")

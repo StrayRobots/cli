@@ -4,8 +4,8 @@ import os
 from collections import OrderedDict
 
 from detectron2 import model_zoo
-from straylib.export import detectron2_dataset_function, scene_dataset_metadata
-from detectron2.data import DatasetCatalog
+from straylib.export import get_detectron2_dataset_function, scene_dataset_metadata
+from detectron2.data import DatasetCatalog, MetadataCatalog
 from detectron2.checkpoint import DetectionCheckpointer
 from detectron2.engine import DefaultTrainer, default_setup, hooks, launch
 from detectron2.evaluation import COCOEvaluator, DatasetEvaluators
@@ -47,12 +47,13 @@ def get_config():
 def main(flags):
     flags = read_args()
 
-    dataset_function = detectron2_dataset_function(flags.dataset)
+    dataset_function = get_detectron2_dataset_function(flags.dataset)
     dataset_metadata = scene_dataset_metadata(flags.dataset)
-    DatasetCatalog.register("stray_dataset", dataset_function)
+    dataset_name = "stray_dataset"
+    DatasetCatalog.register(dataset_name, dataset_function)
+    MetadataCatalog.get(dataset_name).thing_classes = [f"Instance {i}" for i in range(dataset_metadata['num_classes'])]
 
     dataset_name = "stray_dataset"
-    data: List[Dict] = DatasetCatalog.get(dataset_name)
 
     config = get_config()
 

@@ -1,7 +1,7 @@
 import argparse
 import os
 import json
-from straylib.export import detectron2_dataset_function
+from straylib.export import get_detectron2_dataset_function
 
 def read_args():
     parser = argparse.ArgumentParser(description="Convert Stray Scene datasets into other dataset formats.")
@@ -19,7 +19,7 @@ def write(flags, examples):
 def main():
     flags = read_args()
     if flags.format == 'detectron2':
-        examples = detectron2_dataset_function(flags.scenes_folder)
+        examples = get_detectron2_dataset_function(flags.scenes_folder)()
         write(flags, examples)
     else:
         raise NotImplementedError("Unknown dataset format. The only currently supported format is 'detectron2'.")
