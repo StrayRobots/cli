@@ -22,11 +22,15 @@ then
     elif [ "$2" = "semantic" ]
     then
         shift 2
-        stray-segment $@
+        straylib-segment $@
     else
         echo "Bad primitive type"
     fi
 
+elif [ "$1" = "preview" ]
+then
+    shift
+    straylib-preview $@
 elif [ "$1" = "studio" ]
 then
     if [ $# != 2 ]
