@@ -10,7 +10,7 @@ def compute_bounding_box(camera, T_WC, object_mesh):
     image_points = camera.project(vertices, T_CW)
     upper_left = image_points.min(axis=0)
     lower_right = image_points.max(axis=0)
-    return [upper_left.tolist(), lower_right.tolist()]
+    return upper_left.tolist() + lower_right.tolist()
 
 def scene_dataset_metadata(scenes_folder):
     num_instances = 0
