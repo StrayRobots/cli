@@ -20,9 +20,12 @@ def main():
         "name": "Stray Scanner dataset",
         "path_dataset": dataset_path,
         "path_intrinsic": intrinsics_path,
+        "n_frames_per_fragment": 250,
         "depth_scale": 1000.0,
-        "max_depth": 10.0,
-        "min_depth": 0.05,
+        "max_depth": 2.0,
+        "min_depth": 0.1,
+        "max_depth_diff": 0.03,
+        "tsdf_cubic_size": 0.75,
         "debug_mode": False,
         "save_output_as": "mesh"
     }
