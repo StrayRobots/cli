@@ -1,6 +1,6 @@
 import click
 import os, json
-import model
+import straymodel
 
 @click.command()
 @click.option('--dataset', required=True, help='Path to the dataset to bake.')
@@ -10,13 +10,13 @@ import model
 @click.option('--resume', default=False, is_flag=True, help='Resume training.')
 
 def bake(**flags):
-    with open(os.path.join(flags["model_path"], "metadata.json"), 'rt') as f:
-        model_metadata = json.load(f)
+    with open(os.path.join(flags["model_path"], "stray_config.json"), 'rt') as f:
+        stray_model_config = json.load(f)
 
-    if model_metadata['model_type'] == "detectron2":
-        model.detectron.train.train(flags)
+    if stray_model_config['model_type'] == "detectron2":
+        straymodel.detectron.train.train(flags)
     else:
-        raise Exception(f"Invalid model type (model_type) in metadata.json for model {flags['model_path']}. Only detectron2 is currently supported.")
-    
+        raise Exception(f"Invalid model type (model_type) in stray_config.json for model {flags['model_path']}. Only detectron2 is currently supported.")
+
 if __name__ == '__main__':
     bake()
