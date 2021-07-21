@@ -10,14 +10,6 @@ setup(
     classifiers=[
         "Programming Language :: Python :: 3",
     ],
-    packages=['straylib', 'model', 'label'],
-    python_requires=">=3.6",
-    entry_points={
-        'console_scripts': [
-            'straylib-label-segment=label.scripts.segmentation:main',
-            'straylib-label-generate=label.scripts.generate:main',
-            'straylib-label-preview=label.scripts.preview:main',
-            'straylib-model-bake=model.scripts.bake:bake',
-        ]
-    }
+    packages=['straylib'],
+    python_requires=">=3.6"
 )

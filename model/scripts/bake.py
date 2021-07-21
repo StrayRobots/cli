@@ -1,6 +1,6 @@
 import click
 import os, json
-import model
+import straymodel
 
 @click.command()
 @click.option('--dataset', required=True, help='Path to the dataset to bake.')
@@ -14,9 +14,9 @@ def bake(dataset, model_path, primitive, num_gpus, resume):
         model_config = json.load(f)
 
     if model_config['model_type'] == "detectron2":
-        model.detectron.train.train(dataset, num_gpus, resume)
+        straymodel.detectron.train.train(dataset, num_gpus, resume)
     else:
         raise Exception(f"Invalid model type (model_type) in config.json for model {model_path}. Only detectron2 is currently supported.")
-    
+
 if __name__ == '__main__':
     bake()

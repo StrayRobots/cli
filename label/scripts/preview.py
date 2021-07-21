@@ -44,7 +44,7 @@ def main():
         print(f"Image {filename}" + " " * 10, end='\r')
         image = cv2.imread(example["file_name"])
         for annotation in example["annotations"]:
-            bbox = np.array(annotation["bbox"]).round().astype(np.int)
+            bbox = np.array(annotation["bbox"]).round().astype(np.int).reshape(2, 2)
             upper_left = bbox[0]
             lower_right = bbox[1]
             cv2.rectangle(image, tuple(upper_left - 3), tuple(lower_right + 3), (130, 130, 235), 3)

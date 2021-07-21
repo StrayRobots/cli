@@ -1,1 +1,0 @@
-from .detectron import train
