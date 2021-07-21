@@ -121,8 +121,24 @@ class Scene:
         return self._bounding_boxes
 
     @property
-    def num_instances(self):
-        return max([b.instance_id for b in self.bounding_boxes])
+    def keypoints(self):
+        if self._keypoints is None:
+            self._process_annotations()
+        return self._keypoints
+
+    @property
+    def num_bbox_categories(self):
+        ids = [0]
+        for b in self.bounding_boxes:
+            ids.append(b.instance_id+1)
+        return max(ids)
+    
+    @property
+    def num_keypoint_categories(self):
+        ids = [0]
+        for k in self.keypoints:
+            ids.append(k.instance_id+1) 
+        return max(ids)
 
     def image_filepaths(self):
         paths = os.listdir(os.path.join(self.scene_path, 'color'))

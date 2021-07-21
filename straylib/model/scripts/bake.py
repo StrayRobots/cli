@@ -9,14 +9,14 @@ import model
 @click.option('--num_gpus', default=0, help='Number of GPUs to use in baking.')
 @click.option('--resume', default=False, is_flag=True, help='Resume training.')
 
-def bake(dataset, model_path, primitive, num_gpus, resume):
-    with open(os.path.join(model_path, "config.json"), 'rt') as f:
-        model_config = json.load(f)
+def bake(**flags):
+    with open(os.path.join(flags["model_path"], "metadata.json"), 'rt') as f:
+        model_metadata = json.load(f)
 
-    if model_config['model_type'] == "detectron2":
-        model.detectron.train.train(dataset, num_gpus, resume)
+    if model_metadata['model_type'] == "detectron2":
+        model.detectron.train.train(flags)
     else:
-        raise Exception(f"Invalid model type (model_type) in config.json for model {model_path}. Only detectron2 is currently supported.")
+        raise Exception(f"Invalid model type (model_type) in metadata.json for model {flags['model_path']}. Only detectron2 is currently supported.")
     
 if __name__ == '__main__':
     bake()
