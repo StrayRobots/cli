@@ -10,13 +10,12 @@ setup(
     classifiers=[
         "Programming Language :: Python :: 3",
     ],
-    packages=[],
+    packages=["straylabel"],
     python_requires=">=3.6",
     entry_points={
         'console_scripts': [
-            'stray-label-segment=scripts.segmentation:main',
-            'stray-label-generate=scripts.generate:main',
-            'stray-label-preview=scripts.preview:main'
+            'stray-label-generate=straylabel.verbs.generate:generate',
+            'stray-label-show=straylabel.verbs.show:show'
         ]
     }
 )

@@ -14,7 +14,9 @@ setup(
     python_requires=">=3.6",
     entry_points={
         'console_scripts': [
-            'stray-model-bake=bake:bake',
+            'stray-model-bake=straymodel.verbs.bake:bake',
+            'stray-model-generate=straymodel.verbs.generate:generate',
+            'stray-model-evaluate=straymodel.verbs.evaluate:evaluate'
         ]
     }
 )

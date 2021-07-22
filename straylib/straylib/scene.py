@@ -70,6 +70,7 @@ class Scene:
         self._bounding_boxes = None
         self._keypoints = None
         self._poses = None
+        self._metadata = None
         self._read_intrinsics()
 
     def _read_annotations(self):
@@ -127,18 +128,28 @@ class Scene:
         return self._keypoints
 
     @property
-    def num_bbox_categories(self):
-        ids = [0]
+    def bbox_categories(self):
+        categories = []
         for b in self.bounding_boxes:
-            ids.append(b.instance_id+1)
-        return max(ids)
+            if not b.instance_id in categories:
+                categories.append(b.instance_id)
+        return categories
     
     @property
-    def num_keypoint_categories(self):
-        ids = [0]
+    def keypoint_categories(self):
+        categories = []
         for k in self.keypoints:
-            ids.append(k.instance_id+1) 
-        return max(ids)
+            if not k.instance_id in categories:
+                categories.append(k.instance_id) 
+        return categories
+
+    @property
+    def metadata(self):
+        metadata_path = os.path.join(self.scene_path, "metadata.json")
+        if os.path.exists(metadata_path) and self._metadata is None:
+            with open(metadata_path, 'rt') as f:
+                self._metadata = json.load(f)
+        return self._metadata
 
     def image_filepaths(self):
         paths = os.listdir(os.path.join(self.scene_path, 'color'))
