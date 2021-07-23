@@ -11,24 +11,28 @@ def read_args():
     parser.add_argument('--debug', action='store_true')
     return parser.parse_args()
 
-def read_trajectory(path):
+def read_trajectory(pose_ids, path):
     poses = []
     trajectory = np.loadtxt(path, delimiter=' ')
-    for i, line in enumerate(trajectory):
+    for pose_id, line in zip(pose_ids, trajectory):
         ts, tx, ty, tz, qx, qy, qz, qw = line
         rotation = Rotation.from_quat([qx, qy, qz, qw])
         T = np.eye(4)
         T[:3, :3] = rotation.as_matrix()
         T[:3, 3] = [tx, ty, tz]
-        poses.append((i, T))
+        poses.append((pose_id, T))
     return poses
 
 def write_trajectory(poses, flags):
     with open(os.path.join(flags.scene, 'scene', 'trajectory.log'), 'wt') as f:
-        for pose_id, pose in poses:
-            f.write(f"{pose_id} {pose_id} {pose_id+1}\n")
-            for i in range(4):
-                row = pose[i]
+        for i, (pose_id, pose) in enumerate(poses):
+            if i+1 < len(poses):
+                next_id = poses[i+1][0]
+            else:
+                next_id = "{:06}".format(len(poses))
+            f.write(f"{pose_id} {pose_id} {next_id}\n")
+            for row_index in range(4):
+                row = pose[row_index]
                 f.write(f"{row[0]} {row[1]} {row[2]} {row[3]}\n")
 
 def read_image(color_file, depth_file):
@@ -56,7 +60,12 @@ def main():
     scene_path = flags.scene
 
     intrinsic = o3d.io.read_pinhole_camera_intrinsic(os.path.join(scene_path, 'camera_intrinsics.json'))
-    poses = read_trajectory(flags.trajectory)
+
+    color_images = os.listdir(os.path.join(flags.scene, 'color'))
+    pose_ids = [i.split('.')[0] for i in color_images]
+    pose_ids.sort()
+
+    poses = read_trajectory(pose_ids, flags.trajectory)
     os.makedirs(os.path.join(flags.scene, 'scene'), exist_ok=True)
     write_trajectory(poses, flags)
     volume = o3d.pipelines.integration.ScalableTSDFVolume(
@@ -64,18 +73,17 @@ def main():
         sdf_trunc=0.04,
         color_type=o3d.pipelines.integration.TSDFVolumeColorType.RGB8)
 
-    frames = show_frames(poses)
-
     for pose_id, T in poses:
         print(f"Integrating {pose_id}", end='\r')
-        color_image = os.path.join(scene_path, 'color', f'{pose_id:06}.jpg')
-        depth_image = os.path.join(scene_path, 'depth', f'{pose_id:06}.png')
+        color_image = os.path.join(scene_path, 'color', f'{pose_id}.jpg')
+        depth_image = os.path.join(scene_path, 'depth', f'{pose_id}.png')
         rgbd_frame = read_image(color_image, depth_image)
         volume.integrate(rgbd_frame, intrinsic, np.linalg.inv(T))
 
     mesh = volume.extract_triangle_mesh()
     mesh.compute_vertex_normals()
     if flags.debug:
+        frames = show_frames(poses)
         o3d.visualization.draw_geometries([mesh] + frames)
 
     o3d.io.write_triangle_mesh(os.path.join(flags.scene, 'scene', 'integrated.ply'), mesh, False, True)

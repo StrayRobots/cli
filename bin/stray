@@ -47,6 +47,8 @@ then
     elif [ "$2" = "open" ]
     then
         studio $scene_dir
+    else
+        echo "verb $2 not supported by studio subcommand."
     fi
 
 else
