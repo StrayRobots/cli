@@ -1,6 +1,6 @@
 import click
-import os, json
-import straymodel
+import os
+from straymodel.detectron.generate_model import generate as generate_detectron_model
 import datetime
 
 @click.command()
@@ -14,7 +14,7 @@ def generate(**flags):
         model_suffix = now.strftime("%Y-%m-%d-%H:%M:%S")
         base_folder = os.path.join(flags["path"], f"detectron2-{model_suffix}")
         os.makedirs(base_folder, exist_ok=True)
-        straymodel.detectron.generate_model.generate(base_folder)
+        generate_detectron_model(base_folder)
     else:
         raise Exception(f"Invalid model type (--model-type) provided. Only detectron2 is currently supported.")
     print(f"New model created successfully at {base_folder}")

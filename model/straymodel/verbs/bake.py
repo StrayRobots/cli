@@ -1,6 +1,6 @@
 import click
 import os
-import straymodel
+from straymodel.detectron.train import train as train_detectron
 
 @click.command()
 @click.option('--dataset', required=True, help='Path to the dataset to bake.')
@@ -11,7 +11,7 @@ import straymodel
 def bake(**flags):
     model_name = os.path.basename(os.path.normpath(flags["model_path"])).split("-")[0]
     if model_name == "detectron2":
-        straymodel.detectron.train.train(flags)
+        train_detectron(flags)
     else:
         raise Exception(f"Invalid model name prefix for model {flags['model_path']}. Only detectron2 is currently supported.")
 

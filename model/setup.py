@@ -1,4 +1,4 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 
 setup(
     name="straymodel",
@@ -10,7 +10,7 @@ setup(
     classifiers=[
         "Programming Language :: Python :: 3",
     ],
-    packages=['straymodel'],
+    packages=find_packages(),
     python_requires=">=3.6",
     entry_points={
         'console_scripts': [

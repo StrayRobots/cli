@@ -1,6 +1,6 @@
 import os
 from PIL import Image
-from straylib import Scene, Renderer
+from straylib.scene import Scene, Renderer
 
 
 def segment(scene_path):

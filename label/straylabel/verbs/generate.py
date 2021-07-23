@@ -1,4 +1,3 @@
-import argparse
 import os
 import json
 from straylib.export import get_detectron2_dataset_function, get_scene_dataset_metadata

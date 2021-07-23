@@ -3,7 +3,7 @@ import cv2
 import numpy as np
 from straylib.export import get_detectron2_dataset_function, get_scene_dataset_metadata
 import click
-import straylib
+from straylib.utils import get_scene_paths
 
 @click.command()
 @click.option('--dataset', required=True, help='Path to the dataset to bake.')
@@ -11,7 +11,7 @@ import straylib
 @click.option('--rate', '-r', default=30.0, help="Frames per second to show frames.")
 
 def show(**flags):
-    scenes = straylib.utils.get_scene_paths(flags["dataset"])
+    scenes = get_scene_paths(flags["dataset"])
     dataset_metadata = get_scene_dataset_metadata(scenes)
     examples = get_detectron2_dataset_function(scenes, dataset_metadata)()
 

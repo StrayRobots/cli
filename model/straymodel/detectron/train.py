@@ -2,10 +2,10 @@ from detectron2 import model_zoo
 from straylib.export import get_detectron2_dataset_function, get_scene_dataset_metadata
 from detectron2.data import DatasetCatalog, MetadataCatalog
 from detectron2.engine import hooks, launch
-from .trainer import Trainer
+from straymodel.detectron.trainer import Trainer
 from detectron2.config import get_cfg
 import os
-import straylib
+from straylib.utils import get_scene_paths
 
 def setup_config(config, flags, metadata):
     config.merge_from_file(model_zoo.get_config_file("COCO-Keypoints/keypoint_rcnn_R_50_FPN_1x.yaml"))
@@ -24,7 +24,7 @@ def setup_config(config, flags, metadata):
 
 
 def train_detectron(flags):
-    scenes = straylib.utils.get_scene_paths(flags["dataset"])
+    scenes = get_scene_paths(flags["dataset"])
     dataset_metadata = get_scene_dataset_metadata(scenes)
     dataset_function = get_detectron2_dataset_function(scenes, dataset_metadata)
 

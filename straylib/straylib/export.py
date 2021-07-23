@@ -1,7 +1,6 @@
 import numpy as np
 from detectron2 import structures
-from straylib import Scene
-import cv2
+from straylib.scene import Scene
 
 def compute_image_bbox(camera, T_WC, object_mesh):
     T_CW = np.linalg.inv(T_WC)

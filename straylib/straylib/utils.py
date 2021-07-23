@@ -1,7 +1,5 @@
 import os
 
-from straylib import scene
-
 def get_scene_paths(dataset_path):
     if os.path.exists(os.path.join(dataset_path, 'scene', 'integrated.ply')):
         scenes = [dataset_path]

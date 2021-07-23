@@ -1,7 +1,6 @@
 import click
-import os, json
-import straymodel
-import datetime
+import os
+from straymodel.detectron.evaluate import evaluate as evaluate_detectron
 
 @click.command()
 @click.option('--dataset', required=True, help='Path to the dataset to bake.')
@@ -11,7 +10,7 @@ import datetime
 def evaluate(**flags):
     model_name = os.path.basename(os.path.normpath(flags["model_path"])).split("-")[0]
     if model_name == "detectron2":
-        straymodel.detectron.evaluate.evaluate(flags)
+        evaluate_detectron(flags)
     else:
         raise Exception(f"Invalid model name prefix for model {flags['model_path']}. Only detectron2 is currently supported.")
 
