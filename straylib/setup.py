@@ -1,4 +1,4 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 
 setup(
     name="straylib",
@@ -10,13 +10,6 @@ setup(
     classifiers=[
         "Programming Language :: Python :: 3",
     ],
-    packages=['straylib'],
-    python_requires=">=3.6",
-    entry_points={
-        'console_scripts': [
-            'straylib-segment=scripts.segmentation:main',
-            'straylib-generate=scripts.generate:main',
-            'straylib-preview=scripts.preview:main'
-        ]
-    }
+    packages=find_packages(),
+    python_requires=">=3.6"
 )
