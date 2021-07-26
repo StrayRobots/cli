@@ -75,12 +75,14 @@ then
         #TODO: input and parse these as flags and not positional arguments.
         scene_dir=$3
         target_yaml=$4
-        docker_run_with_display -it -v $scene_dir:/root/data/ -v $target_yaml:/root/workspace/target.yaml calibrate run
+        docker_run_with_display -it -v $scene_dir:/root/data/ \
+            -v $target_yaml:/root/workspace/target.yaml calibrate run
     elif [ "$2" = "generate" ]
     then
         target_yaml=$3
         shift 2
-        docker run -v `pwd`:/root/data/ calibrate generate $@
+        docker run -v `pwd`:/root/data/ \
+            -v $target_yaml:/root/workspace/target.yaml calibrate generate
     else
         "Verb $2 not supported by calibrate command. Try run or generate."
         exit 1

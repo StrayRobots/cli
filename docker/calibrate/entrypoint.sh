@@ -25,7 +25,7 @@ elif [ "$1" = "generate" ]
 then
   shift
   pushd /root/data/
-  kalibr_create_target_pdf $@
+  python /root/workspace/create_target.py --target /root/workspace/target.yaml
   popd
 else
   echo "Unrecognized command $1."
