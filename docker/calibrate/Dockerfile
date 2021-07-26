@@ -1,5 +1,9 @@
 FROM stereolabs/kalibr
 
+RUN apt-get update
+RUN apt-get install -y python-pyx
+RUN rm -rf /var/lib/apt/lists/*
+
 RUN mkdir /root/workspace
 COPY ./entrypoint.sh /root/workspace/entrypoint.sh
 COPY convert_format.py /root/workspace/convert_format.py
