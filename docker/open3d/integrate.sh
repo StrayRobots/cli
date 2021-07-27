@@ -15,7 +15,6 @@ echo "Cloning data repository"
 
 echo "$SSH_PRIVATE_KEY" > /root/.ssh/id_integration
 chmod 600 /root/.ssh/id_integration
-cat /root/.ssh/id_integration
 touch /root/.ssh/known_hosts
 ssh-keyscan github.com >> /root/.ssh/known_hosts
 
@@ -38,7 +37,24 @@ for scene_subpath in $scenes; do
 		continue
 	fi
 
-	dvc pull -R "$scene"
+	# Retry on error for dvc pull.
+	set +e
+	for attempt in $(seq 5); do
+		dvc pull -R "$scene"
+		exit_code=$?
+		if [ $exit_code == 1 ]; then
+			# The download may fail for being throttled by the remote. Could be some other
+			# reason, but seems dvc always exits with code 1 if it fails.
+			# Let's retry a few times any way
+			echo "dvc pull retrying after attempt $attempt."
+			random_wait=$(seq 10 | sort -R | tail -n 1)
+			sleep $((50 + $random_wait))
+		else
+			echo "dvc exit code: $exit_code. Moving on."
+			break
+		fi
+	done
+	set -e
 
 	if [[ -f "$scene/scene/integrated.ply.dvc" ]]; then
 		echo "$(basename $scene) has already been integrated. Skipping integration."
@@ -57,20 +73,25 @@ for scene_subpath in $scenes; do
 	python3.8 run_system.py /root/workspace/config.json --refine
 	echo "Integrating scene."
 	python3.8 run_system.py /root/workspace/config.json --integrate
-	# echo "Running simultaneous localization and calibration."
-	# python3.8 run_system.py /root/workspace/config.json --slac --slac_integrate
+	echo "Running simultaneous localization and calibration."
+	python3.8 run_system.py /root/workspace/config.json --slac --slac_integrate
 	popd
 
+	dvc add $scene/slac/0.050/optimized_trajectory_slac.log
+	dvc add $scene/slac/0.050/output_slac_mesh.ply
 	dvc add $scene/scene/integrated.ply
 	dvc add $scene/scene/trajectory.log
 	dvc push
 
+	git add $scene/slac/0.050/optimized_trajectory_slac.log.dvc
+	git add $scene/slac/0.050/output_slac_mesh.ply.dvc
+	git add $scene/slac/0.050/.gitignore
 	git add $scene/scene/integrated.ply.dvc
 	git add $scene/scene/trajectory.log.dvc
 	git add $scene/scene/.gitignore
+	git pull --ff origin $branch
 	git commit -m "Integrate scene $(basename $scene)"
-
-	git push origin testing
+	git push origin $branch
 done
 
 popd

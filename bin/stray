@@ -40,12 +40,27 @@ then
 
 elif [ "$1" = "studio" ]
 then
-    if [ $# -lt 2 ]
+    if [ $# != 3 ]
     then
-        echo "Not enough arguments supplied"
+        echo "Usage: stray studio open/integrate <path-to-scene>"
         exit 1
     fi
-    studio $2
+
+    scene_dir=$3
+    if [ ! -d "$scene_dir" ]; then
+        echo "data directory does not exist: $scene_dir"
+        exit 1
+    fi
+
+    if [ "$2" = "integrate" ]
+    then
+        docker run -it -v $scene_dir:/root/data orbslam
+    elif [ "$2" = "open" ]
+    then
+        studio $scene_dir
+    else
+        echo "verb $2 not supported by studio subcommand."
+    fi
 
 else
     echo "No command supplied"
