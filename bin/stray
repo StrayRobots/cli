@@ -1,30 +1,41 @@
 #!/bin/bash
 set -e
 
-#Add the following lines to your shell initializing script (i.e. .bashrc or .bash_profile etc)
-#export STRAY_PATH=<absolute_path_to_stray_source>
-#export PATH="$STRAY_PATH/CLI/bin:$PATH"
-
-if [ "$1" = "generate" ]
+if [ "$1" = "label" ]
 then
-    if [ $# != 3 ]
-    then
-        echo "Not enough arguments supplied"
-        exit 1
+    if [ $# -lt 2 ]
+        then
+            echo "Not enough arguments supplied"
+            exit 1
     fi
 
-    if [ "$2" = "keypoints" ]
+    if [ "$2" = "generate" ]
     then
-        python3 $STRAY_PATH/Labeling/labeling/generate.py $3 --keypoints --generate-images
-    elif [ "$2" = "bbox_2d" ]
+        stray-label-generate "${@:3}"
+    elif [ "$2" = "show" ]
     then
-        python3 $STRAY_PATH/Labeling/labeling/generate.py $3 --bbox_2d --generate-images
-    elif [ "$2" = "semantic" ]
-    then
-        shift 2
-        stray-segment $@
+        stray-label-show "${@:3}"
     else
-        echo "Bad primitive type"
+        echo "Incorrect verb"
+    fi
+elif [ "$1" = "model" ]
+then
+    if [ $# -lt 2 ]
+        then
+            echo "Not enough arguments supplied"
+            exit 1
+    fi
+    if [ "$2" = "generate" ]
+    then
+        stray-model-generate "${@:3}"
+    elif [ "$2" = "bake" ]
+    then
+        stray-model-bake "${@:3}"
+    elif [ "$2" = "evaluate" ]
+    then
+        stray-model-evaluate "${@:3}"
+    else
+        echo "Incorrect verb"
     fi
 
 elif [ "$1" = "studio" ]
