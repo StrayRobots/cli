@@ -61,7 +61,10 @@ then
     else
         echo "verb $2 not supported by studio subcommand."
     fi
-
+elif [ "$1" = "import" ]
+then
+    shift
+    straylib-import $@
 else
     echo "No command supplied"
 fi
