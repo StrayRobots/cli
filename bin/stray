@@ -68,7 +68,7 @@ then
         echo "Verb $2 not supported by studio subcommand."
         exit 1
     fi
-elif [ "$1" = "calibrate" ]
+elif [ "$1" = "calibration" ]
 then
     if [ "$2" = "run" ]
     then
@@ -84,7 +84,7 @@ then
         docker run -v `pwd`:/root/data/ \
             -v $target_yaml:/root/workspace/target.yaml calibrate generate
     else
-        "Verb $2 not supported by calibrate command. Try run or generate."
+        "Verb $2 not supported by calibration subcommand. Try run or generate."
         exit 1
     fi
 else
