@@ -5,7 +5,7 @@ from straymodel.detectron.train import train as train_detectron
 @click.command()
 @click.option('--dataset', required=True, help='Path to the dataset to bake.')
 @click.option('--model-path', required=True, help='Path to the model to use in baking.')
-@click.option('--num_gpus', default=0, help='Number of GPUs to use in baking.')
+@click.option('--num-gpus', default=0, help='Number of GPUs to use in baking.')
 @click.option('--resume', default=False, is_flag=True, help='Resume training.')
 
 def bake(**flags):

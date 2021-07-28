@@ -30,7 +30,42 @@ then
         stray-model-generate "${@:3}"
     elif [ "$2" = "bake" ]
     then
-        stray-model-bake "${@:3}"
+        i=0
+        args=("$@")
+        for arg in "$@"
+        do  
+            if [ "${args[i]}" = "--model-path" ]
+            then
+                model_path=${args[i+1]}
+                echo "Found model path ${args[i]} $model_path"
+            elif [ "${args[i]}" = "--dataset" ]
+            then
+                dataset=${args[i+1]}
+                echo "Found dataset ${args[i]} $dataset"
+            elif [ "${args[i]}" = "--num-gpus" ]
+            then
+                gpus=${args[i+1]}
+                echo "Found gpus ${args[i]} $gpus"
+            elif [ "${args[i]}" = "--resume" ]
+            then
+                resume=true
+                echo "Found resume ${args[i]} $resume"
+            fi
+            i=$((i + 1))
+        done
+        
+        if [ $resume ]
+        then
+            docker run -v $dataset:/home/appuser/data -v $model_path:/home/appuser/detectron2-model --gpus all -it  strayrobots/detectron2:latest \
+            --dataset /home/appuser/data \
+            --model-path /home/appuser/detectron2-model \
+            --num-gpus $gpus
+        else
+            docker run -v $dataset:/home/appuser/data -v $model_path:/home/appuser/detectron2-model --gpus all -it  strayrobots/detectron2:latest \
+            --dataset /home/appuser/data \
+            --model-path /home/appuser/detectron2-model \
+            --num-gpus $gpus 
+        fi
     elif [ "$2" = "evaluate" ]
     then
         stray-model-evaluate "${@:3}"

@@ -34,3 +34,6 @@ RUN pip install --user git+https://github.com/facebookresearch/detectron2.git@v0
 
 # Set a fixed model cache directory.
 ENV FVCORE_CACHE="/tmp"
+
+COPY ./entrypoint.sh /home/appuser/entrypoint.sh
+ENTRYPOINT ["/home/appuser/entrypoint.sh"]

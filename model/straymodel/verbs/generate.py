@@ -11,7 +11,7 @@ import datetime
 def generate(**flags):
     if flags['model_type'] == "detectron2":
         now = datetime.datetime.now()
-        model_suffix = now.strftime("%Y-%m-%d-%H:%M:%S")
+        model_suffix = now.strftime("%Y-%m-%d-%H-%M-%S")
         base_folder = os.path.join(flags["path"], f"detectron2-{model_suffix}")
         os.makedirs(base_folder, exist_ok=True)
         generate_detectron_model(base_folder)
