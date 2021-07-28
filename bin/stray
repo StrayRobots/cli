@@ -46,7 +46,7 @@ then
 
 elif [ "$1" = "studio" ]
 then
-    if [ $# -lt 2 ]
+    if [ $# != 3 ]
     then
         echo "Usage: stray studio open/integrate <path-to-scene>"
         exit 1
@@ -90,6 +90,13 @@ then
     else
         "Verb $2 not supported by calibration subcommand. Try run or generate."
         exit 1
+    fi
+elif [ "$1" = "dataset" ]
+then
+    if [ "$2" = "import" ]
+    then
+        shift 2
+        straylib-import $@
     fi
 else
     echo "No command supplied"
