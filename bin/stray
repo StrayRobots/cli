@@ -63,11 +63,10 @@ then
     fi
 elif [ "$1" = "dataset" ]
 then
-    shift
-    if [ "$2" = "import " ]
-        shift
-        straylib-import $@
+    if [ "$2" = "import" ]
     then
+        shift 2
+        straylib-import $@
     fi
 else
     echo "No command supplied"
