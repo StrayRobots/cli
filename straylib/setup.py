@@ -11,5 +11,10 @@ setup(
         "Programming Language :: Python :: 3",
     ],
     packages=find_packages(),
-    python_requires=">=3.6"
+    python_requires=">=3.6",
+    entry_points={
+        'console_scripts': [
+            'straylib-scale-calibration=scripts.scale_calibration:main'
+        ]
+    }
 )

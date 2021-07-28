@@ -83,6 +83,10 @@ then
         shift 2
         docker run -v `pwd`:/root/data/ \
             -v $target_yaml:/root/workspace/target.yaml calibrate generate
+    elif [ "$2" = "scale" ]
+    then
+        shift 2
+        straylib-scale-calibration $@
     else
         "Verb $2 not supported by calibration subcommand. Try run or generate."
         exit 1
