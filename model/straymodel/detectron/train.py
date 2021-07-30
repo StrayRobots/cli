@@ -9,9 +9,9 @@ from straylib.utils import get_scene_paths
 
 def setup_config(config, flags, metadata):
     config.merge_from_file(model_zoo.get_config_file("COCO-Keypoints/keypoint_rcnn_R_50_FPN_1x.yaml"))
-    if os.path.isfile(os.path.join(flags["model_path"], "config.yaml")):
-        config.merge_from_file(os.path.join(flags["model_path"], "config.yaml"))
-    config.OUTPUT_DIR = os.path.join(flags["model_path"], "output")
+    if os.path.isfile(os.path.join(flags["model"], "config.yaml")):
+        config.merge_from_file(os.path.join(flags["model"], "config.yaml"))
+    config.OUTPUT_DIR = os.path.join(flags["model"], "output")
     config.MODEL.ROI_HEADS.NUM_CLASSES = len(metadata['instance_category_mapping'])
     if metadata["max_num_keypoints"] == 0:
         config.MODEL.KEYPOINT_ON = False
