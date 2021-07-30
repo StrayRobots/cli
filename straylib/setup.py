@@ -14,6 +14,7 @@ setup(
     python_requires=">=3.6",
     entry_points={
         'console_scripts': [
+            'straylib-scale-calibration=scripts.scale_calibration:main'
             'straylib-import=scripts.import:main'
         ]
     }

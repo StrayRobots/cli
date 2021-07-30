@@ -1,6 +1,12 @@
 #!/bin/bash
 set -e
 
+function docker_run_with_display {
+    xhost +local:root;
+    docker run -e DISPLAY -e QT_X11_NO_MITSHM=1 -v /tmp/.X11-unix:/tmp/.X11-unix:rw $@
+    xhost -local:root;
+}
+
 if [ "$1" = "label" ]
 then
     if [ $# -lt 2 ]
@@ -59,7 +65,31 @@ then
     then
         studio $scene_dir
     else
-        echo "verb $2 not supported by studio subcommand."
+        echo "Verb $2 not supported by studio subcommand."
+        exit 1
+    fi
+elif [ "$1" = "calibration" ]
+then
+    if [ "$2" = "run" ]
+    then
+        #TODO: input and parse these as flags and not positional arguments.
+        scene_dir=$3
+        target_yaml=$4
+        docker_run_with_display -it -v $scene_dir:/root/data/ \
+            -v $target_yaml:/root/workspace/target.yaml calibrate run
+    elif [ "$2" = "generate" ]
+    then
+        target_yaml=$3
+        shift 2
+        docker run -v `pwd`:/root/data/ \
+            -v $target_yaml:/root/workspace/target.yaml calibrate generate
+    elif [ "$2" = "scale" ]
+    then
+        shift 2
+        straylib-scale-calibration $@
+    else
+        "Verb $2 not supported by calibration subcommand. Try run or generate."
+        exit 1
     fi
 elif [ "$1" = "dataset" ]
 then
