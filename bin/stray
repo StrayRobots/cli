@@ -34,9 +34,9 @@ then
         args=("$@")
         for arg in "$@"
         do  
-            if [ "${args[i]}" = "--model-path" ]
+            if [ "${args[i]}" = "--model" ]
             then
-                model_path=${args[i+1]}
+                model=${args[i+1]}
             elif [ "${args[i]}" = "--dataset" ]
             then
                 dataset=${args[i+1]}
@@ -52,14 +52,15 @@ then
         
         if [ $resume ]
         then
-            docker run -v $dataset:/home/appuser/data -v $model_path:/home/appuser/detectron2-model --gpus all -it  strayrobots/detectron2:latest \
-            --dataset /home/appuser/data \
-            --model-path /home/appuser/detectron2-model \
+            docker run -v $dataset:/root/workspace/data -v $model:/root/workspace/detectron2-model --gpus all -it  strayrobots/detectron2:latest \
+            --dataset /root/workspace/data \
+            --model /root/workspace/detectron2-model \
             --num-gpus $gpus
+            --resume
         else
-            docker run -v $dataset:/home/appuser/data -v $model_path:/home/appuser/detectron2-model --gpus all -it  strayrobots/detectron2:latest \
-            --dataset /home/appuser/data \
-            --model-path /home/appuser/detectron2-model \
+            docker run -v $dataset:/root/workspace/data -v $model:/root/workspace/detectron2-model --gpus all -it  strayrobots/detectron2:latest \
+            --dataset /root/workspace/data \
+            --model /root/workspace/detectron2-model \
             --num-gpus $gpus 
         fi
     elif [ "$2" = "evaluate" ]
