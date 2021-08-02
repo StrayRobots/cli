@@ -36,7 +36,39 @@ then
         stray-model-generate "${@:3}"
     elif [ "$2" = "bake" ]
     then
-        stray-model-bake "${@:3}"
+        i=0
+        args=("$@")
+        for arg in "$@"
+        do  
+            if [ "${args[i]}" = "--model" ]
+            then
+                model=${args[i+1]}
+            elif [ "${args[i]}" = "--dataset" ]
+            then
+                dataset=${args[i+1]}
+            elif [ "${args[i]}" = "--num-gpus" ]
+            then
+                gpus=${args[i+1]}
+            elif [ "${args[i]}" = "--resume" ]
+            then
+                resume=true
+            fi
+            i=$((i + 1))
+        done
+        
+        if [ $resume ]
+        then
+            docker run -v $dataset:/root/workspace/data -v $model:/root/workspace/detectron2-model --gpus all -it  strayrobots/detectron2:latest \
+            --dataset /root/workspace/data \
+            --model /root/workspace/detectron2-model \
+            --num-gpus $gpus
+            --resume
+        else
+            docker run -v $dataset:/root/workspace/data -v $model:/root/workspace/detectron2-model --gpus all -it  strayrobots/detectron2:latest \
+            --dataset /root/workspace/data \
+            --model /root/workspace/detectron2-model \
+            --num-gpus $gpus 
+        fi
     elif [ "$2" = "evaluate" ]
     then
         stray-model-evaluate "${@:3}"

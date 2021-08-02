@@ -11,14 +11,13 @@ import straylib
 def evaluate(flags):
     scenes = straylib.utils.get_scene_paths(flags["dataset"])
     dataset_metadata = get_scene_dataset_metadata(scenes)
-    dataset_dicts = get_detectron2_dataset_function(scenes, dataset_metadata)()
-
     config = get_cfg()
     config = setup_config(config, flags, dataset_metadata)
-
-    config.MODEL.WEIGHTS = os.path.join(config.OUTPUT_DIR, "model_final.pth")
+    config.MODEL.WEIGHTS = os.path.join(config.OUTPUT_DIR, flags["weights"])
     config.MODEL.ROI_HEADS.SCORE_THRESH_TEST = 0.9
     predictor = DefaultPredictor(config)
+
+    dataset_dicts = get_detectron2_dataset_function(scenes, dataset_metadata)()
     for d in random.sample(dataset_dicts, 100): 
         im = cv2.imread(d["file_name"])
         outputs = predictor(im)

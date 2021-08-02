@@ -153,6 +153,7 @@ class Scene:
 
     def image_filepaths(self):
         paths = os.listdir(os.path.join(self.scene_path, 'color'))
+        paths = [path for path in paths if path.lower().split(".")[-1] in ['png', 'jpg', 'jpeg']]
         paths.sort()
         return list(map(lambda p: os.path.join(self.scene_path, 'color', p), paths))
 
