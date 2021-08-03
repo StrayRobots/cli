@@ -68,7 +68,7 @@ def write_intrinsics(dataset, out, width, height, full_width, full_height):
         f.write(json.dumps(data, indent=4, sort_keys=True))
 
 @click.command()
-@click.argument('scenes', nargs=-1)
+@click.option('--scenes', '-s', required=True, help="Path to raw unprocessed data directories", type=str)
 @click.option('--out', '-o', required=True, help="Dataset directory where to place the imported files.", type=str)
 @click.option('--every', type=int, default=1, help="Keep only every n-th frame. 1 keeps every frame, 2 keeps every other and so forth.")
 @click.option('--width', '-w', type=int, default=640)
@@ -77,38 +77,34 @@ def main(scenes, out, every, width, height):
     """
     Command for importing scenes from the Stray Scanner format to the Stray Dataset format.
 
-    Usage: import <scanner-scenes> --out <output-dataset-folder>
+    Usage: import --scenes <scanner-scenes> --out <output-dataset-folder>
 
-    Each scene will be imported and converted into the dataset folder and numbered automatically.
+    Each scene will be imported and converted into the dataset folder.
     """
     os.makedirs(out, exist_ok=True)
     existing_scenes = os.listdir(out)
-    existing_scenes.sort()
-    digits = re.compile('\d+')
-    existing_scenes = [s for s in existing_scenes if digits.fullmatch(s) is not None]
-    if len(existing_scenes) == 0:
-        current_num = 0
-        number_count = 4
-    else:
-        current_num = int(existing_scenes[-1]) + 1
-        number_count = len(existing_scenes[-1])
-
-    for scene in scenes:
-        format_string = "{:0" + str(number_count) + "}"
-        scene_name = format_string.format(current_num)
-        target = os.path.join(out, scene_name)
-        print(f"Importing scene {scene} into {target}")
+    for scene in os.listdir(scenes):
+        if scene[0] == ".":
+            continue
+        if scene in existing_scenes:
+            print(f"Scene {scene} exists already, skipping.")
+            continue
+        abs_scene_path = os.path.join(scenes, scene)
+        target = os.path.join(out, scene)
+        print(f"Importing scene {abs_scene_path} into {target}")
 
         rgb_out = os.path.join(target, 'color/')
         depth_out = os.path.join(target, 'depth/')
         os.makedirs(rgb_out)
         os.makedirs(depth_out)
 
-        write_depth(scene, every, depth_out, width, height)
-        full_width, full_height = write_frames(scene, every, rgb_out, width, height)
-        write_intrinsics(scene, target, width, height, full_width, full_height)
-        shutil.copy(os.path.join(scene, 'rgb.mp4'), os.path.join(target, 'rgb.mp4'))
-        current_num += 1
+        write_depth(abs_scene_path, every, depth_out, width, height)
+        full_width, full_height = write_frames(
+            abs_scene_path, every, rgb_out, width, height)
+        write_intrinsics(abs_scene_path, target, width,
+                         height, full_width, full_height)
+        shutil.copy(os.path.join(abs_scene_path, 'rgb.mp4'),
+                    os.path.join(target, 'rgb.mp4'))
     print("Done.")
 
 if __name__ == "__main__":

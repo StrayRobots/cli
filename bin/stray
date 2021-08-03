@@ -128,7 +128,7 @@ then
     if [ "$2" = "import" ]
     then
         shift 2
-        straylib-import $@
+        straylib-dataset-import $@
     fi
 else
     echo "No command supplied"
