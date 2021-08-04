@@ -92,7 +92,7 @@ then
 
     if [ "$2" = "integrate" ]
     then
-        docker run -it -v $scene_dir:/root/data orbslam
+        docker run -it -v $scene_dir:/home/user/data orbslam
     elif [ "$2" = "open" ]
     then
         studio $scene_dir
