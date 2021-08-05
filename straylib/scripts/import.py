@@ -68,7 +68,7 @@ def write_intrinsics(dataset, out, width, height, full_width, full_height):
         f.write(json.dumps(data, indent=4, sort_keys=True))
 
 @click.command()
-@click.option('--scenes', '-s', required=True, help="Path to raw unprocessed data directories", type=str)
+@click.argument('scenes', nargs=-1)
 @click.option('--out', '-o', required=True, help="Dataset directory where to place the imported files.", type=str)
 @click.option('--every', type=int, default=1, help="Keep only every n-th frame. 1 keeps every frame, 2 keeps every other and so forth.")
 @click.option('--width', '-w', type=int, default=640)
@@ -83,28 +83,28 @@ def main(scenes, out, every, width, height):
     """
     os.makedirs(out, exist_ok=True)
     existing_scenes = os.listdir(out)
-    for scene in os.listdir(scenes):
-        if scene[0] == ".":
+    for scene_path in scenes:
+        scene_base_name = os.path.basename(scene_path)
+        if scene_base_name[0] == ".":
             continue
-        if scene in existing_scenes:
-            print(f"Scene {scene} exists already, skipping.")
+        if scene_base_name in existing_scenes:
+            print(f"Scene {scene_base_name} exists already, skipping.")
             continue
-        abs_scene_path = os.path.join(scenes, scene)
-        target = os.path.join(out, scene)
-        print(f"Importing scene {abs_scene_path} into {target}")
+        target_path = os.path.join(out, scene_base_name)
+        print(f"Importing scene {scene_path} into {target_path}")
 
-        rgb_out = os.path.join(target, 'color/')
-        depth_out = os.path.join(target, 'depth/')
+        rgb_out = os.path.join(target_path, 'color/')
+        depth_out = os.path.join(target_path, 'depth/')
         os.makedirs(rgb_out)
         os.makedirs(depth_out)
 
-        write_depth(abs_scene_path, every, depth_out, width, height)
+        write_depth(scene_path, every, depth_out, width, height)
         full_width, full_height = write_frames(
-            abs_scene_path, every, rgb_out, width, height)
-        write_intrinsics(abs_scene_path, target, width,
+            scene_path, every, rgb_out, width, height)
+        write_intrinsics(scene_path, target_path, width,
                          height, full_width, full_height)
-        shutil.copy(os.path.join(abs_scene_path, 'rgb.mp4'),
-                    os.path.join(target, 'rgb.mp4'))
+        shutil.copy(os.path.join(scene_path, 'rgb.mp4'),
+                    os.path.join(target_path, 'rgb.mp4'))
     print("Done.")
 
 if __name__ == "__main__":
