@@ -77,7 +77,7 @@ def main(scenes, out, every, width, height):
     """
     Command for importing scenes from the Stray Scanner format to the Stray Dataset format.
 
-    Usage: import --scenes <scanner-scenes> --out <output-dataset-folder>
+    Usage: import <scanner-scenes> --out <output-dataset-folder>
 
     Each scene will be imported and converted into the dataset folder.
     """
