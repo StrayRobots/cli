@@ -79,36 +79,32 @@ def main(scenes, out, every, width, height):
 
     Usage: import <scanner-scenes> --out <output-dataset-folder>
 
-    Each scene will be imported and converted into the dataset folder and numbered automatically.
+    Each scene will be imported and converted into the dataset folder.
     """
     os.makedirs(out, exist_ok=True)
     existing_scenes = os.listdir(out)
-    existing_scenes.sort()
-    digits = re.compile('\d+')
-    existing_scenes = [s for s in existing_scenes if digits.fullmatch(s) is not None]
-    if len(existing_scenes) == 0:
-        current_num = 0
-        number_count = 4
-    else:
-        current_num = int(existing_scenes[-1]) + 1
-        number_count = len(existing_scenes[-1])
+    for scene_path in scenes:
+        scene_base_name = os.path.basename(scene_path)
+        if scene_base_name[0] == ".":
+            continue
+        if scene_base_name in existing_scenes:
+            print(f"Scene {scene_base_name} exists already, skipping.")
+            continue
+        target_path = os.path.join(out, scene_base_name)
+        print(f"Importing scene {scene_path} into {target_path}")
 
-    for scene in scenes:
-        format_string = "{:0" + str(number_count) + "}"
-        scene_name = format_string.format(current_num)
-        target = os.path.join(out, scene_name)
-        print(f"Importing scene {scene} into {target}")
-
-        rgb_out = os.path.join(target, 'color/')
-        depth_out = os.path.join(target, 'depth/')
+        rgb_out = os.path.join(target_path, 'color/')
+        depth_out = os.path.join(target_path, 'depth/')
         os.makedirs(rgb_out)
         os.makedirs(depth_out)
 
-        write_depth(scene, every, depth_out, width, height)
-        full_width, full_height = write_frames(scene, every, rgb_out, width, height)
-        write_intrinsics(scene, target, width, height, full_width, full_height)
-        shutil.copy(os.path.join(scene, 'rgb.mp4'), os.path.join(target, 'rgb.mp4'))
-        current_num += 1
+        write_depth(scene_path, every, depth_out, width, height)
+        full_width, full_height = write_frames(
+            scene_path, every, rgb_out, width, height)
+        write_intrinsics(scene_path, target_path, width,
+                         height, full_width, full_height)
+        shutil.copy(os.path.join(scene_path, 'rgb.mp4'),
+                    os.path.join(target_path, 'rgb.mp4'))
     print("Done.")
 
 if __name__ == "__main__":
