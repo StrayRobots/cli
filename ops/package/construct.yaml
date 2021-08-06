@@ -1,0 +1,15 @@
+
+name: stray
+version: "0.1.1"
+batch_mode: true
+channels:
+  - http://repo.anaconda.com/pkgs/main/
+  - conda-forge
+specs:
+  - python 3.8.11
+  - numpy
+  - conda
+  - detectron2
+
+installer_filename: install_env.sh
+
