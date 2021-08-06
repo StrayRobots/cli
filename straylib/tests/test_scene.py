@@ -1,7 +1,8 @@
 import unittest
 import os
 import numpy as np
-from straylib.scene import Scene, Renderer
+from straylib.scene import Scene
+from straylib.renderer import Renderer
 
 class TestScene(unittest.TestCase):
     @classmethod
