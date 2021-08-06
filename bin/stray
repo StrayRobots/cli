@@ -94,7 +94,7 @@ then
 
     if [ "$2" = "integrate" ]
     then
-        docker run -it -v $scene_dir:/root/data orbslam
+        docker run -it -v $scene_dir:/home/user/data orbslam
     elif [ "$2" = "open" ]
     then
         studio $scene_dir
@@ -130,7 +130,7 @@ then
     if [ "$2" = "import" ]
     then
         shift 2
-        $bin_dir/straylib-import $@
+        $bin_dir/straylib-dataset-import $@
     fi
 else
     echo "No command supplied"

@@ -1,20 +1,29 @@
 #!/bin/bash
 
-# Usage: <image> <path-to-scene>
+# Usage: <image> <path-to-scenes>
 
 set -e
 
-echo "Computing trajectory"
+for d in "/home/user/data/"*; do
+    if [ -d $d ]
+        then
+        if [ -d "$d/scene" ] 
+        then
+            echo "Directory $d/scene exists, skipping." 
+        else
+            echo "Computing trajectory for scene $d"
 
-python3 /root/workspace/make_settings.py /root/data/ --default-settings /root/workspace/default_settings.yaml -o /root/workspace/settings.yaml
+            python3 /home/user/workspace/make_settings.py $d --default-settings /home/user/workspace/default_settings.yaml -o /home/user/workspace/settings.yaml
 
-pushd /root/orbslam/Examples/RGB-D
+            pushd /home/user/orbslam/Examples/RGB-D
 
-./o3d ../../Vocabulary/ORBvoc.txt /root/workspace/settings.yaml /root/data/
+            ./o3d ../../Vocabulary/ORBvoc.txt /home/user/workspace/settings.yaml $d
 
-echo "Integrating."
+            echo "Integrating."
 
-python3 /root/workspace/integrate.py /root/data/ --trajectory CameraTrajectory.txt
+            python3 /home/user/workspace/integrate.py $d --trajectory CameraTrajectory.txt
 
-popd
-
+            popd
+        fi
+    fi
+done
