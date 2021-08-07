@@ -6,5 +6,5 @@ if [ ! -d "$data_dir" ]; then
     exit 1
 fi
 
-docker run -it -v $data_dir:/home/user/data orbslam
+docker run -it -v $data_dir:/home/user/data integrate
 

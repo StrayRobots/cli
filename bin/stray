@@ -1,6 +1,8 @@
 #!/bin/bash
 set -e
 
+bin_dir="$HOME/.stray/env/bin"
+
 function docker_run_with_display {
     xhost +local:root;
     docker run -e DISPLAY -e QT_X11_NO_MITSHM=1 -v /tmp/.X11-unix:/tmp/.X11-unix:rw $@
@@ -17,10 +19,10 @@ then
 
     if [ "$2" = "generate" ]
     then
-        stray-label-generate "${@:3}"
+        $bin_dir/stray-label-generate "${@:3}"
     elif [ "$2" = "show" ]
     then
-        stray-label-show "${@:3}"
+        $bin_dir/stray-label-show "${@:3}"
     else
         echo "Incorrect verb"
     fi
@@ -33,13 +35,13 @@ then
     fi
     if [ "$2" = "generate" ]
     then
-        stray-model-generate "${@:3}"
+        $bin_dir/stray-model-generate "${@:3}"
     elif [ "$2" = "bake" ]
     then
         i=0
         args=("$@")
         for arg in "$@"
-        do  
+        do
             if [ "${args[i]}" = "--model" ]
             then
                 model=${args[i+1]}
@@ -55,7 +57,7 @@ then
             fi
             i=$((i + 1))
         done
-        
+
         if [ $resume ]
         then
             docker run -v $dataset:/root/workspace/data -v $model:/root/workspace/detectron2-model --gpus all -it  strayrobots/detectron2:latest \
@@ -67,11 +69,11 @@ then
             docker run -v $dataset:/root/workspace/data -v $model:/root/workspace/detectron2-model --gpus all -it  strayrobots/detectron2:latest \
             --dataset /root/workspace/data \
             --model /root/workspace/detectron2-model \
-            --num-gpus $gpus 
+            --num-gpus $gpus
         fi
     elif [ "$2" = "evaluate" ]
     then
-        stray-model-evaluate "${@:3}"
+        $bin_dir/stray-model-evaluate "${@:3}"
     else
         echo "Incorrect verb"
     fi
@@ -92,7 +94,7 @@ then
 
     if [ "$2" = "integrate" ]
     then
-        docker run -it -v $scene_dir:/home/user/data orbslam
+        docker run -it -v $scene_dir:/home/user/data strayrobots/integrate:latest
     elif [ "$2" = "open" ]
     then
         studio $scene_dir
@@ -108,17 +110,17 @@ then
         scene_dir=$3
         target_yaml=$4
         docker_run_with_display -it -v $scene_dir:/root/data/ \
-            -v $target_yaml:/root/workspace/target.yaml calibrate run
+            -v $target_yaml:/root/workspace/target.yaml strayrobots/calibrate:latest run
     elif [ "$2" = "generate" ]
     then
         target_yaml=$3
         shift 2
         docker run -v `pwd`:/root/data/ \
-            -v $target_yaml:/root/workspace/target.yaml calibrate generate
+            -v $target_yaml:/root/workspace/target.yaml strayrobots/calibrate:latest generate
     elif [ "$2" = "scale" ]
     then
         shift 2
-        straylib-scale-calibration $@
+        $bin_dir/straylib-scale-calibration $@
     else
         "Verb $2 not supported by calibration subcommand. Try run or generate."
         exit 1
@@ -128,7 +130,7 @@ then
     if [ "$2" = "import" ]
     then
         shift 2
-        straylib-dataset-import $@
+        $bin_dir/straylib-dataset-import $@
     fi
 else
     echo "No command supplied"
