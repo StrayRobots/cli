@@ -31,20 +31,20 @@ make_wheel() {
 deploy_wheels() {
   pushd "$source_dir/model/" > /dev/null
   make_wheel
-  wheel_file="$(basename $(find -f straymodel-*))"
+  wheel_file="$(basename $(find straymodel-*))"
   echo "wheel: $wheel_file uploading to $s3_bucket/straymodel/$wheel_file"
   upload_public "$wheel_file" "$s3_bucket/straymodel/$wheel_file"
 
   popd > /dev/null
   pushd "$source_dir/label/" > /dev/null
   make_wheel
-  wheel_file="$(basename $(find -f straylabel-*))"
+  wheel_file="$(basename $(find straylabel-*))"
   upload_public "$wheel_file" "$s3_bucket/straylabel/$wheel_file"
   popd > /dev/null
 
   pushd "$source_dir/straylib/" > /dev/null
   make_wheel
-  wheel_file="$(basename $(find -f straylib-*))"
+  wheel_file="$(basename $(find straylib-*))"
   upload_public "$wheel_file" "$s3_bucket/straylabel/$wheel_file"
   popd
 }

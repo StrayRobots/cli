@@ -12,7 +12,7 @@ platform="$(get_platform)"
 endpoint="https://stray-builds.ams3.digitaloceanspaces.com"
 
 download() {
-  curl --proto '=https' --silent --tlsv1.2 --show-error --fail --location "$1" --output "$2"
+  curl --proto '=https' --tlsv1.2 --show-error --fail --location "$1" --output "$2"
 }
 
 install_studio() {
