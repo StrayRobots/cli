@@ -4,30 +4,40 @@
 
 set -e
 
-for d in "/home/user/data/"*; do
-    if [ -d $d ]
-        then
-        if [ -d "$d/scene" ]
-        then
-            echo "Directory $d/scene exists, skipping."
-        else
-            echo "Computing trajectory for scene $d"
+integrate_scene() {
+    echo "Computing trajectory for scene $(basename $1)"
 
-            python3 /home/user/workspace/make_settings.py $d --default-settings /home/user/workspace/default_settings.yaml -o /home/user/workspace/settings.yaml
+    python3 /home/user/workspace/make_settings.py $1 --default-settings /home/user/workspace/default_settings.yaml -o /home/user/workspace/settings.yaml
 
-            pushd /home/user/orbslam/Examples/RGB-D > /dev/null
+    pushd /home/user/orbslam/Examples/RGB-D > /dev/null
 
-            ./o3d ../../Vocabulary/ORBvoc.txt /home/user/workspace/settings.yaml $d
+    ./o3d ../../Vocabulary/ORBvoc.txt /home/user/workspace/settings.yaml $1
 
-            echo "Integrating scene."
+    echo "Integrating scene."
 
-            python3 /home/user/workspace/integrate.py $d --trajectory CameraTrajectory.txt
+    python3 /home/user/workspace/integrate.py $1 --trajectory CameraTrajectory.txt
 
-            echo "Integrating point cloud."
+    echo "Integrating point cloud."
 
-            python3 /home/user/workspace/integrate_pointcloud.py $d
+    python3 /home/user/workspace/integrate_pointcloud.py $1
 
-            popd > /dev/null
+    popd > /dev/null
+}
+
+if [ -d "/home/user/data/color" ]
+then
+    integrate_scene "/home/user/data/"
+else
+    for d in "/home/user/data/"*; do
+        if [ -d $d ]
+            then
+            if [ -d "$d/scene" ]
+            then
+                echo "Directory $(basename $d)/scene exists, skipping."
+            else
+                integrate_scene $d
+            fi
         fi
-    fi
-done
+    done
+fi
+
