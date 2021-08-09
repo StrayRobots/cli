@@ -9,14 +9,11 @@ docker_run_with_display() {
     xhost -local:root;
 }
 
-
 absolute_path() {
     echo "$(cd "$(dirname "$1")"; pwd)/$(basename "$1")"
 }
 
-
-if [ "$1" = "label" ]
-then
+label() {
     if [ $# -lt 2 ]
         then
             echo "Not enough arguments supplied"
@@ -32,8 +29,9 @@ then
     else
         echo "Incorrect verb"
     fi
-elif [ "$1" = "model" ]
-then
+}
+
+model() {
     if [ $# -lt 2 ]
         then
             echo "Not enough arguments supplied"
@@ -83,9 +81,9 @@ then
     else
         echo "Incorrect verb"
     fi
+}
 
-elif [ "$1" = "studio" ]
-then
+studio() {
     if [ $# != 3 ]
     then
         echo "Usage: stray studio open/integrate <path-to-scene>"
@@ -108,8 +106,9 @@ then
         echo "Verb $2 not supported by studio subcommand."
         exit 1
     fi
-elif [ "$1" = "calibration" ]
-then
+}
+
+calibration() {
     if [ "$2" = "run" ]
     then
         #TODO: input and parse these as flags and not positional arguments.
@@ -131,13 +130,31 @@ then
         "Verb $2 not supported by calibration subcommand. Try run or generate."
         exit 1
     fi
-elif [ "$1" = "dataset" ]
-then
+}
+
+dataset() {
     if [ "$2" = "import" ]
     then
         shift 2
         $bin_dir/straylib-dataset-import $@
     fi
+}
+
+if [ "$1" = "label" ]
+then
+    label $@
+elif [ "$1" = "model" ]
+then
+    model $@
+elif [ "$1" = "studio" ]
+then
+    studio $@
+elif [ "$1" = "calibration" ]
+then
+    calibration $@
+elif [ "$1" = "dataset" ]
+then
+    dataset $@
 else
     echo "No command supplied"
 fi
