@@ -52,7 +52,7 @@ def write_depth(dataset, every, depth_out_dir, width, height):
         depth = resize_depth(depth, width, height)
         cv2.imwrite(os.path.join(depth_out_dir, number + '.png'), depth)
 
-def write_intrinsics(dataset, out, width, height, full_width, full_height):
+def write_intrinsic_params(dataset, out, width, height, full_width, full_height):
     intrinsics = np.loadtxt(os.path.join(dataset, 'camera_matrix.csv'), delimiter=',')
     data = {}
     intrinsics_scaled = _resize_camera_matrix(intrinsics, width / full_width, height / full_height)
@@ -73,7 +73,8 @@ def write_intrinsics(dataset, out, width, height, full_width, full_height):
 @click.option('--every', type=int, default=1, help="Keep only every n-th frame. 1 keeps every frame, 2 keeps every other and so forth.")
 @click.option('--width', '-w', type=int, default=640)
 @click.option('--height', '-h', type=int, default=480)
-def main(scenes, out, every, width, height):
+@click.option('--intrinsics', type=str, help="Path to the intrinsic parameters to use (for example calibrated parameters from stray calibration run). Defaults to factory parameters.")
+def main(scenes, out, every, width, height, intrinsics):
     """
     Command for importing scenes from the Stray Scanner format to the Stray Dataset format.
 
@@ -84,7 +85,7 @@ def main(scenes, out, every, width, height):
     os.makedirs(out, exist_ok=True)
     existing_scenes = os.listdir(out)
     for scene_path in scenes:
-        scene_base_name = os.path.basename(scene_path)
+        scene_base_name = os.path.basename(scene_path.rstrip("/"))
         if scene_base_name[0] == ".":
             continue
         if scene_base_name in existing_scenes:
@@ -95,16 +96,27 @@ def main(scenes, out, every, width, height):
 
         rgb_out = os.path.join(target_path, 'color/')
         depth_out = os.path.join(target_path, 'depth/')
-        os.makedirs(rgb_out)
-        os.makedirs(depth_out)
 
-        write_depth(scene_path, every, depth_out, width, height)
-        full_width, full_height = write_frames(
-            scene_path, every, rgb_out, width, height)
-        write_intrinsics(scene_path, target_path, width,
+        if intrinsics:
+            print("Writing intrinsics.")
+            write_intrinsic_params(scene_path, target_path, width,
                          height, full_width, full_height)
-        shutil.copy(os.path.join(scene_path, 'rgb.mp4'),
+
+        if os.path.exists(os.path.join(scene_path, "depth")):
+            os.makedirs(depth_out)
+            write_depth(scene_path, every, depth_out, width, height)
+        else:
+            print("Warning: no depth frames found, skipping.")
+
+        if os.path.exists(os.path.join(scene_path, "rgb.mp4")):
+            os.makedirs(rgb_out)
+            full_width, full_height = write_frames(
+                scene_path, every, rgb_out, width, height)
+            shutil.copy(os.path.join(scene_path, 'rgb.mp4'),
                     os.path.join(target_path, 'rgb.mp4'))
+        else:
+            print("Warning: no rgb.mp4 found, skipping.")
+
     print("Done.")
 
 if __name__ == "__main__":
