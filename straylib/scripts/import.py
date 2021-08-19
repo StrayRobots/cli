@@ -110,11 +110,14 @@ def main(scenes, out, every, width, height, intrinsics):
                 os.path.join(target_path, 'rgb.mp4'))
 
         if intrinsics is None:
-            print("Writing factory intrinsics.")
-            write_intrinsic_params(scene_path, target_path, width,
-                         height, full_width, full_height)
+            if os.path.exists(os.path.join(scene_path, 'camera_matrix.csv')):
+                print("Writing factory intrinsics.", end='\n')
+                write_intrinsic_params(scene_path, target_path, width,
+                            height, full_width, full_height)
+            else:
+                print("Warning: no camera matrix found, skipping.")
         else:
-            print("Writing intrinsics.")
+            print("Writing intrinsics.", end='\n')
             shutil.copy(intrinsics,
                     os.path.join(target_path, 'camera_intrinsics.json'))
 
