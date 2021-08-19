@@ -97,25 +97,27 @@ def main(scenes, out, every, width, height, intrinsics):
         rgb_out = os.path.join(target_path, 'color/')
         depth_out = os.path.join(target_path, 'depth/')
 
-        if intrinsics:
-            print("Writing intrinsics.")
-            write_intrinsic_params(scene_path, target_path, width,
-                         height, full_width, full_height)
-
         if os.path.exists(os.path.join(scene_path, "depth")):
             os.makedirs(depth_out)
             write_depth(scene_path, every, depth_out, width, height)
         else:
             print("Warning: no depth frames found, skipping.")
 
-        if os.path.exists(os.path.join(scene_path, "rgb.mp4")):
-            os.makedirs(rgb_out)
-            full_width, full_height = write_frames(
-                scene_path, every, rgb_out, width, height)
-            shutil.copy(os.path.join(scene_path, 'rgb.mp4'),
-                    os.path.join(target_path, 'rgb.mp4'))
+        os.makedirs(rgb_out)
+        full_width, full_height = write_frames(
+            scene_path, every, rgb_out, width, height)
+        shutil.copy(os.path.join(scene_path, 'rgb.mp4'),
+                os.path.join(target_path, 'rgb.mp4'))
+
+        if intrinsics is None:
+            print("Writing factory intrinsics.")
+            write_intrinsic_params(scene_path, target_path, width,
+                         height, full_width, full_height)
         else:
-            print("Warning: no rgb.mp4 found, skipping.")
+            print("Writing intrinsics.")
+            shutil.copy(intrinsics,
+                    os.path.join(target_path, 'camera_intrinsics.json'))
+
 
     print("Done.")
 
