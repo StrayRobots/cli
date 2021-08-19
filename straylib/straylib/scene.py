@@ -151,6 +151,12 @@ class Scene:
         images = self.image_filepaths()
         return Image.open(images[0]).size
 
+    def depth_filepaths(self):
+        paths = os.listdir(os.path.join(self.scene_path, 'depth'))
+        paths = [path for path in paths if path.lower().split(".")[-1] == 'png']
+        paths.sort()
+        return list(map(lambda p: os.path.join(self.scene_path, 'depth', p), paths))
+
     def objects(self):
         """
         Returns a trimesh for each bounding box in the scene.

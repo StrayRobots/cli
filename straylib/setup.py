@@ -12,6 +12,12 @@ setup(
     ],
     packages=find_packages(),
     python_requires=">=3.6",
+    install_requires=[
+        'trimesh',
+        'scipy',
+        'pillow',
+        'numpy'
+    ],
     entry_points={
         'console_scripts': [
             'straylib-scale-calibration=scripts.scale_calibration:main',

@@ -33,7 +33,7 @@ RUN wget https://bootstrap.pypa.io/get-pip.py
 RUN python3 get-pip.py
 RUN rm get-pip.py
 
-RUN pip3 install --user open3d scipy numpy PyYAML && rm -rf /user/.cache
+RUN pip3 install --user open3d opencv-python scipy numpy PyYAML && rm -rf /user/.cache
 
 RUN git clone https://github.com/stevenlovegrove/Pangolin.git /home/user/pangolin
 RUN cd /home/user/pangolin && mkdir build && cd build && \
@@ -55,11 +55,15 @@ RUN cd /home/user/orbslam/Vocabulary && tar -xf ORBvoc.txt.tar.gz
 RUN cd /home/user/orbslam/ && mkdir build && cd build && cmake .. -DCMAKE_BUILD_TYPE=Release && \
   make -j2 o3d
 
+RUN wget https://stray-builds.ams3.digitaloceanspaces.com/straylib/straylib-0.0.1-py36-none-any.whl && \
+  pip3 install --user straylib-0.0.1-py36-none-any.whl && rm straylib-0.0.1-py36-none-any.whl #
+
 RUN mkdir /home/user/workspace
 WORKDIR /home/user/workspace
 
 COPY ./entrypoint.sh /home/user/workspace/entrypoint.sh
 COPY integrate.py /home/user/workspace/integrate.py
+COPY integrate_pointcloud.py /home/user/workspace/integrate_pointcloud.py
 COPY make_settings.py /home/user/workspace/make_settings.py
 COPY default_settings.yaml /home/user/workspace/default_settings.yaml
 
