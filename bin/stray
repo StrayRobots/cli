@@ -3,12 +3,6 @@ set -e
 
 bin_dir="$HOME/.stray/env/bin"
 
-docker_run_with_display() {
-    xhost +local:root;
-    docker run -e DISPLAY -e QT_X11_NO_MITSHM=1 -v /tmp/.X11-unix:/tmp/.X11-unix:rw $@
-    xhost -local:root;
-}
-
 absolute_path() {
     echo "$(cd "$(dirname "$1")"; pwd)/$(basename "$1")"
 }
