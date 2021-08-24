@@ -67,8 +67,9 @@ class Scene:
         annotation_file = os.path.join(self.scene_path, 'annotations.json')
         if not os.path.exists(annotation_file):
             self.annotations = {}
-        with open(annotation_file, 'rt') as f:
-            self.annotations = json.load(f)
+        else:
+            with open(annotation_file, 'rt') as f:
+                self.annotations = json.load(f)
 
     def _read_trajectory(self):
         self._poses = []
