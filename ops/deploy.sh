@@ -45,7 +45,7 @@ deploy_wheels() {
   pushd "$source_dir/straylib/" > /dev/null
   make_wheel
   wheel_file="$(basename $(find straylib-*))"
-  upload_public "$wheel_file" "$s3_bucket/straylabel/$wheel_file"
+  upload_public "$wheel_file" "$s3_bucket/straylib/$wheel_file"
   popd
 }
 
