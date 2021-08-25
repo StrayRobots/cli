@@ -42,7 +42,7 @@ RUN cd /home/user/pangolin && mkdir build && cd build && \
   make install
 
 RUN git clone https://github.com/StrayRobots/ORB_SLAM3.git /home/user/orbslam && \
-  cd /home/user/orbslam && git checkout 7db29949f898339ed17e8eaa68f75599e43bca5d
+  cd /home/user/orbslam && git checkout 8aa1cf67e10aa45f09cce1965bae0c3ae40e06fd
 
 RUN cd /home/user/orbslam/Thirdparty/DBoW2 && mkdir build && cd build && cmake .. -DCMAKE_BUILD_TYPE=Release \
   && make -j10
@@ -68,4 +68,5 @@ COPY make_settings.py /home/user/workspace/make_settings.py
 COPY default_settings.yaml /home/user/workspace/default_settings.yaml
 
 ENTRYPOINT ["/home/user/workspace/entrypoint.sh"]
+CMD []
 

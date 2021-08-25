@@ -77,13 +77,26 @@ model() {
     fi
 }
 
-studio() {
-    if [ $# != 3 ]
+studio-integrate() {
+    i=$((i + 1))
+    args=("$@")
+    for arg in "$@"
+    do
+        if [ "${args[i]}" = "--settings" ]
+        then
+            settings=${args[i+1]}
+        fi
+        i=$((i + 1))
+    done
+    if [ -n "$settings" ]
     then
-        echo "Usage: stray studio open/integrate <path-to-scene>"
-        exit 1
+        docker run -it -v $scene_dir:/home/user/data strayrobots/integrate:latest --settings $settings
+    else
+        docker run -it -v $scene_dir:/home/user/data strayrobots/integrate:latest
     fi
+}
 
+studio() {
     scene_dir="$(absolute_path $3)"
     if [ ! -d "$scene_dir" ]; then
         echo "data directory does not exist: $scene_dir"
@@ -92,7 +105,8 @@ studio() {
 
     if [ "$2" = "integrate" ]
     then
-        docker run -it -v $scene_dir:/home/user/data strayrobots/integrate:latest
+        shift
+        studio-integrate $scene_dir $@
     elif [ "$2" = "open" ]
     then
         studio $scene_dir
