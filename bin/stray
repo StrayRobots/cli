@@ -7,7 +7,7 @@ absolute_path() {
     echo "$(cd "$(dirname "$1")"; pwd)/$(basename "$1")"
 }
 
-label() {
+label-subcommand() {
     if [ $# -lt 2 ]
         then
             echo "Not enough arguments supplied"
@@ -25,7 +25,7 @@ label() {
     fi
 }
 
-model() {
+model-subcommand() {
     if [ $# -lt 2 ]
         then
             echo "Not enough arguments supplied"
@@ -96,7 +96,7 @@ studio-integrate() {
     fi
 }
 
-studio() {
+studio-subcommand() {
     scene_dir="$(absolute_path $3)"
     if [ ! -d "$scene_dir" ]; then
         echo "data directory does not exist: $scene_dir"
@@ -116,7 +116,7 @@ studio() {
     fi
 }
 
-calibration() {
+calibration-subcommand() {
     if [ "$2" = "run" ]
     then
         #TODO: input and parse these as flags and not positional arguments.
@@ -146,7 +146,7 @@ calibration() {
     fi
 }
 
-dataset() {
+dataset-subcommand() {
     if [ "$2" = "import" ]
     then
         shift 2
@@ -156,19 +156,19 @@ dataset() {
 
 if [ "$1" = "label" ]
 then
-    label $@
+    label-subcommand $@
 elif [ "$1" = "model" ]
 then
-    model $@
+    model-subcommand $@
 elif [ "$1" = "studio" ]
 then
-    studio $@
+    studio-subcommand $@
 elif [ "$1" = "calibration" ]
 then
-    calibration $@
+    calibration-subcommand $@
 elif [ "$1" = "dataset" ]
 then
-    dataset $@
+    dataset-subcommand $@
 else
     echo "No command supplied"
 fi
