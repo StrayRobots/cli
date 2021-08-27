@@ -8,19 +8,27 @@ function src_ros() {
 }
 src_ros
 
+
+calibrate_cameras() {
+  python /root/workspace/convert_format.py /root/data/ --out /root/workspace/data
+
+  kalibr_bagcreater --folder /root/workspace/data --out /root/workspace/data/bag.bag
+
+  kalibr_calibrate_cameras --bag /root/workspace/data/bag.bag --target /root/workspace/target.yaml --topics /cam0/image_raw --models pinhole-equi
+
+  mv camchain-rootworkspacedatabag.yaml camchain-bag.yaml
+
+  python /root/workspace/extract_calibration.py --calibration camchain-bag.yaml --out /root/data/camera_intrinsics.json
+
+  mv report-cam-rootworkspacedatabag.pdf /root/data/calibration-report.pdf
+}
+
 if [ "$1" = "run" ]
 then
 
   mkdir -p /root/workspace/data
 
-  python /root/workspace/convert_format.py /root/data/ --out /root/workspace/data
-
-  kalibr_bagcreater --folder /root/workspace/data --out /root/workspace/data/bag.bag
-  kalibr_calibrate_cameras --bag /root/workspace/data/bag.bag --target /root/workspace/target.yaml --topics /cam0/image_raw --models pinhole-equi
-  mv camchain-rootworkspacedatabag.yaml camchain-bag.yaml
-  python /root/workspace/extract_calibration.py --calibration camchain-bag.yaml --out /root/data/camera_intrinsics.json
-
-  mv report-cam-rootworkspacedatabag.pdf /root/data/calibration-report.pdf
+  calibrate_cameras
 
   rm -rf /root/workspace/data
 elif [ "$1" = "generate" ]
