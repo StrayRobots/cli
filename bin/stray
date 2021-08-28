@@ -3,17 +3,11 @@ set -e
 
 bin_dir="$HOME/.stray/env/bin"
 
-docker_run_with_display() {
-    xhost +local:root;
-    docker run -e DISPLAY -e QT_X11_NO_MITSHM=1 -v /tmp/.X11-unix:/tmp/.X11-unix:rw $@
-    xhost -local:root;
-}
-
 absolute_path() {
     echo "$(cd "$(dirname "$1")"; pwd)/$(basename "$1")"
 }
 
-label() {
+label-subcommand() {
     if [ $# -lt 2 ]
         then
             echo "Not enough arguments supplied"
@@ -31,7 +25,7 @@ label() {
     fi
 }
 
-model() {
+model-subcommand() {
     if [ $# -lt 2 ]
         then
             echo "Not enough arguments supplied"
@@ -83,13 +77,26 @@ model() {
     fi
 }
 
-studio() {
-    if [ $# != 3 ]
+studio-integrate() {
+    i=$((i + 1))
+    args=("$@")
+    for arg in "$@"
+    do
+        if [ "${args[i]}" = "--settings" ]
+        then
+            settings=${args[i+1]}
+        fi
+        i=$((i + 1))
+    done
+    if [ -n "$settings" ]
     then
-        echo "Usage: stray studio open/integrate <path-to-scene>"
-        exit 1
+        docker run -it -v $scene_dir:/home/user/data strayrobots/integrate:latest --settings $settings
+    else
+        docker run -it -v $scene_dir:/home/user/data strayrobots/integrate:latest
     fi
+}
 
+studio-subcommand() {
     scene_dir="$(absolute_path $3)"
     if [ ! -d "$scene_dir" ]; then
         echo "data directory does not exist: $scene_dir"
@@ -98,7 +105,8 @@ studio() {
 
     if [ "$2" = "integrate" ]
     then
-        docker run -it -v $scene_dir:/home/user/data strayrobots/integrate:latest
+        shift
+        studio-integrate $scene_dir $@
     elif [ "$2" = "open" ]
     then
         studio $scene_dir
@@ -108,13 +116,19 @@ studio() {
     fi
 }
 
-calibration() {
+calibration-subcommand() {
     if [ "$2" = "run" ]
     then
         #TODO: input and parse these as flags and not positional arguments.
         scene_dir="$(absolute_path $3)"
         target_yaml=$4
-        docker_run_with_display -it -v $scene_dir:/root/data/ \
+        if [ "$target_yaml" = "" ] || [ "$scene_dir" = "" ]; then
+            echo "Both scene and target needs to be provided."
+            echo ""
+            echo "Usage: stray calibration run <calibration-scene> <target.yaml>"
+            exit 1
+        fi
+        docker run -it -v $scene_dir:/root/data/ \
             -v $target_yaml:/root/workspace/target.yaml strayrobots/calibrate:latest run
     elif [ "$2" = "generate" ]
     then
@@ -132,7 +146,7 @@ calibration() {
     fi
 }
 
-dataset() {
+dataset-subcommand() {
     if [ "$2" = "import" ]
     then
         shift 2
@@ -142,19 +156,19 @@ dataset() {
 
 if [ "$1" = "label" ]
 then
-    label $@
+    label-subcommand $@
 elif [ "$1" = "model" ]
 then
-    model $@
+    model-subcommand $@
 elif [ "$1" = "studio" ]
 then
-    studio $@
+    studio-subcommand $@
 elif [ "$1" = "calibration" ]
 then
-    calibration $@
+    calibration-subcommand $@
 elif [ "$1" = "dataset" ]
 then
-    dataset $@
+    dataset-subcommand $@
 else
     echo "No command supplied"
 fi
