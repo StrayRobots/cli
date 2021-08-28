@@ -26,11 +26,13 @@ def write_frames(dataset, every, rgb_out_dir, width, height):
             continue
         print(f"Writing rgb frame {i:06}" + " " * 10, end='\r')
         frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
+        full_width = frame.shape[1]
+        full_height = frame.shape[0]
         frame = cv2.resize(frame, (width, height))
         frame_path = os.path.join(rgb_out_dir, f"{i:06}.jpg")
         params = [int(cv2.IMWRITE_JPEG_QUALITY), 90]
         cv2.imwrite(frame_path, frame, params)
-    return frame.shape[1], frame.shape[0]
+    return full_width, full_height
 
 def resize_depth(depth, width, height):
     out = cv2.resize(depth, (width, height), interpolation=cv2.INTER_NEAREST_EXACT)
@@ -44,8 +46,10 @@ def write_depth(dataset, every, depth_out_dir, width, height):
     for i, filename in enumerate(files):
         if '.npy' not in filename or i % every != 0:
             continue
-        print(f"Writing depth frame {filename}", end='\r')
         number, _ = filename.split('.')
+        if not os.path.exists(os.path.join(confidence_dir, number + '.png')):
+            continue
+        print(f"Writing depth frame {filename}", end='\r')
         depth = np.load(os.path.join(depth_dir_in, filename))
         confidence = cv2.imread(os.path.join(confidence_dir, number + '.png'))[:, :, 0]
         depth[confidence < 2] = 0
@@ -96,13 +100,12 @@ def main(scenes, out, every, width, height, intrinsics):
 
         rgb_out = os.path.join(target_path, 'color/')
         depth_out = os.path.join(target_path, 'depth/')
-
+   
         if os.path.exists(os.path.join(scene_path, "depth")):
             os.makedirs(depth_out)
             write_depth(scene_path, every, depth_out, width, height)
         else:
             print("Warning: no depth frames found, skipping.")
-
         os.makedirs(rgb_out)
         full_width, full_height = write_frames(
             scene_path, every, rgb_out, width, height)

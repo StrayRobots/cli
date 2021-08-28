@@ -135,23 +135,23 @@ class Scene:
 
     @property
     def metadata(self):
-        metadata_path = os.path.join(self.scene_path, "metadata.json")
+        metadata_path = os.path.join(os.path.dirname(self.scene_path.rstrip("/")), "metadata.json")
         if os.path.exists(metadata_path) and self._metadata is None:
             with open(metadata_path, 'rt') as f:
                 self._metadata = json.load(f)
         return self._metadata
 
-    def image_filepaths(self):
+    def get_image_filepaths(self):
         paths = os.listdir(os.path.join(self.scene_path, 'color'))
         paths = [path for path in paths if path.lower().split(".")[-1] in ['png', 'jpg', 'jpeg']]
         paths.sort()
         return list(map(lambda p: os.path.join(self.scene_path, 'color', p), paths))
 
     def image_size(self):
-        images = self.image_filepaths()
+        images = self.get_image_filepaths()
         return Image.open(images[0]).size
 
-    def depth_filepaths(self):
+    def get_depth_filepaths(self):
         paths = os.listdir(os.path.join(self.scene_path, 'depth'))
         paths = [path for path in paths if path.lower().split(".")[-1] == 'png']
         paths.sort()
