@@ -62,7 +62,7 @@ def main(scene, start, end):
     depth_frames = sorted([f for f in os.listdir(depth_dir) if '.png' in f])
 
     if end is None:
-        end = max(len(rgb_frames), len(depth_frames))
+        end = min(len(rgb_frames), len(depth_frames))
 
     new_frames = []
     for i in list(range(0, start)) + list(range(end, max(frame_number(rgb_frames[-1]), frame_number(depth_frames[-1])) + 1)):
