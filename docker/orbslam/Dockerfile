@@ -44,7 +44,7 @@ RUN cd /home/user/pangolin && git checkout dd801d244db3a8e27b7fe8020cd751404aa81
 
 #TODO checkout the correct commit from main
 RUN git clone https://github.com/StrayRobots/ORB_SLAM3.git /home/user/orbslam && \
-  cd /home/user/orbslam && git fetch && git checkout debug-view-wip
+  cd /home/user/orbslam && git fetch && git checkout master
 
 
 RUN cd /home/user/orbslam/Thirdparty/DBoW2 && mkdir build && cd build && cmake .. -DCMAKE_BUILD_TYPE=Release \
