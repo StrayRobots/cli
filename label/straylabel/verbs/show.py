@@ -9,10 +9,9 @@ import click
 @click.command()
 @click.argument('dataset', nargs=-1)
 @click.option('--primitive', default="bbox_2d", help='Primitive type labels to show/create.')
-@click.option('--box_from_mesh', default=False, is_flag=True, help='Use the mesh to determine the bounding box')
+@click.option('--bbox-from-mesh', default=False, is_flag=True, help='Use the mesh to determine the bounding box')
 @click.option('--save', default=False, is_flag=True, help='Save labeled examples to <scene>/<primitive>.')
 @click.option('--rate', '-r', default=30.0, help="Frames per second to show frames.")
-
 def show(**flags):
     if flags["primitive"] != 'bbox_2d':
         raise NotImplementedError(f"Unknown label type {flags['primitive']}.")
@@ -39,7 +38,7 @@ def show(**flags):
             filename = os.path.basename(image_path)
             print(f"Image {filename}" + " " * 10, end='\r')
             image = cv2.imread(image_path)
-            
+
             for obj, bbox in zip(objects, bboxes):
                 if flags["box_from_mesh"]:
                     bbox_flat = bbox_2d_from_mesh(camera, T_WC, obj)
