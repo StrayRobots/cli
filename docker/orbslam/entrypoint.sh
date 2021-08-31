@@ -5,7 +5,28 @@
 set -e
 
 integrate_scene() {
-    python3 /home/user/workspace/make_settings.py $1 --default-settings /home/user/workspace/default_settings.yaml -o /home/user/workspace/settings.yaml
+    i=$((i + 1))
+    args=("$@")
+    echo "args: $@"
+    for arg in "$@"
+    do
+        if [ "${args[i]}" = "--settings" ]
+        then
+            settings=${args[i+1]}
+        fi
+        i=$((i + 1))
+    done
+    echo "Settings $settings"
+    if [ -n "$settings" ]
+    then
+        echo "Overriding SLAM settings"
+        python3 /home/user/workspace/make_settings.py $1 --default-settings /home/user/workspace/default_settings.yaml \
+            --settings $settings \
+            -o /home/user/workspace/settings.yaml
+    else
+        python3 /home/user/workspace/make_settings.py $1 --default-settings /home/user/workspace/default_settings.yaml \
+            -o /home/user/workspace/settings.yaml
+    fi
 
     pushd /home/user/orbslam/Examples/RGB-D > /dev/null
 
@@ -25,7 +46,7 @@ integrate_scene() {
 if [ -d "/home/user/data/color" ]
 then
     echo "Computing trajectory for scene."
-    integrate_scene "/home/user/data/"
+    integrate_scene "/home/user/data/" $@
 else
     for d in "/home/user/data/"*; do
         if [ -d $d ]
@@ -36,7 +57,7 @@ else
             else
                 echo "Computing trajectory for scene $(basename $1)"
 
-                integrate_scene $d
+                integrate_scene $d $@
             fi
         fi
     done

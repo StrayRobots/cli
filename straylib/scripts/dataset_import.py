@@ -4,6 +4,7 @@ import shutil
 import re
 import numpy as np
 import json
+import csv
 import cv2
 from skvideo import io
 
@@ -20,8 +21,8 @@ def _resize_camera_matrix(camera_matrix, scale_x, scale_y):
 
 def write_frames(dataset, every, rgb_out_dir, width, height):
     rgb_video = os.path.join(dataset, 'rgb.mp4')
-    video = io.vreader(rgb_video)
-    for i, frame in enumerate(video):
+    video = io.FFmpegReader(rgb_video)
+    for i, frame in enumerate(video.nextFrame()):
         if i % every != 0:
             continue
         print(f"Writing rgb frame {i:06}" + " " * 10, end='\r')
@@ -30,6 +31,7 @@ def write_frames(dataset, every, rgb_out_dir, width, height):
         frame_path = os.path.join(rgb_out_dir, f"{i:06}.jpg")
         params = [int(cv2.IMWRITE_JPEG_QUALITY), 90]
         cv2.imwrite(frame_path, frame, params)
+    video.close()
     return frame.shape[1], frame.shape[0]
 
 def resize_depth(depth, width, height):
@@ -72,6 +74,29 @@ def write_intrinsics(dataset, out, width, height, full_width, full_height):
     with open(os.path.join(out, 'camera_intrinsics.json'), 'wt') as f:
         f.write(json.dumps(data, indent=4, sort_keys=True))
 
+
+def copy_rgb(scene_path, target_path):
+    shutil.copy(os.path.join(scene_path, 'rgb.mp4'),
+            os.path.join(target_path, 'rgb.mp4'))
+
+def copy_imu(scene_path, target_path):
+    imu_csv = os.path.join(scene_path, 'imu.csv')
+    if os.path.exists(imu_csv):
+        shutil.copy(imu_csv, os.path.join(target_path, 'imu.csv'))
+
+def copy_frame_metadata(scene_path, target_path):
+    odometry_csv = os.path.join(scene_path, 'odometry.csv')
+    with open(odometry_csv, 'rt') as in_file:
+        reader = csv.reader(in_file)
+        header = next(reader)
+        with open(os.path.join(target_path, 'frames.csv'), 'wt') as out_file:
+            writer = csv.writer(out_file)
+            writer.writerow(['timestamp', 'frame'])
+            for line in reader:
+                timestamp = line[0]
+                frame = line[1]
+                writer.writerow([timestamp, frame])
+
 @click.command()
 @click.argument('scenes', nargs=-1)
 @click.option('--out', '-o', required=True, help="Dataset directory where to place the imported files.", type=str)
@@ -107,9 +132,12 @@ def main(scenes, out, every, width, height, intrinsics):
         write_depth(scene_path, every, depth_out, width, height)
         full_width, full_height = write_frames(
             scene_path, every, rgb_out, width, height)
+
         write_intrinsics(scene_path, target_path, width,
                          height, full_width, full_height)
-        shutil.copy(os.path.join(scene_path, 'rgb.mp4'), os.path.join(target_path, 'rgb.mp4'))
+        copy_rgb(scene_path, target_path)
+        copy_imu(scene_path, target_path)
+        copy_frame_metadata(scene_path, target_path)
 
         if intrinsics is None:
             if os.path.exists(os.path.join(scene_path, 'camera_matrix.csv')):

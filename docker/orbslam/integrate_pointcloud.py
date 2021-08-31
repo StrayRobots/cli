@@ -9,7 +9,7 @@ from straylib.scene import Scene
 def read_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('scene')
-    parser.add_argument('--frames-per-fragment', '-f', type=int, default=100)
+    parser.add_argument('--frames-per-fragment', '-f', type=int, default=50)
     parser.add_argument('--voxel-size', type=float, default=0.025)
     return parser.parse_args()
 

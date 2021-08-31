@@ -10,6 +10,7 @@ def read_args():
     parser.add_argument('--default-settings', type=str, required=True)
     parser.add_argument('--out', '-o', type=str, default='settings.yaml')
     parser.add_argument('--debug', action='store_true')
+    parser.add_argument('--settings', type=str, help="SLAM settings to override.", default=None)
     return parser.parse_args()
 
 def main():
@@ -34,7 +35,7 @@ def main():
     settings['Camera.fps'] = intrinsics.get('fps', 30.0)
 
     if (intrinsics.get('camera_model', 'pinhole').lower() == 'pinhole' and
-            intrinsics.get('distortion_model', 'KannalaBrandt').lower() == 'kannalabrandt'):
+            intrinsics.get('distortion_model', '').lower() == 'kannalabrandt'):
         distortion_coeffs = intrinsics['distortion_coefficients']
         settings['Camera.type'] = 'KannalaBrandt8'
         settings['Camera.k1'] = distortion_coeffs[0]
@@ -46,8 +47,17 @@ def main():
         intrinsics.get('distortion_model', None) == None):
         print("Warning: no distortion coefficients set.")
         settings['Camera.type'] = 'PinHole'
+        settings['Camera.k1'] = 0.0
+        settings['Camera.k2'] = 0.0
+        settings['Camera.p1'] = 0.0
+        settings['Camera.p2'] = 0.0
     else:
         raise ValueError("Unknown camera model.")
+
+    if flags.settings is not None and os.path.exists(flags.settings):
+        with open(flags.settings, 'rt') as f:
+            override = yaml.load(f, Loader=yaml.SafeLoader)
+            settings.update(override)
 
     with open(flags.out, 'wt') as f:
         # ORBSlam reads the file with opencv which needs this.
