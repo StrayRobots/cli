@@ -2,10 +2,23 @@ import numpy as np
 from detectron2 import structures
 from straylib.scene import Scene
 
-def compute_image_bbox(camera, T_WC, object_mesh):
+def bbox_2d_from_mesh(camera, T_WC, object_mesh):
     T_CW = np.linalg.inv(T_WC)
     vertices = object_mesh.vertices
     image_points = camera.project(vertices, T_CW)
+    upper_left = image_points.min(axis=0)
+    lower_right = image_points.max(axis=0)
+    return upper_left.tolist() + lower_right.tolist()
+
+def bbox_2d_from_bbox_3d(camera, T_WC, bbox_3d):
+    T_CW = np.linalg.inv(T_WC)
+    size = bbox_3d.dimensions
+    corners_world = []
+    for x_bbox in [-size[0]/2, size[0]/2]:
+        for y_bbox in [-size[1]/2, size[1]/2]:
+            for z_bbox in [-size[2]/2, size[2]/2]:
+                corners_world.append(bbox_3d.position + bbox_3d.orientation.as_matrix()@np.array([x_bbox, y_bbox, z_bbox]))
+    image_points = camera.project(np.array(corners_world), T_CW)
     upper_left = image_points.min(axis=0)
     lower_right = image_points.max(axis=0)
     return upper_left.tolist() + lower_right.tolist()
@@ -68,7 +81,7 @@ def get_detectron2_dataset_function(scene_paths, dataset_metadata):
                 for obj, bbox in zip(objects, bounding_boxes):
                     annotation = {
                         'category_id': dataset_metadata['instance_category_mapping'][f"instance_{bbox.instance_id}"],
-                        'bbox': compute_image_bbox(camera, T_WC, obj),
+                        'bbox': bbox_2d_from_mesh(camera, T_WC, obj),
                         'bbox_mode': structures.BoxMode.XYXY_ABS.value
                     }
                     if metadata is not None:
