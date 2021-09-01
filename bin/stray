@@ -129,14 +129,42 @@ calibration-subcommand() {
         #TODO: input and parse these as flags and not positional arguments.
         scene_dir="$(absolute_path $3)"
         target_yaml=$4
-        if [ "$target_yaml" = "" ] || [ "$scene_dir" = "" ]; then
-            echo "Both scene and target needs to be provided."
-            echo ""
-            echo "Usage: stray calibration run <calibration-scene> <target.yaml>"
-            exit 1
+        i=0
+        args=("$@")
+        for arg in "$@"
+        do
+            if [ "${args[i]}" = "--imu-noise" ]
+            then
+                calibrate_imu_noise=true
+            elif [ "${args[i]}" = "--camera-imu" ]
+            then
+                calibrate_camera_imu=true
+            elif [ "${args[i]}" = "--target" ]
+            then
+                target_yaml=$(absolute_path ${args[i+1]})
+            elif [ "${args[i]}" = "--imu" ]
+            then
+                imu_yaml=$(absolute_path ${args[i+1]})
+            elif [ "${args[i]}" = "--camera" ]
+            then
+                camera_yaml=$(absolute_path ${args[i+1]})
+            fi
+            i=$((i + 1))
+        done
+        if [ "$calibrate_camera_imu" = true ]
+        then
+            docker run -v $scene_dir:/root/data/ -v $target_yaml:/root/workspace/target.yaml \
+                -v $imu_yaml:/root/workspace/imu.yaml -v $camera_yaml:/root/workspace/camera.yaml -it strayrobots/calibrate:latest run $@
+        else
+            if [ "$target_yaml" = "" ] || [ "$scene_dir" = "" ]; then
+                echo "Both scene and target needs to be provided."
+                echo ""
+                echo "Usage: stray calibration run <calibration-scene> <target.yaml>"
+                exit 1
+            fi
+            docker run -it -v $scene_dir:/root/data/ \
+                -v $target_yaml:/root/workspace/target.yaml calibrate run # strayrobots/calibrate:latest run
         fi
-        docker run -it -v $scene_dir:/root/data/ \
-            -v $target_yaml:/root/workspace/target.yaml strayrobots/calibrate:latest run
     elif [ "$2" = "generate" ]
     then
         target_yaml=$3

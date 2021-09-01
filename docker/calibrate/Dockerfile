@@ -42,10 +42,12 @@ RUN mkdir -p $KALIBR_WORKSPACE/src &&\
 	catkin config --extend /opt/ros/kinetic &&\
 	catkin config --cmake-args -DCMAKE_BUILD_TYPE=Release
 
-RUN cd $KALIBR_WORKSPACE/src &&\
-	git clone https://github.com/StrayRobots/Kalibr.git && \
-	git clone https://github.com/A1R0B0T/code_utils && \
-	git clone https://github.com/gaowenliang/imu_utils
+WORKDIR "$KALIBR_WORKSPACE"
+
+RUN cd $KALIBR_WORKSPACE/src && git clone https://github.com/StrayRobots/Kalibr.git && \
+	cd Kalibr && git checkout 777cda4daafc996da794e5ea2762a7004973cf99
+
+RUN cd $KALIBR_WORKSPACE/src && git clone https://github.com/A1R0B0T/code_utils && git clone https://github.com/gaowenliang/imu_utils
 
 RUN cd $KALIBR_WORKSPACE &&\
 	catkin build -DCMAKE_BUILD_TYPE=Release code_utils
@@ -64,6 +66,8 @@ COPY extract_calibration.py /root/workspace/extract_calibration.py
 COPY create_target.py /root/workspace/create_target.py
 COPY imu/ /root/workspace/imu
 RUN chmod +x /root/workspace/imu/run.sh
+COPY camera_imu/ /root/workspace/camera_imu
+RUN chmod +x /root/workspace/camera_imu/run.sh
 
 ENTRYPOINT ["/root/workspace/entrypoint.sh"]
 
