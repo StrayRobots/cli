@@ -82,17 +82,24 @@ studio-integrate() {
     args=("$@")
     for arg in "$@"
     do
-        if [ "${args[i]}" = "--settings" ]
+        if [ "${args[i]}" = "--debug" ]
         then
-            settings=${args[i+1]}
+            debug=1
         fi
         i=$((i + 1))
     done
-    if [ -n "$settings" ]
+    if [ -n "$debug" ]
     then
-        docker run -it -v $scene_dir:/home/user/data strayrobots/integrate:latest --settings $settings
+        if [[ $OSTYPE == 'darwin'* ]]
+        then
+            xhost + 127.0.0.1
+            docker run -it -v $scene_dir:/home/user/data -e DISPLAY=host.docker.internal:0 -v /tmp/.X11-unix:/tmp/.X11-unix:rw strayrobots/integrate:latest $@
+            xhost - 127.0.0.1
+        else
+            docker run -it -v $scene_dir:/home/user/data --runtime=nvidia -e DISPLAY=unix$DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix:rw strayrobots/integrate:latest $@
+        fi
     else
-        docker run -it -v $scene_dir:/home/user/data strayrobots/integrate:latest
+        docker run -it -v $scene_dir:/home/user/data strayrobots/integrate:latest $@
     fi
 }
 

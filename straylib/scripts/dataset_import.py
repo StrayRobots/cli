@@ -27,12 +27,14 @@ def write_frames(dataset, every, rgb_out_dir, width, height):
             continue
         print(f"Writing rgb frame {i:06}" + " " * 10, end='\r')
         frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
+        full_width = frame.shape[1]
+        full_height = frame.shape[0]
         frame = cv2.resize(frame, (width, height))
         frame_path = os.path.join(rgb_out_dir, f"{i:06}.jpg")
         params = [int(cv2.IMWRITE_JPEG_QUALITY), 90]
         cv2.imwrite(frame_path, frame, params)
     video.close()
-    return frame.shape[1], frame.shape[0]
+    return full_width, full_height
 
 def resize_depth(depth, width, height):
     out = cv2.resize(depth, (width, height), interpolation=cv2.INTER_NEAREST_EXACT)
@@ -46,7 +48,6 @@ def write_depth(dataset, every, depth_out_dir, width, height):
     for i, filename in enumerate(files):
         if '.npy' not in filename or i % every != 0:
             continue
-        print(f"Writing depth frame {filename}", end='\r')
         number, _ = filename.split('.')
         depth_file = os.path.join(depth_dir_in, filename)
         confidence_file = os.path.join(confidence_dir, number + '.png')
@@ -133,8 +134,6 @@ def main(scenes, out, every, width, height, intrinsics):
         full_width, full_height = write_frames(
             scene_path, every, rgb_out, width, height)
 
-        write_intrinsics(scene_path, target_path, width,
-                         height, full_width, full_height)
         copy_rgb(scene_path, target_path)
         copy_imu(scene_path, target_path)
         copy_frame_metadata(scene_path, target_path)
@@ -142,10 +141,11 @@ def main(scenes, out, every, width, height, intrinsics):
         if intrinsics is None:
             if os.path.exists(os.path.join(scene_path, 'camera_matrix.csv')):
                 print("Writing factory intrinsics.", end='\n')
-                write_intrinsic_params(scene_path, target_path, width, height, full_width, full_height)
+                write_intrinsics(scene_path, target_path, width,
+                         height, full_width, full_height)
             else:
                 print("Warning: no camera matrix found, skipping.")
-         else:
+        else:
             print("Writing intrinsics.", end='\n')
             shutil.copy(intrinsics, os.path.join(target_path, 'camera_intrinsics.json'))
 

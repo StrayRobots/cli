@@ -1,4 +1,4 @@
-FROM ubuntu:18.04
+FROM nvidia/opengl:base-ubuntu18.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update -y && apt-get install -y \
@@ -17,7 +17,8 @@ RUN apt-get update -y && apt-get install -y \
   libssl-dev \
   libomp-dev \
   libboost-serialization-dev \
-  wget
+  wget \
+  python3.8
 
 RUN rm -rf /var/lib/apt/lists/*
 
@@ -30,19 +31,21 @@ WORKDIR /home/user
 
 ENV PATH="/home/user/.local/bin:${PATH}"
 RUN wget https://bootstrap.pypa.io/get-pip.py
-RUN python3 get-pip.py
+RUN python3.8 get-pip.py
 RUN rm get-pip.py
 
 RUN pip3 install --user open3d opencv-python scipy numpy PyYAML && rm -rf /user/.cache
 
-RUN git clone https://github.com/stevenlovegrove/Pangolin.git /home/user/pangolin
-RUN cd /home/user/pangolin && mkdir build && cd build && \
+RUN git clone https://github.com/stevenlovegrove/Pangolin.git --recursive /home/user/pangolin
+RUN cd /home/user/pangolin && git checkout dd801d244db3a8e27b7fe8020cd751404aa818fd && mkdir build && cd build && \
   cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX:PATH=/home/user/opt/ && \
   cmake --build . && \
   make install
 
+#TODO checkout the correct commit from main
 RUN git clone https://github.com/StrayRobots/ORB_SLAM3.git /home/user/orbslam && \
-  cd /home/user/orbslam && git checkout 8aa1cf67e10aa45f09cce1965bae0c3ae40e06fd
+  cd /home/user/orbslam && git fetch && git checkout master
+
 
 RUN cd /home/user/orbslam/Thirdparty/DBoW2 && mkdir build && cd build && cmake .. -DCMAKE_BUILD_TYPE=Release \
   && make -j10
@@ -55,8 +58,8 @@ RUN cd /home/user/orbslam/Vocabulary && tar -xf ORBvoc.txt.tar.gz
 RUN cd /home/user/orbslam/ && mkdir build && cd build && cmake .. -DCMAKE_BUILD_TYPE=Release && \
   make -j2 o3d
 
-RUN wget https://stray-builds.ams3.digitaloceanspaces.com/straylib/straylib-0.0.1-py36-none-any.whl && \
-  pip3 install --user straylib-0.0.1-py36-none-any.whl && rm straylib-0.0.1-py36-none-any.whl #
+RUN wget https://stray-builds.ams3.digitaloceanspaces.com/straylib/straylib-0.0.1-py38-none-any.whl && \
+  pip3 install --user straylib-0.0.1-py38-none-any.whl && rm straylib-0.0.1-py38-none-any.whl
 
 RUN mkdir /home/user/workspace
 WORKDIR /home/user/workspace
