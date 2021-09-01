@@ -16,12 +16,14 @@ setup(
         'trimesh',
         'scipy',
         'pillow',
-        'numpy'
+        'numpy',
+        'scikit-video'
     ],
     entry_points={
         'console_scripts': [
             'straylib-scale-calibration=scripts.scale_calibration:main',
-            'straylib-dataset-import=scripts.import:main'
+            'straylib-dataset-import=scripts.dataset_import:main',
+            'straylib-dataset-cut=scripts.cut:main'
         ]
     }
 )

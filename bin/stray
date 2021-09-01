@@ -158,6 +158,13 @@ dataset-subcommand() {
     then
         shift 2
         $bin_dir/straylib-dataset-import $@
+    elif [ "$2" = "cut" ]
+    then
+        shift 2
+        $bin_dir/straylib-dataset-cut $@
+    else
+        echo "verb $2 not recognized by dataset command."
+        exit 1
     fi
 }
 

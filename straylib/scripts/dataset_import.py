@@ -49,16 +49,18 @@ def write_depth(dataset, every, depth_out_dir, width, height):
         if '.npy' not in filename or i % every != 0:
             continue
         number, _ = filename.split('.')
-        if not os.path.exists(os.path.join(confidence_dir, number + '.png')):
-            continue
-        print(f"Writing depth frame {filename}", end='\r')
-        depth = np.load(os.path.join(depth_dir_in, filename))
-        confidence = cv2.imread(os.path.join(confidence_dir, number + '.png'))[:, :, 0]
+        depth_file = os.path.join(depth_dir_in, filename)
+        confidence_file = os.path.join(confidence_dir, number + '.png')
+        depth = np.load(depth_file)
+        if os.path.exists(confidence_file):
+            confidence = cv2.imread(confidence_file)[:, :, 0]
+        else:
+            confidence = np.ones_like(depth_file, dtype=np.uint8) * 2
         depth[confidence < 2] = 0
         depth = resize_depth(depth, width, height)
         cv2.imwrite(os.path.join(depth_out_dir, number + '.png'), depth)
 
-def write_intrinsic_params(dataset, out, width, height, full_width, full_height):
+def write_intrinsics(dataset, out, width, height, full_width, full_height):
     intrinsics = np.loadtxt(os.path.join(dataset, 'camera_matrix.csv'), delimiter=',')
     data = {}
     intrinsics_scaled = _resize_camera_matrix(intrinsics, width / full_width, height / full_height)
@@ -114,7 +116,7 @@ def main(scenes, out, every, width, height, intrinsics):
     os.makedirs(out, exist_ok=True)
     existing_scenes = os.listdir(out)
     for scene_path in scenes:
-        scene_base_name = os.path.basename(scene_path.rstrip("/"))
+        scene_base_name = os.path.basename(scene_path)
         if scene_base_name[0] == ".":
             continue
         if scene_base_name in existing_scenes:
@@ -125,15 +127,13 @@ def main(scenes, out, every, width, height, intrinsics):
 
         rgb_out = os.path.join(target_path, 'color/')
         depth_out = os.path.join(target_path, 'depth/')
-   
-        if os.path.exists(os.path.join(scene_path, "depth")):
-            os.makedirs(depth_out)
-            write_depth(scene_path, every, depth_out, width, height)
-        else:
-            print("Warning: no depth frames found, skipping.")
         os.makedirs(rgb_out)
+        os.makedirs(depth_out)
+
+        write_depth(scene_path, every, depth_out, width, height)
         full_width, full_height = write_frames(
             scene_path, every, rgb_out, width, height)
+
         copy_rgb(scene_path, target_path)
         copy_imu(scene_path, target_path)
         copy_frame_metadata(scene_path, target_path)
@@ -141,15 +141,13 @@ def main(scenes, out, every, width, height, intrinsics):
         if intrinsics is None:
             if os.path.exists(os.path.join(scene_path, 'camera_matrix.csv')):
                 print("Writing factory intrinsics.", end='\n')
-                write_intrinsic_params(scene_path, target_path, width,
-                            height, full_width, full_height)
+                write_intrinsics(scene_path, target_path, width,
+                         height, full_width, full_height)
             else:
                 print("Warning: no camera matrix found, skipping.")
         else:
             print("Writing intrinsics.", end='\n')
-            shutil.copy(intrinsics,
-                    os.path.join(target_path, 'camera_intrinsics.json'))
-
+            shutil.copy(intrinsics, os.path.join(target_path, 'camera_intrinsics.json'))
 
     print("Done.")
 
