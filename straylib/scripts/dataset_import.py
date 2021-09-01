@@ -116,6 +116,8 @@ def main(scenes, out, every, width, height, intrinsics):
     os.makedirs(out, exist_ok=True)
     existing_scenes = os.listdir(out)
     for scene_path in scenes:
+        if scene_path[-1] == os.path.sep:
+            scene_path = scene_path[:-1]
         scene_base_name = os.path.basename(scene_path)
         if scene_base_name[0] == ".":
             continue
