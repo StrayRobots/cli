@@ -155,13 +155,13 @@ calibration-subcommand() {
                 exit 1
             fi
             docker run -it -v $scene_dir:/root/data/ \
-                -v $target_yaml:/root/workspace/target.yaml calibrate run $@ # strayrobots/calibrate:latest run $@
+                -v $target_yaml:/root/workspace/target.yaml strayrobots/calibrate:latest run $@ # strayrobots/calibrate:latest run $@
         elif [ "$task" = "imu_noise" ]; then
             docker run -v $scene_dir:/root/data/ -v $target_yaml:/root/workspace/target.yaml \
                 -v $camera_yaml:/root/workspace/camera.yaml -it strayrobots/calibrate:latest run $@
         elif [ "$task" = "camera_imu" ]; then
             docker run -v $scene_dir:/root/data/ -v $target_yaml:/root/workspace/target.yaml \
-                -v $imu_yaml:/root/workspace/imu.yaml -v $camera_yaml:/root/workspace/camera.yaml -it calibrate run $@ # strayrobots/calibrate:latest run $@
+                -v $imu_yaml:/root/workspace/imu.yaml -v $camera_yaml:/root/workspace/camera.yaml -it strayrobots/calibrate:latest run $@
         else
             echo "Unrecognized calibration task $task. Try intrinsics or camera_imu."
         fi
