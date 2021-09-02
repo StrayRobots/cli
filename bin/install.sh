@@ -22,6 +22,7 @@ install_studio() {
   folder_name="$(echo Studio-*)"
   mv "$folder_name" studio
   cp studio/bin/studio $install_dir/bin/
+  cp studio/bin/preview $install_dir/bin/stray-preview
   cp -r studio/share/stray "$install_dir/share/stray"
 }
 
