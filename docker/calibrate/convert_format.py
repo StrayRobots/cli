@@ -6,6 +6,7 @@ from time import time
 from PIL import Image
 
 DT = 1.0 / 60.0
+start = time() * 1e9
 
 def read_args():
     parser = argparse.ArgumentParser()
@@ -24,7 +25,7 @@ def read_imu(flags):
                 out.append(row)
     return out
 
-def move_imu(flags, color_image):
+def move_imu(flags, color_images):
     imu_path_out = os.path.join(flags.out, 'imu0.csv')
     imu_readings = read_imu(flags)
     with open(imu_path_out, 'wt') as f:
@@ -48,7 +49,7 @@ def read_frames(flags, color_images):
     if not os.path.exists(frames_path):
         for color_image in color_images:
             num = os.path.basename(color_image).split('.')[0]
-            ts = int(start + float(num) * DT * 1e9)
+            ts = str(int(start + float(num) * DT * 1e9))
             timing[num] = ts
     else:
         with open(frames_path, 'rt') as f:
@@ -73,7 +74,6 @@ def main():
     except OSError:
         pass
 
-    start = time() * 1e9
     print("Creating dataset.")
     move_imu(flags, color_images)
     timing = read_frames(flags, color_images)

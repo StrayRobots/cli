@@ -128,18 +128,13 @@ calibration-subcommand() {
     then
         #TODO: input and parse these as flags and not positional arguments.
         scene_dir="$(absolute_path $3)"
-        target_yaml=$4
+        task=$3
+        shift 2
         i=0
         args=("$@")
         for arg in "$@"
         do
-            if [ "${args[i]}" = "--imu-noise" ]
-            then
-                calibrate_imu_noise=true
-            elif [ "${args[i]}" = "--camera-imu" ]
-            then
-                calibrate_camera_imu=true
-            elif [ "${args[i]}" = "--target" ]
+            if [ "${args[i]}" = "--target" ]
             then
                 target_yaml=$(absolute_path ${args[i+1]})
             elif [ "${args[i]}" = "--imu" ]
@@ -151,28 +146,31 @@ calibration-subcommand() {
             fi
             i=$((i + 1))
         done
-        if [ "$calibrate_camera_imu" = true ]
-        then
-            docker run -v $scene_dir:/root/data/ -v $target_yaml:/root/workspace/target.yaml \
-                -v $imu_yaml:/root/workspace/imu.yaml -v $camera_yaml:/root/workspace/camera.yaml -it strayrobots/calibrate:latest run $@
-        else
+
+        if [ "$task" = "intrinsics" ]; then
             if [ "$target_yaml" = "" ] || [ "$scene_dir" = "" ]; then
                 echo "Both scene and target needs to be provided."
                 echo ""
-                echo "Usage: stray calibration run <calibration-scene> <target.yaml>"
+                echo "Usage: stray calibration run intrinsics <calibration-scene> --target <target.yaml>"
                 exit 1
             fi
             docker run -it -v $scene_dir:/root/data/ \
-                -v $target_yaml:/root/workspace/target.yaml calibrate run # strayrobots/calibrate:latest run
+                -v $target_yaml:/root/workspace/target.yaml calibrate run $@ # strayrobots/calibrate:latest run $@
+        elif [ "$task" = "imu_noise" ]; then
+            docker run -v $scene_dir:/root/data/ -v $target_yaml:/root/workspace/target.yaml \
+                -v $camera_yaml:/root/workspace/camera.yaml -it strayrobots/calibrate:latest run $@
+        elif [ "$task" = "camera_imu" ]; then
+            docker run -v $scene_dir:/root/data/ -v $target_yaml:/root/workspace/target.yaml \
+                -v $imu_yaml:/root/workspace/imu.yaml -v $camera_yaml:/root/workspace/camera.yaml -it calibrate run $@ # strayrobots/calibrate:latest run $@
+        else
+            echo "Unrecognized calibration task $task. Try intrinsics or camera_imu."
         fi
-    elif [ "$2" = "generate" ]
-    then
+    elif [ "$2" = "generate" ]; then
         target_yaml=$3
         shift 2
         docker run -v `pwd`:/root/data/ \
             -v $target_yaml:/root/workspace/target.yaml strayrobots/calibrate:latest generate
-    elif [ "$2" = "scale" ]
-    then
+    elif [ "$2" = "scale" ]; then
         shift 2
         $bin_dir/straylib-scale-calibration $@
     else

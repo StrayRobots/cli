@@ -8,8 +8,9 @@ function src_ros() {
 }
 src_ros
 
+intrinsics_calibration() {
+  mkdir -p /root/workspace/data
 
-calibrate_cameras() {
   python /root/workspace/convert_format.py /root/data/ --out /root/workspace/data
 
   kalibr_bagcreater --folder /root/workspace/data --out /root/workspace/data/bag.bag
@@ -22,46 +23,30 @@ calibrate_cameras() {
   python /root/workspace/extract_calibration.py --calibration camchain-bag.yaml --out /root/data/camera_intrinsics.json
 
   mv report-cam-rootworkspacedatabag.pdf /root/data/calibration-report.pdf
+
+  rm -rf /root/workspace/data
 }
 
 if [ "$1" = "run" ]
 then
-
-  mkdir -p /root/workspace/data
-
-  args=("$@")
-  # Defaults to camera intrinsics calibration
-  # if --imu-noise is specified, it will assume the imu.csv file contains at least an hour
-  # of imu data where the device was static and not moving.
-  # --camera-imu is for calibrating camera to imu.
-  imu_noise_calibration=false
-  camera_imu_calibration=false
-  echo "Calibration run $@"
-  for arg in "$@"
-  do
-    if [ "${args[i]}" = "--imu-noise" ]
-    then
-      imu_noise_calibration=true
-    elif [ "${args[i]}" = "--camera-imu" ]
-    then
-      camera_imu_calibration=true
-    fi
-    i=$((i + 1))
-  done
-
-  if [ "$imu_noise_calibration" = true ]
+  task="$2"
+  shift
+  if [ "$task" = "intrinsics" ]
   then
-    echo "Calibrating imu noise"
+    echo "Calibrating camera intrinsics."
+    intrinsics_calibration $@
+  elif [ "$task" = "imu_noise" ]
+  then
+    echo "Calibrating imu noise."
     /root/workspace/imu/run.sh $@
-  elif [ "$camera_imu_calibration" = true ]
+  elif [ "$task" = "camera_imu" ]
   then
-    echo "Calibrating camera to imu"
+    echo "Calibrating camera to imu."
     /root/workspace/camera_imu/run.sh $@
   else
-    calibrate_cameras $@
+    echo "Unrecognized calibration task $task."
+    exit 1
   fi
-
-  rm -rf /root/workspace/data
 elif [ "$1" = "generate" ]
 then
   shift
