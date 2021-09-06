@@ -1,0 +1,46 @@
+name: Publish Docs
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  publish_docs:
+    runs-on: ubuntu-20.04
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v2
+
+      - name: Setup mdBook
+        uses: peaceiris/actions-mdbook@v1
+        with:
+          mdbook-version: '0.4.10'
+
+      - name: Build documentation
+        run: cd "${{ github.workspace }}/docs" && mdbook build && mv book /tmp/book
+
+      - name: Save ssh key
+        run: |
+          mkdir -p $HOME/.ssh
+          echo "${{ secrets.DOCS_DEPLOY_SSH_KEY }}" > $HOME/.ssh/docs_deploy_key
+          chmod 600 $HOME/.ssh/docs_deploy_key
+          echo "Host github.com
+            IdentityFile $HOME/.ssh/docs_deploy_key
+            IdentitiesOnly yes" >> $HOME/.ssh/config
+
+      - name: Commit to docs repository
+        run: |
+          git clone git@github.com:StrayRobots/Docs.git $HOME/docs
+          cd $HOME/docs
+          git config --global user.email "help@strayrobots.io"
+          git config --global user.name "Stray Robots Github Bot"
+          cp -r /tmp/book/* $HOME/docs/
+          if [ -z "$(git status --porcelain)" ]; then
+            echo "No changes to commit"
+          else
+            git status
+            git add . && git commit -m "Building docs from ${{ github.sha  }}" && git push origin main
+          fi
+
