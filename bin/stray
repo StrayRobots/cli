@@ -117,20 +117,12 @@ studio-subcommand() {
     elif [ "$2" = "open" ]
     then
         studio $scene_dir
+    elif [ "$2" = "preview" ]
+    then
+        stray-preview $scene_dir
     else
         echo "Verb $2 not supported by studio subcommand."
         exit 1
-    fi
-}
-
-preview-subcommand() {
-    if [ "$2" = "open" ]; then
-        scene_dir="$3"
-        stray-preview $scene_dir
-    elif [ -d "$2/color" ]; then
-        stray-preview $2
-    else
-        echo "stray preview usage: stray preview open <scene>"
     fi
 }
 
@@ -188,9 +180,6 @@ then
 elif [ "$1" = "studio" ]
 then
     studio-subcommand $@
-elif [ "$1" = "preview" ]
-then
-    preview-subcommand $@
 elif [ "$1" = "calibration" ]
 then
     calibration-subcommand $@
