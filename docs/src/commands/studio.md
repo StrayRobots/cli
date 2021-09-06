@@ -22,6 +22,10 @@ The scene directory has to follow the [dataset format](/formats/data.md#dataset-
 
 Opens a scene in the Studio graphical interface. Before a scene can be opened, it has to be integrated with the [`integrate`](#stray-studio-integrate-scene-directory) command.
 
+## `stray studio preview <scene>`
+
+Plays through images in the scene with overlayed 3d annotations.
+
 #### Options
 
 |name|default|choices|description|
