@@ -126,9 +126,8 @@ studio-subcommand() {
 calibration-subcommand() {
     if [ "$2" = "run" ]
     then
-        #TODO: input and parse these as flags and not positional arguments.
-        scene_dir="$(absolute_path $3)"
         task=$3
+        scene_dir="$(absolute_path $4)"
         shift 2
         i=0
         args=("$@")
