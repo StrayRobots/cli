@@ -16,8 +16,14 @@ def read_args():
 def read_image(color_file, depth_file):
     color = o3d.io.read_image(color_file)
     depth = o3d.io.read_image(depth_file)
+    depth_width, _ = depth.get_max_bound()
+    width, _ = color.get_max_bound()
+    scale = depth_width / width
+    color = o3d.t.geometry.Image.from_legacy_image(color)
+    color = color.resize(scale, o3d.t.geometry.InterpType.Linear)
+
     return o3d.geometry.RGBDImage.create_from_color_and_depth(
-        color,
+        color.to_legacy_image(),
         depth,
         depth_scale=1000,
         depth_trunc=3.0,
@@ -55,8 +61,8 @@ def main():
     intrinsics = o3d.camera.PinholeCameraIntrinsic(scene.frame_width, scene.frame_height, camera_matrix[0, 0],
             camera_matrix[1, 1], camera_matrix[0, 2], camera_matrix[1, 2])
     trajectory = scene.poses
-    color_images = scene.image_filepaths()
-    depth_images = scene.depth_filepaths()
+    color_images = scene.get_image_filepaths()
+    depth_images = scene.get_depth_filepaths()
 
     scene_cloud = o3d.geometry.PointCloud()
     n_frames = min(len(color_images), len(depth_images))

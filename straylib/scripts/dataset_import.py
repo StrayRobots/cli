@@ -41,7 +41,7 @@ def resize_depth(depth, width, height):
     out[out < 10] = 0
     return out
 
-def write_depth(dataset, every, depth_out_dir, width, height):
+def write_depth(dataset, every, depth_out_dir):
     depth_dir_in = os.path.join(dataset, 'depth')
     confidence_dir = os.path.join(dataset, 'confidence')
     files = sorted(os.listdir(depth_dir_in))
@@ -57,7 +57,6 @@ def write_depth(dataset, every, depth_out_dir, width, height):
         else:
             confidence = np.ones_like(depth_file, dtype=np.uint8) * 2
         depth[confidence < 2] = 0
-        depth = resize_depth(depth, width, height)
         cv2.imwrite(os.path.join(depth_out_dir, number + '.png'), depth)
 
 def write_intrinsics(dataset, out, width, height, full_width, full_height):
@@ -102,8 +101,8 @@ def copy_frame_metadata(scene_path, target_path):
 @click.argument('scenes', nargs=-1)
 @click.option('--out', '-o', required=True, help="Dataset directory where to place the imported files.", type=str)
 @click.option('--every', type=int, default=1, help="Keep only every n-th frame. 1 keeps every frame, 2 keeps every other and so forth.")
-@click.option('--width', '-w', type=int, default=640)
-@click.option('--height', '-h', type=int, default=480)
+@click.option('--width', '-w', type=int, default=1920)
+@click.option('--height', '-h', type=int, default=1440)
 @click.option('--intrinsics', type=str, help="Path to the intrinsic parameters to use (for example calibrated parameters from stray calibration run). Defaults to factory parameters.")
 def main(scenes, out, every, width, height, intrinsics):
     """
@@ -132,7 +131,7 @@ def main(scenes, out, every, width, height, intrinsics):
         os.makedirs(rgb_out)
         os.makedirs(depth_out)
 
-        write_depth(scene_path, every, depth_out, width, height)
+        write_depth(scene_path, every, depth_out)
         full_width, full_height = write_frames(
             scene_path, every, rgb_out, width, height)
 
