@@ -42,10 +42,8 @@ RUN cd /home/user/pangolin && git checkout dd801d244db3a8e27b7fe8020cd751404aa81
   cmake --build . && \
   make install
 
-#TODO checkout the correct commit from main
 RUN git clone https://github.com/StrayRobots/ORB_SLAM3.git /home/user/orbslam && \
   cd /home/user/orbslam && git fetch && git checkout 2c9dc486d97995b577dbf895418dd3f70983cf5c
-
 
 RUN cd /home/user/orbslam/Thirdparty/DBoW2 && mkdir build && cd build && cmake .. -DCMAKE_BUILD_TYPE=Release \
   && make -j10
@@ -58,17 +56,18 @@ RUN cd /home/user/orbslam/Vocabulary && tar -xf ORBvoc.txt.tar.gz
 RUN cd /home/user/orbslam/ && mkdir build && cd build && cmake .. -DCMAKE_BUILD_TYPE=Release && \
   make -j2 o3d
 
-RUN wget https://stray-builds.ams3.digitaloceanspaces.com/straylib/straylib-0.0.1-py38-none-any.whl && \
-  pip3 install --user straylib-0.0.1-py38-none-any.whl && rm straylib-0.0.1-py38-none-any.whl
+COPY --chown=user straylib /tmp/straylib
+RUN pip3 install /tmp/straylib
+RUN rm -rf /tmp/straylib
 
 RUN mkdir /home/user/workspace
 WORKDIR /home/user/workspace
 
-COPY ./entrypoint.sh /home/user/workspace/entrypoint.sh
-COPY integrate.py /home/user/workspace/integrate.py
-COPY integrate_pointcloud.py /home/user/workspace/integrate_pointcloud.py
-COPY make_settings.py /home/user/workspace/make_settings.py
-COPY default_settings.yaml /home/user/workspace/default_settings.yaml
+COPY docker/orbslam/entrypoint.sh /home/user/workspace/entrypoint.sh
+COPY docker/orbslam/integrate.py /home/user/workspace/integrate.py
+COPY docker/orbslam/integrate_pointcloud.py /home/user/workspace/integrate_pointcloud.py
+COPY docker/orbslam/make_settings.py /home/user/workspace/make_settings.py
+COPY docker/orbslam/default_settings.yaml /home/user/workspace/default_settings.yaml
 
 ENTRYPOINT ["/home/user/workspace/entrypoint.sh"]
 CMD []
