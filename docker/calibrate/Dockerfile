@@ -18,6 +18,7 @@ RUN apt-get update && apt-get install -y \
 	python-git \
 	python-pip \
 	python-tk \
+	python-pyx \
 	libtbb-dev \
 	libblas-dev \
 	liblapack-dev \
@@ -48,10 +49,10 @@ RUN cd $KALIBR_WORKSPACE &&\
 
 RUN mkdir /root/workspace
 RUN python -m pip install pillow pyyaml
-COPY ./entrypoint.sh /root/workspace/entrypoint.sh
-COPY convert_format.py /root/workspace/convert_format.py
-COPY extract_calibration.py /root/workspace/extract_calibration.py
-COPY create_target.py /root/workspace/create_target.py
+COPY docker/calibrate/entrypoint.sh /root/workspace/entrypoint.sh
+COPY docker/calibrate/convert_format.py /root/workspace/convert_format.py
+COPY docker/calibrate/extract_calibration.py /root/workspace/extract_calibration.py
+COPY docker/calibrate/create_target.py /root/workspace/create_target.py
 
 ENTRYPOINT ["/root/workspace/entrypoint.sh"]
 
