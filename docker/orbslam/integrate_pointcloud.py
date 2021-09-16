@@ -4,6 +4,7 @@ import math
 import numpy as np
 import open3d as o3d
 from scipy.spatial.transform import Rotation
+from straylib.camera import scale_intrinsics
 from straylib.scene import Scene
 
 def read_args():
@@ -16,8 +17,14 @@ def read_args():
 def read_image(color_file, depth_file):
     color = o3d.io.read_image(color_file)
     depth = o3d.io.read_image(depth_file)
+    depth_width, _ = depth.get_max_bound()
+    width, _ = color.get_max_bound()
+    scale = depth_width / width
+    color = o3d.t.geometry.Image.from_legacy_image(color)
+    color = color.resize(scale, o3d.t.geometry.InterpType.Linear)
+
     return o3d.geometry.RGBDImage.create_from_color_and_depth(
-        color,
+        color.to_legacy_image(),
         depth,
         depth_scale=1000,
         depth_trunc=3.0,
@@ -38,11 +45,14 @@ def filename(path):
 
 def create_fragment(trajectory, color_images, depth_images, intrinsics, voxel_size):
     fragment = o3d.geometry.PointCloud()
+    depth_image = o3d.io.read_image(depth_images[0])
+    intrinsics_scaled = scale_intrinsics(intrinsics, *depth_image.get_max_bound())
+    rgbd = read_image(color_images[0], depth_images[0])
     for i, (pose, color, depth) in enumerate(zip(trajectory, color_images, depth_images)):
         print(f"reading frame {i}", end='\r')
         assert filename(color) == filename(depth)
         rgbd = read_image(color, depth)
-        pointcloud = o3d.geometry.PointCloud.create_from_rgbd_image(rgbd, intrinsics, extrinsic=np.linalg.inv(pose))
+        pointcloud = o3d.geometry.PointCloud.create_from_rgbd_image(rgbd, intrinsics_scaled, extrinsic=np.linalg.inv(pose))
         fragment += pointcloud
 
     return fragment.voxel_down_sample(voxel_size)
@@ -55,8 +65,8 @@ def main():
     intrinsics = o3d.camera.PinholeCameraIntrinsic(scene.frame_width, scene.frame_height, camera_matrix[0, 0],
             camera_matrix[1, 1], camera_matrix[0, 2], camera_matrix[1, 2])
     trajectory = scene.poses
-    color_images = scene.image_filepaths()
-    depth_images = scene.depth_filepaths()
+    color_images = scene.get_image_filepaths()
+    depth_images = scene.get_depth_filepaths()
 
     scene_cloud = o3d.geometry.PointCloud()
     n_frames = min(len(color_images), len(depth_images))

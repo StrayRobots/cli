@@ -2,13 +2,14 @@
 # Docker configuration for running ORBSlam + Open3D based integration
 
 ## Build image
-`docker build -t integrate .` in this directory ()
+
+From the root of the repository, run `docker build -t integrate . -f docker/orbslam/Dockerfile`.
 
 ## Push image to registry (requires login)
 
-`docker tag integrate strayrobots/integrate:latest && docker push strayrobots/integrate:latest`
-
-## Run container
-
-Run with `./run.sh <path-to-scene>` to integrate the scene that was passed in.
+Again, from the root, run:
+```
+docker build -t integrate . -f docker/orbslam/Dockerfile
+docker tag integrate strayrobots/integrate:latest && docker push strayrobots/integrate:latest
+```
 
