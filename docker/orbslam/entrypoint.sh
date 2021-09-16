@@ -4,14 +4,23 @@
 
 set -e
 
+validate_scene() {
+    if [ ! -d "$1/color" ] || [ ! -d "$1/depth" ] || [ ! -f "$1/camera_intrinsics.json" ]
+    then
+        echo "$(basename $1) does not look like a scene path."
+        exit 1
+    fi
+}
+
 integrate_scene() {
+    validate_scene $1
     i=$((i + 1))
     args=("$@")
     echo "args: $@"
     sleep=1
     debug=0
     for arg in "$@"
-    do  
+    do
         if [ "${args[i]}" = "--settings" ]
         then
             settings=${args[i+1]}
@@ -58,10 +67,13 @@ integrate_scene() {
     popd > /dev/null
 }
 
-if [ -d "/home/user/data/color" ]
+success=0
+
+if [ -d "/home/user/data/color" ] && [ -f "/home/user/data/camera_intrinsics.json" ]
 then
     echo "Computing trajectory for scene."
     integrate_scene "/home/user/data/" $@
+    success=1
 else
     for d in "/home/user/data/"*; do
         if [ -d $d ]
@@ -73,7 +85,13 @@ else
                 echo "Computing trajectory for scene $(basename $1)"
                 integrate_scene $d $@
             fi
+            success=1
         fi
     done
+fi
+
+if [ "$success" = "0" ]
+then
+    echo "Doesn't look like a scene folder. Check your scene path arguments."
 fi
 
