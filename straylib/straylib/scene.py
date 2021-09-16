@@ -58,14 +58,28 @@ class Keypoint:
 class Scene:
     def __init__(self, path):
         self.scene_path = path
-        mesh_file = os.path.join(path, 'scene', 'integrated.ply')
-        self.mesh = trimesh.load(mesh_file)
+        self._read_mesh()
         self._read_annotations()
+        self._read_metadata()
         self._bounding_boxes = None
         self._keypoints = None
         self._poses = None
         self._metadata = None
         self._read_intrinsics()
+
+    def _read_mesh(self):
+        mesh_file = os.path.join(self.scene_path, 'scene', 'integrated.ply')
+        if os.path.exists(mesh_file):
+            self.mesh = trimesh.load(mesh_file)
+        else:
+            self.mesh = None
+
+    def _read_point_cloud(self):
+        point_cloud_file = os.path.join(self.scene_path, 'scene', 'cloud.ply')
+        if os.path.exists(point_cloud_file):
+            self.point_cloud = trimesh.load(point_cloud_file)
+        else:
+            self.point_cloud = None
 
     def _read_annotations(self):
         annotation_file = os.path.join(self.scene_path, 'annotations.json')
@@ -75,20 +89,30 @@ class Scene:
             with open(annotation_file, 'rt') as f:
                 self.annotations = json.load(f)
 
+    def _read_metadata(self):
+        metadata_path = os.path.join(os.path.dirname(self.scene_path.rstrip("/")), "metadata.json")
+        if os.path.exists(metadata_path):
+            with open(metadata_path, 'rt') as f:
+                self.metadata = json.load(f)
+        else:
+            self.metadata = {}
+
     def _read_trajectory(self):
         self._poses = []
-        with open(os.path.join(self.scene_path, 'scene', 'trajectory.log'), 'rt') as f:
-            lines = f.readlines()
-            for i in range(0, len(lines), 5):
-                rows = [np.fromstring(l, count=4, sep=' ') for l in lines[i+1:i+5]]
-                self._poses.append(np.stack(rows))
+        if os.path.exists(os.path.join(self.scene_path, 'scene', 'trajectory.log')):
+            with open(os.path.join(self.scene_path, 'scene', 'trajectory.log'), 'rt') as f:
+                lines = f.readlines()
+                for i in range(0, len(lines), 5):
+                    rows = [np.fromstring(l, count=4, sep=' ') for l in lines[i+1:i+5]]
+                    self._poses.append(np.stack(rows))
 
     def _read_intrinsics(self):
-        with open(os.path.join(self.scene_path, 'camera_intrinsics.json')) as f:
-            camera_data = json.load(f)
-        self.camera_matrix = np.array(camera_data['intrinsic_matrix']).reshape(3, 3).T
-        self.frame_width = camera_data['width']
-        self.frame_height = camera_data['height']
+        if os.path.exists(os.path.join(self.scene_path, 'camera_intrinsics.json')):
+            with open(os.path.join(self.scene_path, 'camera_intrinsics.json')) as f:
+                camera_data = json.load(f)
+            self.camera_matrix = np.array(camera_data['intrinsic_matrix']).reshape(3, 3).T
+            self.frame_width = camera_data['width']
+            self.frame_height = camera_data['height']
 
     def _process_annotations(self):
         self._bounding_boxes = []
@@ -137,14 +161,18 @@ class Scene:
             if not k.instance_id in categories:
                 categories.append(k.instance_id)
         return categories
-
+    
     @property
-    def metadata(self):
-        metadata_path = os.path.join(os.path.dirname(self.scene_path.rstrip("/")), "metadata.json")
-        if os.path.exists(metadata_path) and self._metadata is None:
-            with open(metadata_path, 'rt') as f:
-                self._metadata = json.load(f)
-        return self._metadata
+    def objects(self):
+        """
+        Returns a trimesh for each bounding box in the scene.
+        returns: list[trimesh.Mesh]
+        """
+        objects = []
+        for bbox in self.bounding_boxes:
+            object_mesh = bbox.cut(self.mesh)
+            objects.append(object_mesh)
+        return objects
 
     def get_image_filepaths(self):
         paths = os.listdir(os.path.join(self.scene_path, 'color'))
@@ -161,17 +189,6 @@ class Scene:
         paths = [path for path in paths if path.lower().split(".")[-1] == 'png']
         paths.sort()
         return list(map(lambda p: os.path.join(self.scene_path, 'depth', p), paths))
-
-    def objects(self):
-        """
-        Returns a trimesh for each bounding box in the scene.
-        returns: list[trimesh.Mesh]
-        """
-        objects = []
-        for bbox in self.bounding_boxes:
-            object_mesh = bbox.cut(self.mesh)
-            objects.append(object_mesh)
-        return objects
 
     def background(self):
         background = self.mesh

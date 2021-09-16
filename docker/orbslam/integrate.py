@@ -48,7 +48,7 @@ def read_image(color_file, depth_file):
         color,
         depth.to_legacy_image(),
         depth_scale=1000,
-        depth_trunc=3.0,
+        depth_trunc=5,
         convert_rgb_to_intensity=False)
 
 def show_frames(poses):

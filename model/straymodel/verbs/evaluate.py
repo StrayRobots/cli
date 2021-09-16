@@ -3,9 +3,10 @@ import os
 from straymodel.detectron.evaluate import evaluate as evaluate_detectron
 
 @click.command()
-@click.option('--dataset', required=True, help='Path to the dataset to bake.')
+@click.argument('dataset', nargs=-1)
 @click.option('--model', required=True, help='Path to the model to use in baking.')
-@click.option('--weights', default="model_final.pth", help='Name of the weights file in model/output.')
+@click.option('--weights', help='Override the weights file in model/output. Default is model/output/model_final.pth')
+@click.option('--threshold', default=0.7, help='Prediction confidence threshold')
 
 
 def evaluate(**flags):

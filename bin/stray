@@ -1,7 +1,14 @@
 #!/bin/bash
 set -e
 
-bin_dir="$HOME/.stray/env/bin"
+BIN_DIR="$HOME/.stray/env/bin/"
+CONTAINER_PREFIX="strayrobots/"
+
+if [ STRAY_DEV ]
+    then
+        CONTAINER_PREFIX=""
+        BIN_DIR=""
+fi
 
 absolute_path() {
     echo "$(cd "$(dirname "$1")"; pwd)/$(basename "$1")"
@@ -16,13 +23,88 @@ label-subcommand() {
 
     if [ "$2" = "generate" ]
     then
-        $bin_dir/stray-label-generate "${@:3}"
+        ${BIN_DIR}stray-label-generate "${@:3}"
     elif [ "$2" = "show" ]
     then
-        $bin_dir/stray-label-show "${@:3}"
+        ${BIN_DIR}stray-label-show "${@:3}"
     else
         echo "Incorrect verb"
     fi
+}
+
+validate-model-bake-flags() {
+    model_found=false
+    i=0
+    args=("$@")
+    for arg in "$@"
+    do
+        if [ $arg = "--model" ]
+        then
+            if [ ! -d "${args[i+1]}" ]
+            then
+                echo "Model ${args[i+1]} does not exist"
+                exit 1
+            else
+                model_found=true
+            fi
+        fi
+        i=$((i + 1))
+    done
+    if [ ! model_found ]
+    then
+        echo "Missing the --model flag"
+        exit 1
+    fi
+}
+
+model-bake-command() {
+    validate-model-bake-flags $@
+    CMD="docker run "
+    DOCKER_ARGS=""
+    #Add scenes
+    for arg in "$@"
+    do
+        if [ $arg = "--model" ] || [ $arg = "--num-gpus" ] || [ $arg = "--resume" ] || [ $arg = "--segmentation" ] || [ $arg = "--bbox-from-mask" ]
+        then
+            break #All scenes mounted
+        else
+            if [ -d $arg ]
+            then
+                scene_base=$(basename $arg)
+                CMD="$CMD -v $arg:/root/workspace/data/$scene_base"
+                DOCKER_ARGS="$DOCKER_ARGS /root/workspace/data/$scene_base"
+            fi
+        fi
+    done
+
+    #Grab flags
+    i=0
+    args=("$@")
+    for arg in "$@"
+    do
+        if [ $arg = "--model" ]
+        then
+            CMD="$CMD -v ${args[i+1]}:/root/workspace/detectron2-model "
+            DOCKER_ARGS="$DOCKER_ARGS --model /root/workspace/detectron2-model"
+
+        elif [ "${args[i]}" = "--num-gpus" ]
+        then
+            DOCKER_ARGS="$DOCKER_ARGS --num-gpus ${args[i+1]}"
+        elif [ "${args[i]}" = "--resume" ]
+        then
+            DOCKER_ARGS="$DOCKER_ARGS --resume"
+        elif [ "${args[i]}" = "--segmentation" ]
+        then
+            DOCKER_ARGS="$DOCKER_ARGS --segmentation"
+        elif [ "${args[i]}" = "--bbox-from-mask" ]
+        then
+            DOCKER_ARGS="$DOCKER_ARGS --bbox-from-mask"
+        fi
+        i=$((i + 1))
+    done
+
+    CMD="$CMD --gpus all -it ${CONTAINER_PREFIX}detectron2:latest $DOCKER_ARGS"
+    eval $CMD
 }
 
 model-subcommand() {
@@ -33,45 +115,13 @@ model-subcommand() {
     fi
     if [ "$2" = "generate" ]
     then
-        $bin_dir/stray-model-generate "${@:3}"
+        ${BIN_DIR}stray-model-generate "${@:3}"
     elif [ "$2" = "bake" ]
     then
-        i=0
-        args=("$@")
-        for arg in "$@"
-        do
-            if [ "${args[i]}" = "--model" ]
-            then
-                model=${args[i+1]}
-            elif [ "${args[i]}" = "--dataset" ]
-            then
-                dataset=${args[i+1]}
-            elif [ "${args[i]}" = "--num-gpus" ]
-            then
-                gpus=${args[i+1]}
-            elif [ "${args[i]}" = "--resume" ]
-            then
-                resume=true
-            fi
-            i=$((i + 1))
-        done
-
-        if [ $resume ]
-        then
-            docker run -v $dataset:/root/workspace/data -v $model:/root/workspace/detectron2-model --gpus all -it  strayrobots/detectron2:latest \
-            --dataset /root/workspace/data \
-            --model /root/workspace/detectron2-model \
-            --num-gpus $gpus
-            --resume
-        else
-            docker run -v $dataset:/root/workspace/data -v $model:/root/workspace/detectron2-model --gpus all -it  strayrobots/detectron2:latest \
-            --dataset /root/workspace/data \
-            --model /root/workspace/detectron2-model \
-            --num-gpus $gpus
-        fi
+        model-bake-command "${@:3}"
     elif [ "$2" = "evaluate" ]
     then
-        $bin_dir/stray-model-evaluate "${@:3}"
+        ${BIN_DIR}stray-model-evaluate "${@:3}"
     else
         echo "Incorrect verb"
     fi
@@ -93,13 +143,13 @@ studio-integrate() {
         if [[ $OSTYPE == 'darwin'* ]]
         then
             xhost + 127.0.0.1
-            docker run -it -v $scene_dir:/home/user/data -e DISPLAY=host.docker.internal:0 -v /tmp/.X11-unix:/tmp/.X11-unix:rw strayrobots/integrate:latest $@
+            docker run -it -v $scene_dir:/home/user/data -e DISPLAY=host.docker.internal:0 -v /tmp/.X11-unix:/tmp/.X11-unix:rw ${CONTAINER_PREFIX}integrate:latest $@
             xhost - 127.0.0.1
         else
-            docker run -it -v $scene_dir:/home/user/data --runtime=nvidia -e DISPLAY=unix$DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix:rw strayrobots/integrate:latest $@
+            docker run -it -v $scene_dir:/home/user/data --runtime=nvidia -e DISPLAY=unix$DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix:rw s${CONTAINER_PREFIX}integrate:latest $@
         fi
     else
-        docker run -it -v $scene_dir:/home/user/data strayrobots/integrate:latest $@
+        docker run -it -v $scene_dir:/home/user/data ${CONTAINER_PREFIX}integrate:latest $@
     fi
 }
 
@@ -139,17 +189,17 @@ calibration-subcommand() {
             exit 1
         fi
         docker run -it -v $scene_dir:/root/data/ \
-            -v $target_yaml:/root/workspace/target.yaml strayrobots/calibrate:latest run
+            -v $target_yaml:/root/workspace/target.yaml ${CONTAINER_PREFIX}calibrate:latest run
     elif [ "$2" = "generate" ]
     then
         target_yaml=$3
         shift 2
         docker run -v `pwd`:/root/data/ \
-            -v $target_yaml:/root/workspace/target.yaml strayrobots/calibrate:latest generate
+            -v $target_yaml:/root/workspace/target.yaml ${CONTAINER_PREFIX}calibrate:latest generate
     elif [ "$2" = "scale" ]
     then
         shift 2
-        $bin_dir/straylib-scale-calibration $@
+        ${BIN_DIR}straylib-scale-calibration $@
     else
         "Verb $2 not supported by calibration subcommand. Try run or generate."
         exit 1
@@ -160,11 +210,19 @@ dataset-subcommand() {
     if [ "$2" = "import" ]
     then
         shift 2
-        $bin_dir/straylib-dataset-import $@
+        ${BIN_DIR}straylib-dataset-import $@
     elif [ "$2" = "cut" ]
     then
         shift 2
-        $bin_dir/straylib-dataset-cut $@
+        ${BIN_DIR}straylib-dataset-cut $@
+    elif [ "$2" = "show" ]
+    then
+        shift 2
+        ${BIN_DIR}straylib-dataset-show $@
+    elif [ "$2" = "bake" ]
+    then
+        shift 2
+        ${BIN_DIR}straylib-dataset-bake $@
     else
         echo "verb $2 not recognized by dataset command."
         exit 1

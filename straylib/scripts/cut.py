@@ -2,7 +2,6 @@ import os
 import click
 import shutil
 import uuid
-# from skvideo import io
 import hashlib
 from pathlib import Path
 

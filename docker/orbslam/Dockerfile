@@ -43,7 +43,7 @@ RUN cd /home/user/pangolin && git checkout dd801d244db3a8e27b7fe8020cd751404aa81
   make install
 
 RUN git clone https://github.com/StrayRobots/ORB_SLAM3.git /home/user/orbslam && \
-  cd /home/user/orbslam && git fetch && git checkout 2c9dc486d97995b577dbf895418dd3f70983cf5c
+  cd /home/user/orbslam && git checkout 2c9dc486d97995b577dbf895418dd3f70983cf5c
 
 RUN cd /home/user/orbslam/Thirdparty/DBoW2 && mkdir build && cd build && cmake .. -DCMAKE_BUILD_TYPE=Release \
   && make -j10

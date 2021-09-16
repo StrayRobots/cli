@@ -12,14 +12,17 @@ ARG TORCH_CUDA_ARCH_LIST="Kepler;Kepler+Tesla;Maxwell;Maxwell+Tegra;Pascal;Volta
 ENV TORCH_CUDA_ARCH_LIST="${TORCH_CUDA_ARCH_LIST}"
 
 RUN pip install torch==1.9 torchvision==0.10 -f https://download.pytorch.org/whl/cu111/torch_stable.html
-RUN pip install git+https://github.com/facebookresearch/detectron2.git@v0.4
+RUN pip install git+https://github.com/facebookresearch/detectron2.git@v0.5
 
 RUN mkdir -p /root/workspace/
-ADD "https://stray-builds.ams3.digitaloceanspaces.com/straylib/straylib-0.0.1-py38-none-any.whl" /root/workspace/straylib-0.0.1-py38-none-any.whl
-ADD "https://stray-builds.ams3.digitaloceanspaces.com/straymodel/straymodel-0.0.1-py38-none-any.whl" /root/workspace/straymodel-0.0.1-py38-none-any.whl
 
-RUN pip install /root/workspace/straylib-0.0.1-py38-none-any.whl
-RUN pip install /root/workspace/straymodel-0.0.1-py38-none-any.whl
+COPY --chown=user straylib /tmp/straylib
+RUN pip3 install /tmp/straylib
+RUN rm -rf /tmp/straylib
+
+COPY --chown=user model /tmp/straymodel
+RUN pip3 install /tmp/straymodel
+RUN rm -rf /tmp/straymodel
 
 ENV FVCORE_CACHE="/tmp"
 
@@ -27,3 +30,4 @@ COPY ./entrypoint.sh /root/workspace/entrypoint.sh
 RUN chmod +x /root/workspace/entrypoint.sh
 
 ENTRYPOINT ["/root/workspace/entrypoint.sh"]
+CMD []

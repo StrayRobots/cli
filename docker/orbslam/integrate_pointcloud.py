@@ -11,7 +11,7 @@ def read_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('scene')
     parser.add_argument('--frames-per-fragment', '-f', type=int, default=50)
-    parser.add_argument('--voxel-size', type=float, default=0.025)
+    parser.add_argument('--voxel-size', type=float, default=0.005)
     return parser.parse_args()
 
 def read_image(color_file, depth_file):
@@ -27,7 +27,7 @@ def read_image(color_file, depth_file):
         color.to_legacy_image(),
         depth,
         depth_scale=1000,
-        depth_trunc=3.0,
+        depth_trunc=2.5,
         convert_rgb_to_intensity=False)
 
 def show_frames(poses):

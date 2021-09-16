@@ -10,8 +10,9 @@ def generate(model_folder):
         SOLVER = dict(
             IMS_PER_BATCH = 2,
             BASE_LR = 0.00025,
-            MAX_ITER = 300,
-            STEPS = []
+            MAX_ITER = 10000,
+            STEPS = [],
+            CHECKPOINT_PERIOD=1000
         ),
         MODEL = dict(
             ROI_HEADS = dict(

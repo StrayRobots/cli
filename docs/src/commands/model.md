@@ -24,10 +24,12 @@ The `model` subcommand is used to generate and train [models](/formats/model.md)
 
 |name|default|choices|description|
 |-|-|-|-|
-|`--dataset`|| |Path to the scene(s) to be baked|
+|`<scenes>`| | |Paths to the scenes which are used in model training|
 |`--model`| | |Path to the model to be used in baking|
 |`--num-gpus`|0| |Number of GPUs to use in baking|
-|`--resume`|False| |Resume training from previous run|
+|`--resume`|False| (flag) |Resume training from previous run|
+|`--segmentation`| False |(flag)|Train a segmentation model, requires segmentation masks to exist (masks can be created with `stray dataset bake`|
+|`--bbox-from-mask`| False |(flag)|Determine the 2D bounding boxes from segmentation masks, requires segmentation masks to exist (masks can be created with `stray dataset bake`|
 |`--help, -h`| | |Show help|
 
 ## `stray model evaluate`
@@ -38,10 +40,10 @@ The `model` subcommand is used to generate and train [models](/formats/model.md)
 
 |name|default|choices|description|
 |-|-|-|-|
-|`--dataset`| | |Path to the scene(s) to be evaluated against|
+|`<scenes>`| | |Paths to the scenes to use for evaluation|
 |`--model`| | |Path to the model to evaluate|
-|`--weights`|`model_final.pth`| |Weights file to use for evaluation in the `model/output` directory|
-|`--show`| | |Optionally show visual examples of the predictions|
+|`--weights`|`model/output/model_final.pth`| |Path to the weights file to use for evaluation|
+|`--threshold`|0.7| |Prediction confidence threshold|
 |`--help, -h`| | |Show help|
 
 

@@ -35,6 +35,7 @@ integrate_scene() {
         fi
         i=$((i + 1))
     done
+    i=0
     echo "Settings $settings"
     if [ -n "$settings" ]
     then
@@ -57,7 +58,7 @@ integrate_scene() {
     fi
 
     echo "Integrating scene."
-
+    
     python3.8 /home/user/workspace/integrate.py $1 --trajectory CameraTrajectory.txt
 
     echo "Integrating point cloud."
@@ -78,9 +79,9 @@ else
     for d in "/home/user/data/"*; do
         if [ -d $d ]
             then
-            if [ -d "$d/scene" ]
+            if [ -f "$d/scene/integrated.ply" ]
             then
-                echo "Directory $(basename $d)/scene exists, skipping."
+                echo "Mesh $(basename $d)/scene/integrated.ply exists, skipping."
             else
                 echo "Computing trajectory for scene $(basename $1)"
                 integrate_scene $d $@

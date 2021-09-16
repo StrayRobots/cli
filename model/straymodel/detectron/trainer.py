@@ -5,6 +5,23 @@ from collections import OrderedDict
 from detectron2.engine import DefaultTrainer
 from detectron2.evaluation import COCOEvaluator, DatasetEvaluators
 from detectron2.modeling import GeneralizedRCNNWithTTA
+from detectron2.data import DatasetMapper, build_detection_train_loader
+import detectron2.data.transforms as T
+
+def build_augmentations(cfg):
+    augs = [
+            T.ResizeShortestEdge(
+                cfg.INPUT.MIN_SIZE_TRAIN, cfg.INPUT.MAX_SIZE_TRAIN, cfg.INPUT.MIN_SIZE_TRAIN_SAMPLING
+            ),
+            T.ResizeScale(min_scale=0.1, max_scale=2.0, target_height=cfg.INPUT.MAX_SIZE_TRAIN, target_width=cfg.INPUT.MAX_SIZE_TRAIN),
+            T.RandomCrop_CategoryAreaConstraint(
+                cfg.INPUT.CROP.TYPE,
+                cfg.INPUT.CROP.SIZE,
+
+            ),
+            T.RandomFlip()
+        ]
+    return augs
 
 class Trainer(DefaultTrainer):
     @classmethod
@@ -28,3 +45,8 @@ class Trainer(DefaultTrainer):
         res = cls.test(config, model, evaluators)
         res = OrderedDict({k + "_TTA": v for k, v in res.items()})
         return res
+
+    @classmethod
+    def build_train_loader(cls, cfg):
+        mapper = DatasetMapper(cfg, is_train=True, augmentations=build_augmentations(cfg))
+        return build_detection_train_loader(cfg, mapper=mapper)

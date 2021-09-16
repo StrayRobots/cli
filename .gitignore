@@ -126,4 +126,4 @@ dmypy.json
 *.whl
 
 ops/package/install_env.sh
-
+docs/book/*
