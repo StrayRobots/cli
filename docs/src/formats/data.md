@@ -14,6 +14,8 @@ Contains numbered (`000.png`, `001.png`, ...) png files which contain depth maps
 
 Depth maps are encoded as 16 bit grayscale png images, where each value corresponds to depth in millimeters.
 
+The depth maps do not have to be of the same size as the color images, but they do need to have the same aspect ratio.
+
 ### `camera_intrinsic.json`
 Contains the intrinsic parameters of the camera that was used to collect the `color` and `depth` files.
 It should contain a single object, with the following fields:
@@ -51,6 +53,8 @@ Here is an example of a `camera_intrinsics.json` file:
     "distortion_coefficients": [0.4930586782521112, -0.42050294868589483, 1.2586663628718142, -1.1575906751296825]
 }
 ```
+
+The width and height have to correspond to the size of the color images.
 
 In addition, the following data can be created with various Stray [commands](/commands/index.md):
 ### `scene`
