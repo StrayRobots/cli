@@ -1,8 +1,9 @@
 import unittest
 import os
 import numpy as np
-from straylib.scene import Scene
+from straylib.scene import Scene, NotASceneException
 from straylib.renderer import Renderer
+import shutil
 
 class TestScene(unittest.TestCase):
     @classmethod
@@ -43,6 +44,35 @@ class TestScene(unittest.TestCase):
         self.assertEqual(seg.shape, (480, 640, 3))
         colors = np.unique(seg.reshape(-1, 3), axis=0)
         self.assertEqual(colors.shape[0], 2)
+
+
+class TestValidateScene(unittest.TestCase):
+    def test_not_scene(self):
+        with self.assertRaises(NotASceneException):
+            Scene.validate_path("/tmp")
+
+        with self.assertRaises(NotASceneException):
+            Scene.validate_path("/tmp/does_not_exist")
+
+    def test_actual_scene(self):
+        random_scene_path = '/tmp/scene_hash123'
+        try:
+            os.makedirs(random_scene_path, exist_ok=True)
+            with open(os.path.join(random_scene_path, 'camera_intrinsics.json'), 'wt') as f:
+                f.write("\n")
+            path = Scene.validate_path(random_scene_path)
+            self.assertEqual(path, random_scene_path)
+
+            os.makedirs(os.path.join(random_scene_path, 'color'), exist_ok=True)
+            path = Scene.validate_path(random_scene_path)
+            self.assertEqual(path, random_scene_path)
+
+            corrected = Scene.validate_path(os.path.join(random_scene_path, 'rgb.mp4'))
+            self.assertEqual(corrected, random_scene_path)
+
+        finally:
+            shutil.rmtree(random_scene_path)
+
 
 
 if __name__ == "__main__":

@@ -1,10 +1,14 @@
 import os
 import json
+from pathlib import Path
 import numpy as np
 import trimesh
 from PIL import Image
 from scipy.spatial.transform import Rotation
 from straylib import camera
+
+class NotASceneException(ValueError):
+    pass
 
 class BoundingBox:
     def __init__(self, data):
@@ -175,3 +179,29 @@ class Scene:
             background = bbox.background(self.mesh)
         return background
 
+    @staticmethod
+    def validate_path(scene_path) -> str:
+        """
+        Checks if a path is an actual path. Returns a fixed path, if for example the path
+        refers to a subfile or directory in the scene folder. If scene_path is legit, this is an identity function.
+
+        throws NotASceneException if this doesn't look to be a scene folder.
+
+        scene_path: str path to a potential path
+        returns: str scene_path or fixed scene_path
+        """
+        def looks_like_scene(path):
+            is_dir = path.is_dir()
+            has_color_subdir = (path / "color").is_dir()
+            has_scene_subdir = (path / "scene").is_dir()
+            has_intrinsics = (path / "camera_intrinsics.json").is_file()
+            return is_dir and (has_color_subdir or has_scene_subdir or has_intrinsics)
+
+        path = Path(scene_path)
+        if looks_like_scene(path):
+            return scene_path
+        elif looks_like_scene(path.parent):
+            return str(path.parent)
+        elif looks_like_scene(path.parent.parent):
+            return str(path.parent.parent)
+        raise NotASceneException(f"The path {scene_path}")
