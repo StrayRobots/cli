@@ -2,12 +2,11 @@
 
 The calibration command is a thin usability wrapper around [Kalibr](https://github.com/ethz-asl/kalibr) to help with calibrating cameras and generating calibration targets.
 
-## Available commands
 ## `stray calibration generate`
 
 This command creates a calibration target that you can print and use to calibrate your cameras.
 
-#### Options
+### Options
 
 |name|default|choices|description|
 |---|---|---|---|
@@ -37,18 +36,24 @@ We recommend using a larger target, but still small enough so that you can easil
 
 Be sure to check that no scaling is applied when printing the target. After printing, make sure that the tag did not get scaled by measuring the tag with a ruler. If needed, update the `tagSize` field in the `target.yaml` file to reflect the actual size, as the file and tag size will be used again in the calibration step.
 
-## `stray calibration run`
+## `stray calibration run <type> <scene>`
 
-This command runs camera intrinsics calibration.
+This command runs camera calibration. It can calibrate intrinsic parameters of the camera as well as camera-to-imu calibration.
 
-#### Options
+### Options
 
 |name|default|choices|description|
 |---|---|---|---|
+|`<type>`| none | `intrinsics`, `camera_imu`| The type of calibration to run, see below for a description|
 |`<scene>`| | |Path to the [scene](/formats/data.html) to use in calibration|
-|`<target-yaml>`| | |Path to the `target.yaml` file|
+|`--target`| | |Path to the `target.yaml` file|
+|`--camera`| | |Path to the `camchain.yaml` file (only for `camera_imu` calibration)|
+|`--imu`| | |Path to the `imu_noise.yaml` file (only for `camera_imu` calibration)|
 
-Now that we have a calibration board, we can move on to the actual calibration step. In this step, we will collect a dataset where we observe the calibration board from many different viewpoints, covering as many orientations and angles as possible. From this dataset, we can estimate the intrinsic parameters of the camera.
+
+### Camera Intrinsics Calibration
+
+Now that we have a calibration board, we can move on to the actual intrinsics calibration step. In this step, we will collect a dataset where we observe the calibration board from many different viewpoints, covering as many orientations and angles as possible. From this dataset, we can estimate the intrinsic parameters of the camera.
 
 First, mount your calibration board on a flat surface, for example a wall or a table. Make sure that the calibration grid is perfectly flat on the surface and wrinkle free.
 
@@ -59,7 +64,7 @@ Record a dataset with your camera covering as many views as possible. A few thin
 - Make sure the calibration board is entirely visible in the image
 - Use images of the same size that you intend to use with `stray studio integrate` (or alternatively scale the calibration afterwards with [`stray calibration scale`](/commands/calibration.md#stray-calibration-scale) to match the image size)
 
-Here's an example:
+Here is an example:
 
 <video autoplay loop muted playsinline controls >
     <source src="https://stray-data.nyc3.digitaloceanspaces.com/website/calibration.mp4"
@@ -68,13 +73,49 @@ Here's an example:
 
 Convert your dataset into the [Stray scene format](/formats/data.html). Only the color directory is needed for running intrinsics calibration. We recommend capturing frames at somewhere between 5 to 10hz, as using higher frame rates will needlessly slow down computing the calibration without much benefit.
 
-Run the actual calibration step with the command `stray calibration run <scene-path> <target-yaml>`.
+Run the intrinsics calibration step with the command `stray calibration run intrinsics <scene-path> <target-yaml>`.
 
 The command will extract the calibration target from each image and recover the intrinsic parameters through optimization. Once done, the command will create a `camera_intrinsics.json` file in the scene data directory, which contains the intrinsic parameters of the camera, including the intrinsics matrix and distortion coefficients. You can then copy or [import](/commands/dataset.md#stray-dataset-import) this file over to all other scenes captured with this camera.
 
 The command will output a `calibration-report.pdf` file into the scene directory you used. You can check the report to make sure the reprojection errors are less than a few pixels. The smaller the better. If they are large, try recording a new dataset or run the calibration with a higher resolution.
 
+Another output, `camchain.yaml` is a yaml file containing intrinsics parameters. It can be used in the camera-imu step.
+
 Now you are done, and can proceed to integrate and annotate some scenes!
+
+
+### Camera-imu Calibration
+
+Camera-imu calibration is for computing the transformation from your IMU to the camera sensor. This is needed if you want to do visual-inertial SLAM.
+
+For camera-imu calibration you will need a scene with a `color` directory, `imu.csv` file with imu readings and a `frames.csv` file with timestamps for each frame. Additionally, you will need an imu noise configuration file, call it `imu_noise.yaml`, and intrinsics calibration yaml file `camchain.yaml` (generated by the intrinsics calibration step) and a calibration target file `target.yaml` as specified in the `generate` step.
+
+For this type of calibration you will need camera images recorded at 20hz and an imu rate as high as possible. For a tutorial on how to collect the dataset, check out the [Kalibr wiki](https://github.com/ethz-asl/kalibr/wiki/camera-imu-calibration).
+
+The imu noise configuration file describes the noise properties of your inertial sensor. Here is an example file for the imu on an iPhone 12 Pro:
+```
+#Accelerometers
+accelerometer_noise_density: 4.25e-03   #Noise density (continuous-time)
+accelerometer_random_walk:   2.97e-04   #Bias random walk
+
+#Gyroscopes
+gyroscope_noise_density:     1.4e-04    # Noise density (continuous-time)
+gyroscope_random_walk:       5.86e-06   # Bias random walk
+
+update_rate:                 100.0      # Hz frequency of imu measurements.
+```
+
+You should be able to use the same one for other iPhones. The manufacturer of your IMU sensor might report these values, if not you can use a tool such as [imu_utils](https://github.com/gaowenliang/imu_utils) to compute them.
+
+Once if you have your dataset collected and imu configured, you can run the command:
+```
+stray calibration run camera_imu <path-to-scene> --target target.yaml --camera camchain.yaml --imu imu_noise.yaml
+```
+to compute the
+
+Outputs include:
+- `report-imucam.pdf` a report with details on how the calibration succeeded.
+- `camchain-imucam.yaml` contains estimated camera to imu transformation and time shift.
 
 ## `stray calibration scale`
 

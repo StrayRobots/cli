@@ -28,7 +28,9 @@ RUN apt-get update && apt-get install -y \
 	bison \
 	flex \
 	wget \
-	autoconf automake
+	autoconf automake \
+	libceres-dev \
+	libdw-dev
 
 RUN rm -rf /var/lib/apt/lists/*
 
@@ -41,14 +43,32 @@ RUN mkdir -p $KALIBR_WORKSPACE/src &&\
 	catkin config --extend /opt/ros/kinetic &&\
 	catkin config --cmake-args -DCMAKE_BUILD_TYPE=Release
 
-RUN cd $KALIBR_WORKSPACE/src &&\
-	git clone https://github.com/StrayRobots/Kalibr.git
+WORKDIR "$KALIBR_WORKSPACE"
+
+RUN cd $KALIBR_WORKSPACE/src && git clone https://github.com/StrayRobots/Kalibr.git && \
+	cd Kalibr && git checkout 777cda4daafc996da794e5ea2762a7004973cf99
+
+RUN cd $KALIBR_WORKSPACE/src && git clone https://github.com/A1R0B0T/code_utils && git clone https://github.com/gaowenliang/imu_utils
+
+RUN cd $KALIBR_WORKSPACE &&\
+	catkin build -DCMAKE_BUILD_TYPE=Release code_utils
+
+RUN cd $KALIBR_WORKSPACE &&\
+	catkin build -DCMAKE_BUILD_TYPE=Release imu_utils
 
 RUN cd $KALIBR_WORKSPACE &&\
 	catkin build -DCMAKE_BUILD_TYPE=Release -j4
 
 RUN mkdir /root/workspace
 RUN python -m pip install pillow pyyaml
+
+
+
+
+COPY docker/calibrate/imu/ /root/workspace/imu
+RUN chmod +x /root/workspace/imu/run.sh
+COPY docker/calibrate/camera_imu/ /root/workspace/camera_imu
+RUN chmod +x /root/workspace/camera_imu/run.sh
 COPY docker/calibrate/entrypoint.sh /root/workspace/entrypoint.sh
 COPY docker/calibrate/convert_format.py /root/workspace/convert_format.py
 COPY docker/calibrate/extract_calibration.py /root/workspace/extract_calibration.py

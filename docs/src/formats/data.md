@@ -14,6 +14,23 @@ Contains numbered (`000.png`, `001.png`, ...) png files which contain depth maps
 
 Depth maps are encoded as 16 bit grayscale png images, where each value corresponds to depth in millimeters.
 
+### `frames.csv`
+
+CSV file containing timestamps for each frame. Columns:
+- `timestamp` A timestamp in seconds of when the frame was captured
+- `frame` The number of the frame. E.g. `000012`
+
+
+### `imu.csv`
+
+CSV file containing imu readings. The columns are as follows:
+- `timestamp` a timestamp in seconds, should be synchronized with the values in `frames.csv`
+- `a_x` acceleration in x direction in m/s^2
+- `a_y` acceleration in y direction in m/s^2
+- `a_z` acceleration in z direction in m/s^2
+- `alpha_x` rotation along the x axis in rad/s
+- `alpha_y` rotation along the y axis in rad/s
+- `alpha_z` rotation along the z axis in rad/s
 The depth maps do not have to be of the same size as the color images, but they do need to have the same aspect ratio.
 
 ### `camera_intrinsic.json`
