@@ -10,7 +10,7 @@ Other commands are implemented as Python scripts. These will are installed into 
 
 To install the toolkit run this command in your shell:
 ```
-curl --proto '=https' --tlsv1.2 -sSf https://stray-builds.ams3.digitaloceanspaces.com/cli/install.sh | sh
+curl --proto '=https' --tlsv1.2 -sSf https://stray-builds.ams3.digitaloceanspaces.com/cli/install.sh | bash
 ```
 
 Then source your environment with `source ~/.bashrc` or `source ~/.zshrc` if you are using zsh.

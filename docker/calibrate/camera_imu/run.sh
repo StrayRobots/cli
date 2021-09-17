@@ -6,6 +6,7 @@ python /root/workspace/camera_imu/create_imu_config.py /root/workspace/imu.yaml 
 
 kalibr_bagcreater --folder /tmp/data --out /tmp/data/bag.bag
 
+cat /tmp/imu.yaml
 kalibr_calibrate_imu_camera --bag /tmp/data/bag.bag --target /root/workspace/target.yaml --cam /root/workspace/camera.yaml --imu /tmp/imu.yaml --dont-show-report
 
 mv camchain-imucam-tmpdatabag.yaml /root/data/camchain-imucam.yaml

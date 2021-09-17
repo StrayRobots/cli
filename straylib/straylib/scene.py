@@ -1,10 +1,14 @@
 import os
 import json
+from pathlib import Path
 import numpy as np
 import trimesh
 from PIL import Image
 from scipy.spatial.transform import Rotation
 from straylib import camera
+
+class NotASceneException(ValueError):
+    pass
 
 class BoundingBox:
     def __init__(self, data):
@@ -54,14 +58,28 @@ class Keypoint:
 class Scene:
     def __init__(self, path):
         self.scene_path = path
-        mesh_file = os.path.join(path, 'scene', 'integrated.ply')
-        self.mesh = trimesh.load(mesh_file)
+        self._read_mesh()
         self._read_annotations()
+        self._read_metadata()
         self._bounding_boxes = None
         self._keypoints = None
         self._poses = None
         self._metadata = None
         self._read_intrinsics()
+
+    def _read_mesh(self):
+        mesh_file = os.path.join(self.scene_path, 'scene', 'integrated.ply')
+        if os.path.exists(mesh_file):
+            self.mesh = trimesh.load(mesh_file)
+        else:
+            self.mesh = None
+
+    def _read_point_cloud(self):
+        point_cloud_file = os.path.join(self.scene_path, 'scene', 'cloud.ply')
+        if os.path.exists(point_cloud_file):
+            self.point_cloud = trimesh.load(point_cloud_file)
+        else:
+            self.point_cloud = None
 
     def _read_annotations(self):
         annotation_file = os.path.join(self.scene_path, 'annotations.json')
@@ -71,20 +89,30 @@ class Scene:
             with open(annotation_file, 'rt') as f:
                 self.annotations = json.load(f)
 
+    def _read_metadata(self):
+        metadata_path = os.path.join(os.path.dirname(self.scene_path.rstrip("/")), "metadata.json")
+        if os.path.exists(metadata_path):
+            with open(metadata_path, 'rt') as f:
+                self.metadata = json.load(f)
+        else:
+            self.metadata = {}
+
     def _read_trajectory(self):
         self._poses = []
-        with open(os.path.join(self.scene_path, 'scene', 'trajectory.log'), 'rt') as f:
-            lines = f.readlines()
-            for i in range(0, len(lines), 5):
-                rows = [np.fromstring(l, count=4, sep=' ') for l in lines[i+1:i+5]]
-                self._poses.append(np.stack(rows))
+        if os.path.exists(os.path.join(self.scene_path, 'scene', 'trajectory.log')):
+            with open(os.path.join(self.scene_path, 'scene', 'trajectory.log'), 'rt') as f:
+                lines = f.readlines()
+                for i in range(0, len(lines), 5):
+                    rows = [np.fromstring(l, count=4, sep=' ') for l in lines[i+1:i+5]]
+                    self._poses.append(np.stack(rows))
 
     def _read_intrinsics(self):
-        with open(os.path.join(self.scene_path, 'camera_intrinsics.json')) as f:
-            camera_data = json.load(f)
-        self.camera_matrix = np.array(camera_data['intrinsic_matrix']).reshape(3, 3).T
-        self.frame_width = camera_data['width']
-        self.frame_height = camera_data['height']
+        if os.path.exists(os.path.join(self.scene_path, 'camera_intrinsics.json')):
+            with open(os.path.join(self.scene_path, 'camera_intrinsics.json')) as f:
+                camera_data = json.load(f)
+            self.camera_matrix = np.array(camera_data['intrinsic_matrix']).reshape(3, 3).T
+            self.frame_width = camera_data['width']
+            self.frame_height = camera_data['height']
 
     def _process_annotations(self):
         self._bounding_boxes = []
@@ -133,14 +161,18 @@ class Scene:
             if not k.instance_id in categories:
                 categories.append(k.instance_id)
         return categories
-
+    
     @property
-    def metadata(self):
-        metadata_path = os.path.join(os.path.dirname(self.scene_path.rstrip("/")), "metadata.json")
-        if os.path.exists(metadata_path) and self._metadata is None:
-            with open(metadata_path, 'rt') as f:
-                self._metadata = json.load(f)
-        return self._metadata
+    def objects(self):
+        """
+        Returns a trimesh for each bounding box in the scene.
+        returns: list[trimesh.Mesh]
+        """
+        objects = []
+        for bbox in self.bounding_boxes:
+            object_mesh = bbox.cut(self.mesh)
+            objects.append(object_mesh)
+        return objects
 
     def get_image_filepaths(self):
         paths = os.listdir(os.path.join(self.scene_path, 'color'))
@@ -158,20 +190,35 @@ class Scene:
         paths.sort()
         return list(map(lambda p: os.path.join(self.scene_path, 'depth', p), paths))
 
-    def objects(self):
-        """
-        Returns a trimesh for each bounding box in the scene.
-        returns: list[trimesh.Mesh]
-        """
-        objects = []
-        for bbox in self.bounding_boxes:
-            object_mesh = bbox.cut(self.mesh)
-            objects.append(object_mesh)
-        return objects
-
     def background(self):
         background = self.mesh
         for bbox in self.bounding_boxes:
             background = bbox.background(self.mesh)
         return background
 
+    @staticmethod
+    def validate_path(scene_path) -> str:
+        """
+        Checks if a path is an actual path. Returns a fixed path, if for example the path
+        refers to a subfile or directory in the scene folder. If scene_path is legit, this is an identity function.
+
+        throws NotASceneException if this doesn't look to be a scene folder.
+
+        scene_path: str path to a potential path
+        returns: str scene_path or fixed scene_path
+        """
+        def looks_like_scene(path):
+            is_dir = path.is_dir()
+            has_color_subdir = (path / "color").is_dir()
+            has_scene_subdir = (path / "scene").is_dir()
+            has_intrinsics = (path / "camera_intrinsics.json").is_file()
+            return is_dir and (has_color_subdir or has_scene_subdir or has_intrinsics)
+
+        path = Path(scene_path)
+        if looks_like_scene(path):
+            return scene_path
+        elif looks_like_scene(path.parent):
+            return str(path.parent)
+        elif looks_like_scene(path.parent.parent):
+            return str(path.parent.parent)
+        raise NotASceneException(f"The path {scene_path}")

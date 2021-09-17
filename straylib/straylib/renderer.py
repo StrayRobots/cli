@@ -26,11 +26,19 @@ class Renderer:
         self.render_scene.add_node(self.camera_node)
         self.bg_node = pyrender.Node(pyrender.Mesh.from_trimesh(self.scene.background()))
         self.render_scene.add_node(self.bg_node)
-        self.object_nodes = []
-        for obj in self.scene.objects():
-            node = pyrender.Node(mesh=pyrender.Mesh.from_trimesh(obj))
-            self.render_scene.add_node(node)
-            self.object_nodes.append(node)
+        self.instance_nodes = []
+    
+    def add_scene_instance(self, instance):
+        obj = instance.cut(self.scene.mesh)
+        node = pyrender.Node(mesh=pyrender.Mesh.from_trimesh(obj))
+        self.render_scene.add_node(node)
+        self.instance_nodes.append(node)
+    
+    def clear_scene_instances(self):
+        for node in self.instance_nodes:
+            self.render_scene.remove_node(node)
+        self.instance_nodes = []
+    
 
     def update_camera_position(self, new_position):
         self.render_scene.remove_node(self.camera_node)
@@ -52,8 +60,8 @@ class Renderer:
         segmentation = {
             self.bg_node: (0.0, 0.0, 0.0),
         }
-        for bbox, node in zip(self.scene.bounding_boxes, self.object_nodes):
-            c = segmentation_colors[bbox.instance_id]
+        for i, node in enumerate(self.instance_nodes):
+            c = segmentation_colors[i]
             segmentation[node] = (c[0], c[1], c[2])
         seg, _ = self.renderer.render(self.render_scene, seg_node_map=segmentation, flags=pyrender.RenderFlags.SEG)
         seg = seg[:, :, 2]
@@ -66,4 +74,5 @@ class Renderer:
                 out[seg == (1 + bbox.instance_id), :] = segmentation_colors[bbox.instance_id]
 
             return (out * 255.0).round().astype(np.uint8)
+
 

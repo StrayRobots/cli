@@ -17,13 +17,16 @@ setup(
         'scipy',
         'pillow',
         'numpy',
-        'scikit-video'
+        'scikit-video',
+        'pycocotools'
     ],
     entry_points={
         'console_scripts': [
             'straylib-scale-calibration=scripts.scale_calibration:main',
             'straylib-dataset-import=scripts.dataset_import:main',
-            'straylib-dataset-cut=scripts.cut:main'
+            'straylib-dataset-cut=scripts.cut:main',
+            'straylib-dataset-bake=scripts.bake:main',
+            'straylib-dataset-show=scripts.show:main'
         ]
     }
 )

@@ -31,6 +31,7 @@ CSV file containing imu readings. The columns are as follows:
 - `alpha_x` rotation along the x axis in rad/s
 - `alpha_y` rotation along the y axis in rad/s
 - `alpha_z` rotation along the z axis in rad/s
+The depth maps do not have to be of the same size as the color images, but they do need to have the same aspect ratio.
 
 ### `camera_intrinsic.json`
 Contains the intrinsic parameters of the camera that was used to collect the `color` and `depth` files.
@@ -69,6 +70,8 @@ Here is an example of a `camera_intrinsics.json` file:
     "distortion_coefficients": [0.4930586782521112, -0.42050294868589483, 1.2586663628718142, -1.1575906751296825]
 }
 ```
+
+The width and height have to correspond to the size of the color images.
 
 In addition, the following data can be created with various Stray [commands](/commands/index.md):
 ### `scene`

@@ -10,6 +10,7 @@ specs:
   - numpy
   - conda
   - detectron2
+  - open3d
 
 installer_filename: install_env.sh
 

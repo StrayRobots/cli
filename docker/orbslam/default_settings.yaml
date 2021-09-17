@@ -12,7 +12,7 @@ Camera.height: 480
 Camera.fps: 30.0
 Camera.RGB: 0
 
-ThDepth: 40.0
+ThDepth: 20.0
 DepthMapFactor: 1000.0
 
 ORBextractor.nFeatures: 1000

@@ -6,6 +6,7 @@ import numpy as np
 import json
 import csv
 import cv2
+from pathlib import Path
 from skvideo import io
 
 def _resize_camera_matrix(camera_matrix, scale_x, scale_y):
@@ -41,7 +42,7 @@ def resize_depth(depth, width, height):
     out[out < 10] = 0
     return out
 
-def write_depth(dataset, every, depth_out_dir, width, height):
+def write_depth(dataset, every, depth_out_dir):
     depth_dir_in = os.path.join(dataset, 'depth')
     confidence_dir = os.path.join(dataset, 'confidence')
     files = sorted(os.listdir(depth_dir_in))
@@ -57,7 +58,6 @@ def write_depth(dataset, every, depth_out_dir, width, height):
         else:
             confidence = np.ones_like(depth_file, dtype=np.uint8) * 2
         depth[confidence < 2] = 0
-        depth = resize_depth(depth, width, height)
         cv2.imwrite(os.path.join(depth_out_dir, number + '.png'), depth)
 
 def write_intrinsics(dataset, out, width, height, full_width, full_height):
@@ -98,12 +98,39 @@ def copy_frame_metadata(scene_path, target_path):
                 frame = line[1]
                 writer.writerow([timestamp, frame])
 
+def validate_scene_path(scene_path) -> str:
+    """
+    Checks if a path looks like a Scanner directory. Returns a fixed path, if for example the path
+    refers to a subfile or directory in the scene folder. If scene_path is an actual scene path, then
+    this is an identity function.
+
+    throws ValueError if this doesn't look to be a scene folder.
+
+    scene_path: str path to a potential path
+    returns: str scene_path or fixed scene_path
+    """
+    def looks_like_scanner_scene(path):
+        is_dir = path.is_dir()
+        has_rgb = (path / "rgb.mp4").is_file()
+        has_depth = (path / "depth").is_dir()
+        has_intrinsics = (path / "camera_matrix.csv").is_file()
+        return is_dir and has_rgb and has_depth and has_intrinsics
+
+    path = Path(scene_path)
+    if looks_like_scanner_scene(path):
+        return scene_path
+    elif looks_like_scanner_scene(path.parent):
+        return str(path.parent)
+    elif looks_like_scanner_scene(path.parent.parent):
+        return str(path.parent.parent)
+    raise ValueError(scene_path)
+
 @click.command()
 @click.argument('scenes', nargs=-1)
 @click.option('--out', '-o', required=True, help="Dataset directory where to place the imported files.", type=str)
 @click.option('--every', type=int, default=1, help="Keep only every n-th frame. 1 keeps every frame, 2 keeps every other and so forth.")
-@click.option('--width', '-w', type=int, default=640)
-@click.option('--height', '-h', type=int, default=480)
+@click.option('--width', '-w', type=int, default=1920)
+@click.option('--height', '-h', type=int, default=1440)
 @click.option('--intrinsics', type=str, help="Path to the intrinsic parameters to use (for example calibrated parameters from stray calibration run). Defaults to factory parameters.")
 def main(scenes, out, every, width, height, intrinsics):
     """
@@ -113,6 +140,12 @@ def main(scenes, out, every, width, height, intrinsics):
 
     Each scene will be imported and converted into the dataset folder.
     """
+    try:
+        scenes = [validate_scene_path(p) for p in scenes]
+    except ValueError as error:
+        print(f"Path {error.args[0]} does not look like a Stray Scanner scene folder.")
+        exit(1)
+
     os.makedirs(out, exist_ok=True)
     existing_scenes = os.listdir(out)
     for scene_path in scenes:
@@ -132,7 +165,7 @@ def main(scenes, out, every, width, height, intrinsics):
         os.makedirs(rgb_out)
         os.makedirs(depth_out)
 
-        write_depth(scene_path, every, depth_out, width, height)
+        write_depth(scene_path, every, depth_out)
         full_width, full_height = write_frames(
             scene_path, every, rgb_out, width, height)
 

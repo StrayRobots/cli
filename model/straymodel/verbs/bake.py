@@ -3,8 +3,10 @@ import os
 from straymodel.detectron.train import train as train_detectron
 
 @click.command()
-@click.option('--dataset', required=True, help='Path to the dataset to bake.')
+@click.argument('dataset', nargs=-1)
 @click.option('--model', required=True, help='Path to the model to use in baking.')
+@click.option('--segmentation', default=False, is_flag=True, help='Use segmentation.')
+@click.option('--bbox-from-mask', default=False, is_flag=True, help='Use the mesh to determine the bounding box')
 @click.option('--num-gpus', default=0, help='Number of GPUs to use in baking.')
 @click.option('--resume', default=False, is_flag=True, help='Resume training.')
 

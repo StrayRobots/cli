@@ -1,33 +1,43 @@
 from detectron2.utils.visualizer import Visualizer
 from detectron2.engine import DefaultPredictor
-from straylib.export import get_detectron2_dataset_function, get_scene_dataset_metadata
 from detectron2.config import get_cfg
 import os
 import cv2
-from straymodel.detectron.train import setup_config
-import random
-import straylib
+import json
+
+def load_config(flags):
+    config = get_cfg()
+    if os.path.isfile(os.path.join(flags["model"], "config.yaml")):
+        config.merge_from_file(os.path.join(flags["model"], "config.yaml"))
+    return config
 
 def evaluate(flags):
-    scenes = straylib.utils.get_scene_paths(flags["dataset"])
-    dataset_metadata = get_scene_dataset_metadata(scenes)
-    config = get_cfg()
-    config = setup_config(config, flags, dataset_metadata)
-    config.MODEL.WEIGHTS = os.path.join(config.OUTPUT_DIR, flags["weights"])
-    config.MODEL.ROI_HEADS.SCORE_THRESH_TEST = 0.9
+    scenes = [scene for scene in flags["dataset"] if os.path.isdir(scene)]
+    dataset_metadata_path = os.path.join(flags["model"], "dataset_metadata.json")
+    with open(dataset_metadata_path, 'rb') as f:
+        dataset_metadata = json.load(f)
+    config = load_config(flags)
+    
+    if flags["weights"] is not None:
+        config.MODEL.WEIGHTS = flags["weights"]
+    else:
+        config.MODEL.WEIGHTS = os.path.join(config.OUTPUT_DIR, "model_final.pth")
+    config.MODEL.ROI_HEADS.SCORE_THRESH_TEST = flags["threshold"]
     predictor = DefaultPredictor(config)
 
-    dataset_dicts = get_detectron2_dataset_function(scenes, dataset_metadata)()
-    for d in random.sample(dataset_dicts, 100): 
-        im = cv2.imread(d["file_name"])
-        outputs = predictor(im)
-        v = Visualizer(im[:, :, ::-1],
-                    metadata=dataset_metadata, 
-                    scale=1.5
-        )
-        out = v.draw_instance_predictions(outputs["instances"].to("cpu"))
-        image = out.get_image()[:, :, ::-1]
-        cv2.imshow("Stray Model Evaluate", image)
-        cv2.waitKey(1)
+
+    for i, scene_path in enumerate(scenes):
+        for image_path in sorted(os.listdir(os.path.join(scene_path, "color"))):
+            image = os.path.join(scene_path, "color", image_path)
+            im = cv2.imread(image)
+            outputs = predictor(im)
+            v = Visualizer(im[:, :, ::-1],
+                        metadata=dataset_metadata, 
+                        scale=1.0
+            )
+            out = v.draw_instance_predictions(outputs["instances"].to("cpu"))
+            image = out.get_image()[:, :, ::-1]
+            cv2.imshow("Stray Model Evaluate", image)
+            cv2.waitKey(1)
 
 

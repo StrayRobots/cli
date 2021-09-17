@@ -15,7 +15,9 @@ def main():
     with open(flags.imu_config, 'rt') as f:
         imu_config = yaml.load(f, Loader=yaml.SafeLoader)
 
-    imu_config['ros_topic'] = '/imu0'
+
+    imu_config['rostopic'] = '/imu0'
+
 
     with open(flags.out, 'wt') as f:
         f.write(yaml.dump(imu_config))

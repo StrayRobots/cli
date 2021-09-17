@@ -46,7 +46,10 @@ This command runs camera calibration. It can calibrate intrinsic parameters of t
 |---|---|---|---|
 |`<type>`| none | `intrinsics`, `camera_imu`| The type of calibration to run, see below for a description|
 |`<scene>`| | |Path to the [scene](/formats/data.html) to use in calibration|
-|`<target-yaml>`| | |Path to the `target.yaml` file|
+|`--target`| | |Path to the `target.yaml` file|
+|`--camera`| | |Path to the `camchain.yaml` file (only for `camera_imu` calibration)|
+|`--imu`| | |Path to the `imu_noise.yaml` file (only for `camera_imu` calibration)|
+
 
 ### Camera Intrinsics Calibration
 
@@ -106,7 +109,7 @@ You should be able to use the same one for other iPhones. The manufacturer of yo
 
 Once if you have your dataset collected and imu configured, you can run the command:
 ```
-stray calibration run camera_imu --target target.yaml --camera camchain.yaml --imu imu_noise.yaml
+stray calibration run camera_imu <path-to-scene> --target target.yaml --camera camchain.yaml --imu imu_noise.yaml
 ```
 to compute the
 

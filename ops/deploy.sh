@@ -35,13 +35,6 @@ deploy_wheels() {
   echo "wheel: $wheel_file uploading to $s3_bucket/straymodel/$wheel_file"
   upload_public "$wheel_file" "$s3_bucket/straymodel/$wheel_file"
 
-  popd > /dev/null
-  pushd "$source_dir/label/" > /dev/null
-  make_wheel
-  wheel_file="$(basename $(find straylabel-*))"
-  upload_public "$wheel_file" "$s3_bucket/straylabel/$wheel_file"
-  popd > /dev/null
-
   pushd "$source_dir/straylib/" > /dev/null
   make_wheel
   wheel_file="$(basename $(find straylib-*))"
