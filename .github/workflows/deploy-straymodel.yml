@@ -1,0 +1,46 @@
+name: Deploy straymodel
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'model/setup.py' #Only push when version bumps happen so package versions can be mapped to commits
+jobs:
+  deploy:
+    name: Build and push
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.8'
+        
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y s3cmd
+            
+      - name: Create s3cmd config
+        run: |
+          echo "[default]" >> $HOME/.s3cfg
+          echo "access_key = ${{ secrets.SPACES_ACCESS_KEY }}" >> $HOME/.s3cfg
+          echo "host_base = ams3.digitaloceanspaces.com" >> $HOME/.s3cfg
+          echo "host_bucket = %(bucket)s.ams3.digitaloceanspaces.com" >> $HOME/.s3cfg
+          echo "secret_key = ${{ secrets.SPACES_SECRET_KEY }}" >> $HOME/.s3cfg
+            
+      - name: Build and upload
+        run: |
+            pushd "model/" > /dev/null
+            python setup.py bdist_egg --exclude-source-files
+            straymodel_egg="$(find dist/straymodel-*.egg)"
+            wheel convert $straymodel_egg
+            straymodel_wheel="$(basename $(find straymodel-*.whl))"
+            straymodel_destination="s3://stray-builds/straymodel/$straymodel_wheel"
+            s3cmd put ${straymodel_wheel} "$straymodel_destination"
+            s3cmd setacl "$straymodel_destination" --acl-public
+            popd > /dev/null
+            
+    
+
+
+

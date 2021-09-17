@@ -11,14 +11,15 @@ setup(
         "Programming Language :: Python :: 3",
     ],
     packages=find_packages(),
-    python_requires=">=3.6",
+    python_requires=">=3.8",
     install_requires=[
         'trimesh',
         'scipy',
         'pillow',
         'numpy',
         'scikit-video',
-        'pycocotools'
+        'pycocotools',
+        'open3d'
     ],
     entry_points={
         'console_scripts': [

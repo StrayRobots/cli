@@ -7,6 +7,7 @@ RUN ln -sv /usr/bin/python3 /usr/bin/python
 RUN wget https://bootstrap.pypa.io/get-pip.py && \
 	python3 get-pip.py && \
 	rm get-pip.py
+
 ENV FORCE_CUDA="1"
 ARG TORCH_CUDA_ARCH_LIST="Kepler;Kepler+Tesla;Maxwell;Maxwell+Tegra;Pascal;Volta;Turing"
 ENV TORCH_CUDA_ARCH_LIST="${TORCH_CUDA_ARCH_LIST}"
@@ -15,18 +16,25 @@ RUN pip install torch==1.9 torchvision==0.10 -f https://download.pytorch.org/whl
 RUN pip install git+https://github.com/facebookresearch/detectron2.git@v0.5
 
 RUN mkdir -p /root/workspace/
+RUN pip install wheel
 
-COPY --chown=user straylib /tmp/straylib
-RUN pip3 install /tmp/straylib
+COPY straylib /tmp/straylib
+WORKDIR /tmp/straylib
+RUN python setup.py bdist_egg --exclude-source-files
+RUN wheel convert $(find dist/straylib-*.egg)
+RUN pip install "$(basename $(find straylib-*.whl))"
 RUN rm -rf /tmp/straylib
 
-COPY --chown=user model /tmp/straymodel
-RUN pip3 install /tmp/straymodel
+COPY model /tmp/straymodel
+WORKDIR /tmp/straymodel
+RUN python setup.py bdist_egg --exclude-source-files
+RUN wheel convert $(find dist/straymodel-*.egg)
+RUN pip install "$(basename $(find straymodel-*.whl))"
 RUN rm -rf /tmp/straymodel
 
 ENV FVCORE_CACHE="/tmp"
 
-COPY ./entrypoint.sh /root/workspace/entrypoint.sh
+COPY docker/detectron2/entrypoint.sh /root/workspace/entrypoint.sh
 RUN chmod +x /root/workspace/entrypoint.sh
 
 ENTRYPOINT ["/root/workspace/entrypoint.sh"]

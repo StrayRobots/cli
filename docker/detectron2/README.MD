@@ -1,7 +1,7 @@
 # Running detectron2 training in a Docker container
 
 ## Build image
-`docker build -t detectron2 . ` in this directory (add `--build-arg dev=true` to use dev python packages)
+From the root of the repository, run `docker build -t detectron2. -f docker/detectron2/Dockerfile`
 
 ## Push image to registry (requires login)
 
