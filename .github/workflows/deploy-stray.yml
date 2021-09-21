@@ -1,12 +1,11 @@
 
-name: Deploy stray bin script
+name: Deploy stray bin scripts
 on:
   push:
     branches:
       - main
-  pull_request:
-    branches:
-      - main
+    paths:
+      - 'bin/*' 
 
 jobs:
   Deploy:
