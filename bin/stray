@@ -71,8 +71,8 @@ model-bake-command() {
             if [ -d $arg ]
             then
                 scene_base=$(basename $arg)
-                CMD="$CMD -v $arg:/root/workspace/data/$scene_base"
-                DOCKER_ARGS="$DOCKER_ARGS /root/workspace/data/$scene_base"
+                CMD="$CMD -v $arg:/home/user/workspace/data/$scene_base"
+                DOCKER_ARGS="$DOCKER_ARGS /home/user/workspace/data/$scene_base"
             fi
         fi
     done
@@ -84,8 +84,8 @@ model-bake-command() {
     do
         if [ $arg = "--model" ]
         then
-            CMD="$CMD -v ${args[i+1]}:/root/workspace/detectron2-model "
-            DOCKER_ARGS="$DOCKER_ARGS --model /root/workspace/detectron2-model"
+            CMD="$CMD -v ${args[i+1]}:/home/user/workspace/detectron2-model "
+            DOCKER_ARGS="$DOCKER_ARGS --model /home/user/workspace/detectron2-model"
 
         elif [ "${args[i]}" = "--num-gpus" ]
         then
@@ -206,22 +206,22 @@ calibration-subcommand() {
                 echo "Usage: stray calibration run intrinsics <calibration-scene> --target <target.yaml>"
                 exit 1
             fi
-            docker run -it -v $scene_dir:/root/data/ \
-                -v $target_yaml:/root/workspace/target.yaml ${CONTAINER_PREFIX}calibrate:latest run $@ 
+            docker run -it -v $scene_dir:/home/user/data/ \
+                -v $target_yaml:/home/user/workspace/target.yaml ${CONTAINER_PREFIX}calibrate:latest run $@ 
         elif [ "$task" = "imu_noise" ]; then
-            docker run -v $scene_dir:/root/data/ -v $target_yaml:/root/workspace/target.yaml \
-                -v $camera_yaml:/root/workspace/camera.yaml -it ${CONTAINER_PREFIX}calibrate:latest run $@
+            docker run -v $scene_dir:/home/user/data/ -v $target_yaml:/home/user/workspace/target.yaml \
+                -v $camera_yaml:/home/user/workspace/camera.yaml -it ${CONTAINER_PREFIX}calibrate:latest run $@
         elif [ "$task" = "camera_imu" ]; then
-            docker run -v $scene_dir:/root/data/ -v $target_yaml:/root/workspace/target.yaml \
-                -v $imu_yaml:/root/workspace/imu.yaml -v $camera_yaml:/root/workspace/camera.yaml -it ${CONTAINER_PREFIX}calibrate:latest run $@
+            docker run -v $scene_dir:/home/user/data/ -v $target_yaml:/home/user/workspace/target.yaml \
+                -v $imu_yaml:/home/user/workspace/imu.yaml -v $camera_yaml:/home/user/workspace/camera.yaml -it ${CONTAINER_PREFIX}calibrate:latest run $@
         else
             echo "Unrecognized calibration task $task. Try intrinsics or camera_imu."
         fi
     elif [ "$2" = "generate" ]; then
         target_yaml=$3
         shift 2
-        docker run -v `pwd`:/root/data/ \
-            -v $target_yaml:/root/workspace/target.yaml ${CONTAINER_PREFIX}calibrate:latest generate
+        docker run -v `pwd`:/home/user/data/ \
+            -v $target_yaml:/home/user/workspace/target.yaml ${CONTAINER_PREFIX}calibrate:latest generate
     elif [ "$2" = "scale" ]; then
         shift 2
         ${BIN_DIR}straylib-scale-calibration $@

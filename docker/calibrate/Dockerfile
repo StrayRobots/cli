@@ -30,12 +30,23 @@ RUN apt-get update && apt-get install -y \
 	wget \
 	autoconf automake \
 	libceres-dev \
-	libdw-dev
+	libdw-dev 
+
+RUN apt-get install -y software-properties-common && add-apt-repository ppa:deadsnakes/ppa
+RUN apt-get update
+RUN apt-get install -y build-essential python3.8 python3.8-distutils
+
 
 RUN rm -rf /var/lib/apt/lists/*
 
+# create a non-root user
+ARG USER_ID=1000
+RUN useradd -m --no-log-init --system  --uid ${USER_ID} user -g sudo
+RUN echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
+USER user
+
 RUN python -m pip install --upgrade pip; python -m pip install python-igraph==0.8
-ENV KALIBR_WORKSPACE /kalibr_workspace
+ENV KALIBR_WORKSPACE /home/user/kalibr_workspace
 
 RUN mkdir -p $KALIBR_WORKSPACE/src &&\
 	cd $KALIBR_WORKSPACE &&\
@@ -59,20 +70,24 @@ RUN cd $KALIBR_WORKSPACE &&\
 RUN cd $KALIBR_WORKSPACE &&\
 	catkin build -DCMAKE_BUILD_TYPE=Release -j4
 
-RUN mkdir /root/workspace
-RUN python -m pip install pillow pyyaml
+RUN mkdir -p /home/user/workspace
+RUN wget https://bootstrap.pypa.io/get-pip.py && \
+	python3.8 get-pip.py && \
+	rm get-pip.py
+
+RUN python3.8 -m pip install --user pillow pyyaml
 
 
 
 
-COPY docker/calibrate/imu/ /root/workspace/imu
-RUN chmod +x /root/workspace/imu/run.sh
-COPY docker/calibrate/camera_imu/ /root/workspace/camera_imu
-RUN chmod +x /root/workspace/camera_imu/run.sh
-COPY docker/calibrate/entrypoint.sh /root/workspace/entrypoint.sh
-COPY docker/calibrate/convert_format.py /root/workspace/convert_format.py
-COPY docker/calibrate/extract_calibration.py /root/workspace/extract_calibration.py
-COPY docker/calibrate/create_target.py /root/workspace/create_target.py
+COPY --chown=user:sudo docker/calibrate/imu/ /home/user/workspace/imu
+RUN chmod +x /home/user/workspace/imu/run.sh
+COPY --chown=user:sudo docker/calibrate/camera_imu/ /home/user/workspace/camera_imu
+RUN chmod +x /home/user/workspace/camera_imu/run.sh
+COPY docker/calibrate/entrypoint.sh /home/user/workspace/entrypoint.sh
+COPY docker/calibrate/convert_format.py /home/user/workspace/convert_format.py
+COPY docker/calibrate/extract_calibration.py /home/user/workspace/extract_calibration.py
+COPY docker/calibrate/create_target.py /home/user/workspace/create_target.py
 
-ENTRYPOINT ["/root/workspace/entrypoint.sh"]
+ENTRYPOINT ["/home/user/workspace/entrypoint.sh"]
 

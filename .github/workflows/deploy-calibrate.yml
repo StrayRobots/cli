@@ -1,13 +1,11 @@
-name: Deploy detectron
+name: Deploy calibrate
 
 on:
   push:
     branches: [ main ]
     paths:
-      - 'model/*'
-      - 'straylib/*'
-      - 'docker/detectron2/*'
-      - '.github/workflows/deploy-detectron.yml'
+      - 'docker/calibrate/*'
+      - '.github/workflows/deploy-calibrate.yml'
 
 jobs:
   deploy:
@@ -26,16 +24,16 @@ jobs:
         id: meta
         uses: docker/metadata-action@98669ae865ea3cffbcbaa878cf57c20bbf1c6c38
         with:
-          images: strayrobots/detectron2
+          images: strayrobots/calibrate
       
       - name: Build and push Docker image
         uses: docker/build-push-action@ad44023a93711e3deb337508980b4b5e9bcdc5dc
         with:
           context: ./
-          file: ./docker/detectron2/Dockerfile
+          file: ./docker/calibrate/Dockerfile
           push: true
-          tags: strayrobots/detectron2:latest
-          cache-from: type=registry,ref=strayrobots/detectron2:latest
+          tags: strayrobots/calibrate:latest
+          cache-from: type=registry,ref=strayrobots/calibrate:latest
           cache-to: type=inline
 
 

@@ -1,13 +1,12 @@
-name: Deploy detectron
+name: Deploy integrate
 
 on:
   push:
     branches: [ main ]
     paths:
-      - 'model/*'
       - 'straylib/*'
-      - 'docker/detectron2/*'
-      - '.github/workflows/deploy-detectron.yml'
+      - 'docker/orbslam/*'
+      - '.github/workflows/deploy-integrate.yml'
 
 jobs:
   deploy:
@@ -26,16 +25,16 @@ jobs:
         id: meta
         uses: docker/metadata-action@98669ae865ea3cffbcbaa878cf57c20bbf1c6c38
         with:
-          images: strayrobots/detectron2
+          images: strayrobots/integrate
       
       - name: Build and push Docker image
         uses: docker/build-push-action@ad44023a93711e3deb337508980b4b5e9bcdc5dc
         with:
           context: ./
-          file: ./docker/detectron2/Dockerfile
+          file: ./docker/orbslam/Dockerfile
           push: true
-          tags: strayrobots/detectron2:latest
-          cache-from: type=registry,ref=strayrobots/detectron2:latest
+          tags: strayrobots/integrate:latest
+          cache-from: type=registry,ref=strayrobots/integrate:latest
           cache-to: type=inline
 
 

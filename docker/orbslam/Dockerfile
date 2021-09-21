@@ -7,7 +7,8 @@ RUN apt-get update -y && apt-get install -y \
   libglu1-mesa-dev \
   libpython2.7-dev \
   python-opencv \
-  python3-dev \
+  python3.8-dev \
+  python3.8-distutils \
   cmake \
   python-pip \
   libglew-dev \
@@ -17,8 +18,7 @@ RUN apt-get update -y && apt-get install -y \
   libssl-dev \
   libomp-dev \
   libboost-serialization-dev \
-  wget \
-  python3.8
+  wget 
 
 RUN rm -rf /var/lib/apt/lists/*
 
@@ -56,8 +56,11 @@ RUN cd /home/user/orbslam/Vocabulary && tar -xf ORBvoc.txt.tar.gz
 RUN cd /home/user/orbslam/ && mkdir build && cd build && cmake .. -DCMAKE_BUILD_TYPE=Release && \
   make -j2 o3d
 
-COPY --chown=user straylib /tmp/straylib
-RUN pip3 install /tmp/straylib
+COPY --chown=user:sudo straylib /tmp/straylib
+WORKDIR /tmp/straylib
+RUN python3.8 setup.py bdist_egg --exclude-source-files
+RUN wheel convert $(find dist/straylib-*.egg)
+RUN pip3.8 install "$(basename $(find straylib-*.whl))"
 RUN rm -rf /tmp/straylib
 
 RUN mkdir /home/user/workspace
