@@ -4,7 +4,7 @@ on:
   push:
     branches: [ main ]
     paths:
-      - 'docker/calibrate/*'
+      - 'docker/calibrate/**'
       - '.github/workflows/deploy-calibrate.yml'
 
 jobs:
