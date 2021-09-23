@@ -12,6 +12,7 @@
 - [Stray Scanner](./apps/scanner/index.md)
     - [Exporting Data](./apps/scanner/export.md)
     - [Data Specification](./apps/scanner/format.md)
+- [Telemetry](./privacy/index.md)
 - [Support](./support/index.md)
 
 
