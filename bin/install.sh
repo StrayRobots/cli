@@ -15,6 +15,12 @@ download() {
   curl --proto '=https' --tlsv1.2 --show-error --fail --location "$1" --output "$2"
 }
 
+log_event() {
+    if [ "$DO_NOT_TRACK" = "" ]; then
+        (curl --request POST --url $ANALYTICS_URL --header 'Content-Type: application/json' --data "{ \"name\": \"cli:$1\" }" 2> /dev/null > /dev/null &)
+    fi
+}
+
 install_studio() {
   install_dir=$1
   download "$endpoint/studio/$platform/$arch/latest/studio.tar.gz" "studio.tar.gz"
@@ -72,6 +78,8 @@ install_python_env() {
 
 main() {
   set -e
+  log_event "install:start"
+
   mkdir -p "$install_dir/bin"
   mkdir -p "$install_dir/share"
   mkdir -p "$install_dir/include"
@@ -90,6 +98,8 @@ main() {
   popd > /dev/null
 
   rm -rf $tmp_dir
+
+  log_event "install:end"
 }
 
 main
