@@ -16,7 +16,7 @@ Without telemetry, we would have no idea which features of our tool people actua
 
 You can opt out of telemetry by setting the `DO_NOT_TRACK` environment variable to any non-empty value in your shell. This can be done by adding:
 ```
-export DO_NOT_TRACK=true
+export DO_NOT_TRACK=True
 ```
 to your shell's rc file and sourcing it for the current session. For example, `.bashrc` for Bash or `.zshrc` for zsh.
 
