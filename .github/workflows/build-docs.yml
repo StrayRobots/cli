@@ -4,7 +4,8 @@ on:
     branches:
       - main
     paths:
-      - 'docs/*'
+      - 'docs/**'
+
 jobs:
   publish_docs:
     runs-on: ubuntu-20.04
