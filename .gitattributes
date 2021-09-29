@@ -1,0 +1,7 @@
+3d/fixtures/ filter=lfs diff=lfs merge=lfs -text
+3d/fixtures/**.jpg filter=lfs diff=lfs merge=lfs -text
+3d/fixtures/**.pickle filter=lfs diff=lfs merge=lfs -text
+3d/fixtures/**.log filter=lfs diff=lfs merge=lfs -text
+3d/fixtures/**.json filter=lfs diff=lfs merge=lfs -text
+*.pickle filter=lfs diff=lfs merge=lfs -text
+*.jpg filter=lfs diff=lfs merge=lfs -text
