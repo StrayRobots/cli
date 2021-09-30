@@ -6,11 +6,14 @@ import torch.nn as nn
 class StrayNet(torch.nn.Module):
     def __init__(self):
         super(StrayNet, self).__init__()
-        self.backbone = models.mobilenet_v2()
-        self.backbone.classifier[1] = nn.Linear(1280, 7)
+        self.backbone = models.mobilenet_v3_large()
+        del self.backbone.classifier
+        self.head = nn.Linear(960, 7) #Change to actual heads
 
     def forward(self, x):
-        return self.backbone(x)
+        x = self.backbone(x)
+        x = self.head(x)
+        return x
 
     def eval(self, train=False):
         self.backbone.eval()
@@ -21,6 +24,5 @@ class StrayNet(torch.nn.Module):
         super(StrayNet, self).train()
 
     def to(self, device):
-        print("tototo", device)
         self.backbone.to(device)
         super(StrayNet, self).to(device)

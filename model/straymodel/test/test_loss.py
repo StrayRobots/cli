@@ -4,7 +4,7 @@ import torch
 import cv2
 import numpy as np
 from torch import optim
-from straymodel.loss import *
+from straymodel.train.loss import *
 import torch.nn.functional as F
 from scipy.spatial.transform import Rotation
 

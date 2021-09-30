@@ -1,7 +1,7 @@
-from data.dataset import Stray3DSceneDataset
+from straymodel.data.dataset import Stray3DSceneDataset, stray_collate
 import click
 from torch.utils.data import DataLoader
-from models.straynet import StrayNet
+from straymodel.models.straynet import StrayNet
 import torch.optim as optim
 import torch.nn as nn
 import torch
@@ -14,7 +14,7 @@ import torch
 @click.option('--shuffle', is_flag=True)
 def train(scenes, batch_size, num_workers, num_epochs, shuffle):
     dataset = Stray3DSceneDataset(scenes)
-    dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=shuffle, num_workers=num_workers)
+    dataloader = DataLoader(dataset, collate_fn=stray_collate, batch_size=batch_size, shuffle=shuffle, num_workers=num_workers)
     model = StrayNet()
 
     if torch.cuda.is_available():
@@ -30,7 +30,7 @@ def train(scenes, batch_size, num_workers, num_epochs, shuffle):
     for epoch in range(num_epochs):
         epoch_loss = 0.0
         for batch in dataloader:
-            images = batch["image"]
+            print(batch)
             images = images.to(device)
             poses = batch["annotations"][0]["pose"].to(device)
 

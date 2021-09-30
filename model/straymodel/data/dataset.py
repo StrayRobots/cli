@@ -10,6 +10,13 @@ import pycocotools.mask as mask_util
 import pickle
 import cv2
 
+def stray_collate(batch):
+    transposed_batch = list(zip(*batch))
+    images = transposed_batch[0]
+    targets = transposed_batch[1]
+    return [images], targets
+
+
 def get_instance_pose(bbox, image_idx, scene):
     '''
     Returns the pose of the instance relative to the camera as a list [pos, rot(quaternion)]
@@ -51,7 +58,6 @@ class Stray3DSceneDataset(Dataset):
                 self.data = self.data.append(data_row, ignore_index=True)
 
     def __len__(self):
-        print("dataset len", len(self.data))
         return len(self.data)
 
     def __getitem__(self, idx):
@@ -64,18 +70,22 @@ class Stray3DSceneDataset(Dataset):
         image = cv2.resize(image, (self.width, self.height))
         image = np.moveaxis(image, -1, 0)/255
         image = torch.from_numpy(image).float()
-        annotations = []
-        for i in range(int(row["num_instances"])):
-            annotation = dict()
-            with open(row[f"instance_{i}_segmentation_path"], 'rb') as handle:
+        target = {}
+
+
+        num_instances = np.random.randint(1,5) #int(row["num_instances"])
+        poses = [row[f"instance_{0}_pose"] for _ in range(num_instances)]
+        categories = [row[f"instance_{0}_category"] for _ in range(num_instances)]
+        masks = []
+        for i in range(num_instances):
+            with open(row[f"instance_{0}_segmentation_path"], 'rb') as handle:
                 mask = pickle.load(handle)
-            mask = mask_util.decode(mask)
-            annotation["mask"] = torch.from_numpy(mask).float()
-            annotation["pose"] = torch.tensor(row[f"instance_{i}_pose"]).float()
-            annotation["category"] = torch.tensor(row[f"instance_{i}_category"]).float()
+            masks.append(mask_util.decode(mask))
 
-            annotations.append(annotation)
+        target["poses"] = torch.as_tensor(poses)
+        target["categories"] = torch.as_tensor(categories)
+        target["masks"] = torch.as_tensor(masks)
+        target["num_instances"] = torch.as_tensor(num_instances)
 
-        sample = {'image': image, 'annotations': annotations}
 
-        return sample
+        return image, target
