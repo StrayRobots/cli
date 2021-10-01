@@ -1,5 +1,5 @@
 import pytest
-from models.straynet import StrayNet
+from straymodel.models.straynet import StrayNet
 import torch
 import os
 

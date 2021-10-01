@@ -7,12 +7,10 @@ class StrayNet(torch.nn.Module):
     def __init__(self):
         super(StrayNet, self).__init__()
         self.backbone = models.mobilenet_v3_large()
-        del self.backbone.classifier
-        self.head = nn.Linear(960, 7) #Change to actual heads
+        self.backbone.classifier[-1] = nn.Linear(1280, 7) #Change to actual heads
 
     def forward(self, x):
         x = self.backbone(x)
-        x = self.head(x)
         return x
 
     def eval(self, train=False):

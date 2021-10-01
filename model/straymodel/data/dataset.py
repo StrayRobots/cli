@@ -6,15 +6,7 @@ import numpy as np
 from straylib.export import validate_segmentations
 from scipy.spatial.transform import Rotation as R
 import torch
-import pycocotools.mask as mask_util
-import pickle
 import cv2
-
-def stray_collate(batch):
-    transposed_batch = list(zip(*batch))
-    images = transposed_batch[0]
-    targets = transposed_batch[1]
-    return [images], targets
 
 
 def get_instance_pose(bbox, image_idx, scene):
@@ -36,7 +28,7 @@ def get_instance_pose(bbox, image_idx, scene):
 
 
 class Stray3DSceneDataset(Dataset):
-    def __init__(self, scene_paths, width=1920, height=1440):
+    def __init__(self, scene_paths, width=100, height=100):
         self.scene_paths = scene_paths
         self.width = width
         self.height = height
@@ -52,9 +44,7 @@ class Stray3DSceneDataset(Dataset):
                 data_row["color_path"] = os.path.join(scene_path, "color", f"{i:06}.jpg")
                 data_row["num_instances"] = len(scene.bounding_boxes)
                 for j, bbox in enumerate(scene.bounding_boxes):
-                    data_row[f"instance_{j}_segmentation_path"]= os.path.join(scene_path, "segmentation", f"instance_{j}", f"{i:06}.pickle")
                     data_row[f"instance_{j}_pose"] = get_instance_pose(bbox, i, scene)
-                    data_row[f"instance_{j}_category"] = bbox.instance_id
                 self.data = self.data.append(data_row, ignore_index=True)
 
     def __len__(self):
@@ -70,22 +60,10 @@ class Stray3DSceneDataset(Dataset):
         image = cv2.resize(image, (self.width, self.height))
         image = np.moveaxis(image, -1, 0)/255
         image = torch.from_numpy(image).float()
-        target = {}
 
 
-        num_instances = np.random.randint(1,5) #int(row["num_instances"])
-        poses = [row[f"instance_{0}_pose"] for _ in range(num_instances)]
-        categories = [row[f"instance_{0}_category"] for _ in range(num_instances)]
-        masks = []
-        for i in range(num_instances):
-            with open(row[f"instance_{0}_segmentation_path"], 'rb') as handle:
-                mask = pickle.load(handle)
-            masks.append(mask_util.decode(mask))
+        num_instances = int(row["num_instances"])
+        poses = [row[f"instance_{i}_pose"] for i in range(num_instances)]
+        poses = torch.as_tensor(poses).float()
 
-        target["poses"] = torch.as_tensor(poses)
-        target["categories"] = torch.as_tensor(categories)
-        target["masks"] = torch.as_tensor(masks)
-        target["num_instances"] = torch.as_tensor(num_instances)
-
-
-        return image, target
+        return image, poses #TODO: currently dataloading assumes the same amount of instances, need to add padding in collate
