@@ -3,14 +3,14 @@ import torch
 import random
 import os
 import numpy as np
-from straymodel.data.dataset import Stray3DSceneDataset
-from torch.utils.data import DataLoader
-from straymodel.models.straynet import StrayNet
 import torch.optim as optim
 import torch.nn as nn
-import torch
-import numpy as np
+from torch.nn import functional as F
 import pathlib
+from straymodel.data.dataset import Stray3DBoundingBoxDetectionDataset
+from torch.utils.data import DataLoader
+from straymodel.models.straynet import StrayNet
+from straymodel.train.loss import BoundingBoxLoss, spatial_softmax
 
 def seed(seed=123):
     random.seed(seed)
@@ -28,27 +28,35 @@ def test_overfit_single_batch():
     seed()
     parent_path = pathlib.Path(__file__).parent.parent.absolute()
     test_scene_path = os.path.join(parent_path, "fixtures", "scene1")
-    dataset = Stray3DSceneDataset([test_scene_path], 100, 100)
-    dataloader = DataLoader(dataset, batch_size=2, shuffle=False, num_workers=1)
-    model = StrayNet()
+    dataset = Stray3DBoundingBoxDetectionDataset([test_scene_path], image_size=(640, 480), out_size=(80, 60))
+    dataloader = DataLoader(dataset, batch_size=2, shuffle=False, num_workers=0)
+    model = StrayNet(dropout=0.0)
 
-    loss_functions = [nn.MSELoss()]
-    optimizer = optim.Adam(model.parameters())
+    loss = BoundingBoxLoss((80, 60))
+    optimizer = optim.SGD(model.parameters(), lr=0.1)
+    schedule = optim.lr_scheduler.StepLR(optimizer, gamma=0.1, step_size=100)
 
     model.train()
     single_batch = next(iter(dataloader))
-    images, poses = single_batch
-    for _ in range(1000):
+    images, gt_heatmap, gt_corners, Ks, gt_points = single_batch
+
+    for _ in range(400):
         optimizer.zero_grad()
-        outputs = model(images)
-        loss = sum([loss_func(outputs, poses) for loss_func in loss_functions])
-        loss.backward()
+        p_heatmaps, regression_features = model(images)
+        p_depth = F.relu(regression_features[:, 0:1])
+        p_corners = regression_features[:, 1:]
+        p_heatmaps = spatial_softmax(p_heatmaps)
+        loss_value = loss(p_heatmaps, p_depth, p_corners, gt_heatmap, gt_corners, Ks, gt_points)
+        loss_value.backward()
         optimizer.step()
-    
+        schedule.step()
+
     model.eval()
-    eval_outputs = model(images)
-    eval_loss = sum([loss_func(eval_outputs, poses) for loss_func in loss_functions])
+    p_heatmaps, regression_features = model(images)
+    p_depth = F.relu(regression_features[:, 0:1])
+    p_corners = regression_features[:, 1:]
+    p_heatmaps = spatial_softmax(p_heatmaps)
+    loss_value = loss(p_heatmaps, p_depth, p_corners, gt_heatmap, gt_corners, Ks, gt_points)
 
-    assert np.isclose(eval_loss.item(), 0.0033829514868557453) #TODO: fails, this result was with mobilenet_v3
-
+    assert loss_value.item() < 0.1
 

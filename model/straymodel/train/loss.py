@@ -6,23 +6,23 @@ def spatial_softmax(predictions):
     """
     Convert predictions to heatmaps by normalizing over the 2d image.
     """
-    N, H, W = predictions.shape
-    return F.softmax(predictions.reshape(N, -1), dim=1).reshape(N, H, W)
+    N, C, H, W = predictions.shape
+    return F.softmax(predictions.reshape(N, C, -1), dim=2).reshape(N, C, H, W)
 
 class IntegralKeypointLoss(_Loss):
     def __init__(self, size):
         super().__init__()
-        self.indices = torch.zeros((*size, 2), dtype=torch.float)
-        for i in range(size[0]):
-            for j in range(size[1]):
-                self.indices[i, j, :] = torch.tensor((j, i), dtype=torch.float)
+        self.indices = torch.zeros((2, size[1], size[0]), dtype=torch.float)
+        for i in range(size[1]):
+            for j in range(size[0]):
+                self.indices[:, i, j] = torch.tensor((j, i), dtype=torch.float) + 0.5
         self.indices = self.indices[None]
 
     def _integrate_maps_unproject_points(self, heatmap, depthmap, K):
-        heatmap_double = heatmap[:, :, :, None].repeat(1, 1, 1, 2)
-        points2d = (self.indices * heatmap_double).sum(dim=[1, 2]) / heatmap.sum(dim=[1,2])
+        heatmap_double = heatmap.repeat(1, 2, 1, 1)
+        points2d = (self.indices * heatmap_double).sum(dim=[2, 3]) / heatmap.sum(dim=[1, 2, 3])
         depth = depthmap * heatmap
-        depth = depth.sum(dim=[1, 2])
+        depth = depth.sum(dim=[1, 2, 3])
 
         fx = K[..., 0, 0]
         fy = K[..., 1, 1]
@@ -34,9 +34,9 @@ class IntegralKeypointLoss(_Loss):
         xyz = torch.stack([x, y, torch.ones_like(x)], dim=-1)
         return xyz * depth[:, None]
 
-    def forward(self, heatmap, depthmap, K, target):
+    def forward(self, heatmap, depthmap, K, gt_points):
         points3d = self._integrate_maps_unproject_points(heatmap, depthmap, K)
-        return F.l1_loss(points3d, target)
+        return F.l1_loss(points3d, gt_points)
 
 class BoundingBoxLoss(_Loss):
     def __init__(self, size, center_weight=1.0, heatmap_weight=1.0, corner_weight=1.0):
@@ -49,7 +49,9 @@ class BoundingBoxLoss(_Loss):
     def forward(self, p_heatmap, p_depth, p_corners, gt_heatmap, gt_corners, Ks, gt_points):
         center_loss = self.integral_loss(p_heatmap, p_depth, Ks, gt_points)
         l2_heatmap_loss = F.mse_loss(p_heatmap, gt_heatmap)
-        corner_loss = F.l1_loss(p_corners, gt_corners)
+        where_positive = (gt_heatmap > 0.0).repeat(1, 16, 1, 1)
+        N = p_heatmap.shape[0]
+        corner_loss = F.l1_loss(p_corners[where_positive], gt_corners[where_positive])
         return (self.center_weight * center_loss +
                 self.heatmap_weight * l2_heatmap_loss +
                 self.corner_weight * corner_loss)

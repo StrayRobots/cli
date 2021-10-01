@@ -3,11 +3,12 @@ import numpy as np
 import open3d as o3d
 
 class Camera:
-    def __init__(self, K, D=np.zeros(4)):
+    def __init__(self, size, K, D=np.zeros(4)):
         """
         K: 3 x 3 camera projection matrix.
         D: distortion parameters.
         """
+        self.size = size
         self.camera_matrix = K
         self.distortion = D
 
@@ -20,6 +21,20 @@ class Camera:
         R, _ = cv2.Rodrigues(T_CW[:3, :3])
         out, _ = cv2.projectPoints(points, R, T_CW[:3, 3], self.camera_matrix, self.distortion)
         return out[:, 0, :]
+
+    def scale(self, new_size):
+        scale_x = new_size[0] / self.size[0]
+        scale_y = new_size[1] / self.size[1]
+        fx = self.camera_matrix[0, 0]
+        fy = self.camera_matrix[1, 1]
+        cx = self.camera_matrix[0, 2]
+        cy = self.camera_matrix[1, 2]
+        new_K = np.eye(3)
+        new_K[0, 0] = self.camera_matrix[0, 0] * scale_x
+        new_K[1, 1] = self.camera_matrix[1, 1] * scale_y
+        new_K[0, 2] = self.camera_matrix[0, 2] * scale_x
+        new_K[1, 2] = self.camera_matrix[1, 2] * scale_y
+        return Camera(new_size, new_K, self.distortion)
 
 def scale_intrinsics(o3d_intrinsics, new_width, new_height):
     old_height = o3d_intrinsics.height
