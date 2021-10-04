@@ -51,7 +51,6 @@ class Stray3DBoundingBoxScene(Dataset):
             for j in range(self.out_width):
                 self.indices[i, j] = np.array([j, i])
         self.lengthscale = self.out_width / 64.0
-        self.radius = 4.0 * self.lengthscale
         self.max_points = 5
 
     def __len__(self):
@@ -62,6 +61,7 @@ class Stray3DBoundingBoxScene(Dataset):
             idx = idx.tolist()
 
         image = cv2.imread(self.color_images[idx])
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         image = cv2.resize(image, (self.image_width, self.image_height))
         image = np.moveaxis(image, -1, 0) / 255.0
         image = torch.from_numpy(image).float()
