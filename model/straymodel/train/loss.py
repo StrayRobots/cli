@@ -20,7 +20,7 @@ class IntegralKeypointLoss(_Loss):
 
     def _integrate_maps_unproject_points(self, heatmap, depthmap, K):
         heatmap_double = heatmap.repeat(1, 2, 1, 1)
-        points2d = (self.indices * heatmap_double).sum(dim=[2, 3]) / heatmap.sum(dim=[1, 2, 3])
+        points2d = (self.indices * heatmap_double).sum(dim=[2, 3]) / heatmap.sum(dim=[2, 3])
         depth = depthmap * heatmap
         depth = depth.sum(dim=[1, 2, 3])
 
