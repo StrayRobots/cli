@@ -89,7 +89,7 @@ class Stray3DBoundingBoxScene(Dataset):
                 where_support = center_map[0] > 0.0
                 #TODO: blend corners in proportion to the support in case the centers overlap.
                 corner_map[j*2:j*2+2, where_support] = (point - center_point[0])[:, None]
-        return image, center_map, corner_map, torch.from_numpy(self.camera.camera_matrix), torch.from_numpy(c_C)
+        return image, center_map, corner_map, torch.from_numpy(self.camera.camera_matrix), torch.from_numpy(c_C[0])
 
 class Stray3DBoundingBoxDetectionDataset(ConcatDataset):
     def __init__(self, scene_paths, *args, **kwargs):
