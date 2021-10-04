@@ -10,6 +10,8 @@ from scipy.spatial.transform import Rotation as R
 from straymodel.heatmap_utils import paint_heatmap
 from torch.utils.data import Dataset, ConcatDataset
 
+I = np.eye(3)
+
 def transform(T, vectors):
     return (T[:3, :3] @ vectors[:, :, None])[:, :, 0] + T[:3, 3]
 
@@ -50,8 +52,6 @@ class Stray3DBoundingBoxScene(Dataset):
         for i in range(self.out_height):
             for j in range(self.out_width):
                 self.indices[i, j] = np.array([j, i])
-        self.lengthscale = self.out_width / 64.0
-        self.max_points = 5
 
     def __len__(self):
         return len(self.scene)
@@ -69,18 +69,24 @@ class Stray3DBoundingBoxScene(Dataset):
         center_map = np.zeros((1, self.out_height, self.out_width), dtype=np.float32)
         corner_map = np.zeros((16, self.out_height, self.out_width), dtype=np.float32)
 
-        T_CW = self.scene.poses[idx]
+        T_CW = np.linalg.inv(self.scene.poses[idx])
 
         # Only single instances supported for now.
         assert len(self.scene.bounding_boxes) == 1
         #TODO: handle case where center is not in frame.
 
         for i, bounding_box in enumerate(self.scene.bounding_boxes):
-            center_point = self.camera.project(bounding_box.position[None], T_CW)
-            paint_heatmap(center_map[0], center_point, self.lengthscale)
+            center_C = transform(T_CW, bounding_box.position[None])[0]
+            center_point = self.camera.project(center_C)
+            # Let's set the heatmap radius to 1/4 of the bounding box's diameter.
+            diagonal_fraction = np.linalg.norm(bounding_box.dimensions, 2) * 0.125 # 1/8.
+            # Compute the size of the center ball in pixels.
+            top_point = self.camera.project((center_C - I[1] * diagonal_fraction)[None])[0]
+            bottom_point = self.camera.project((center_C + I[1] * diagonal_fraction)[None])[0]
+            size = np.linalg.norm(top_point - bottom_point)
+            lengthscale = np.sqrt(size**2/20.0)
 
-            c_W = self.scene.bounding_boxes[0].position
-            c_C = transform(T_CW, c_W[None])
+            paint_heatmap(center_map[0], center_point, lengthscale)
 
             # Corner map.
             vertices = bounding_box.vertices()
@@ -89,7 +95,7 @@ class Stray3DBoundingBoxScene(Dataset):
                 where_support = center_map[0] > 0.0
                 #TODO: blend corners in proportion to the support in case the centers overlap.
                 corner_map[j*2:j*2+2, where_support] = (point - center_point[0])[:, None]
-        return image, center_map, corner_map, torch.from_numpy(self.camera.camera_matrix), torch.from_numpy(c_C[0])
+        return image, center_map, corner_map, torch.from_numpy(self.camera.camera_matrix), torch.from_numpy(center_C)
 
 class Stray3DBoundingBoxDetectionDataset(ConcatDataset):
     def __init__(self, scene_paths, *args, **kwargs):
