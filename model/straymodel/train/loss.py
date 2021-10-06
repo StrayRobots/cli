@@ -1,7 +1,6 @@
 import torch
 from torch.nn.modules.loss import _Loss
 import torch.nn.functional as F
-import numpy as np
 
 def spatial_softmax(predictions):
     """
@@ -42,8 +41,7 @@ class IntegralKeypointLoss(_Loss):
 
     def forward(self, heatmap, depthmap, K, gt_points):
         points3d = self._integrate_maps_unproject_points(heatmap, depthmap, K)
-        loss = F.l1_loss(points3d, gt_points)
-        return loss
+        return F.l1_loss(points3d, gt_points)
 
 class BoundingBoxLoss(_Loss):
     def __init__(self, size, center_weight=1.0, heatmap_weight=1.0, corner_weight=1.0):
@@ -56,6 +54,7 @@ class BoundingBoxLoss(_Loss):
     def forward(self, p_heatmap, p_depth, p_corners, gt_heatmap, gt_corners, Ks, gt_points):
         center_loss = self.integral_loss(spatial_softmax(p_heatmap), p_depth, Ks, gt_points)
         l2_heatmap_loss = F.mse_loss(p_heatmap, gt_heatmap)
+        #TODO: add filtering based on heatmap, currently heatmap too "peaky" to cover any corners
         corner_loss = F.l1_loss(p_corners, gt_corners)
         return self.center_weight * center_loss, self.heatmap_weight * l2_heatmap_loss, self.corner_weight * corner_loss
 

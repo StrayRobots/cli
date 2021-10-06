@@ -1,10 +1,8 @@
-from straylib import camera
 from straymodel.data.dataset import Stray3DBoundingBoxDetectionDataset
 import click
 from torch.utils.data import DataLoader
 from straymodel.models.straynet import StrayNet
 import torch.optim as optim
-import torch.nn as nn
 import torch
 from straymodel.train.loss import BoundingBoxLoss
 import os
@@ -13,6 +11,7 @@ import cv2
 from straylib.scene import cube_indices
 
 
+#TODO: not to be included in "final" version, visualization helper
 def extract_corners_from_maps(corner_map, scale):
     corners = []
     for i in range(8):
@@ -23,6 +22,7 @@ def extract_corners_from_maps(corner_map, scale):
         corners.append((int(scale*x_min[1]), int(scale*y_min[0])))
     return corners
 
+#TODO: not to be included in "final" version, visualization helper
 def save_example_images(images, center_maps, corner_maps, save_folder):
     for i, (image, center_map, corner_map) in enumerate(zip(images, center_maps, corner_maps)):
         _, cm_height, _ = center_map.size()
@@ -99,11 +99,11 @@ def train(scenes, batch_size, debug_save_folder, num_workers, num_epochs, shuffl
             epoch_center_loss += center_loss.item()
             epoch_heatmap_loss += heatmap_loss.item()
             
-            #TODO: not to be included in "final" version, currently saves examples of last batch from epoch
+            #TODO: not to be included in "final" version, currently saves gt examples of first batch of first epoch
             if epoch == 0 and i == 0:
                 save_example_images(images, center_maps, corner_maps, os.path.join(debug_save_folder, "examples"))
             
-        #TODO: not to be included in "final" version, currently saves examples of last batch from epoch
+        #TODO: not to be included in "final" version, currently saves examples of last batch preds from each epoch
         save_example_images(images.detach(), p_heatmaps.detach(), p_corners.detach(), epoch_dir)
 
         print(f"Epoch {epoch} corner loss: {epoch_corner_loss} center loss: {epoch_center_loss} heatmap loss: {epoch_heatmap_loss}")

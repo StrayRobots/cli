@@ -18,7 +18,7 @@ cube_vertices = np.array([
     [ 1., -1., -1.],
     [ 1., -1.,  1.],
     [ 1.,  1., -1.],
-    [ 1.,  1.,  1.]], dtype=np.float32)
+    [ 1.,  1.,  1.]], dtype=np.float32) * 0.5
 
 cube_indices = np.array([
     [0., 0., 0.],
@@ -70,7 +70,7 @@ class BoundingBox:
         return background
 
     def vertices(self):
-        vertices = cube_vertices * 0.5 * self.dimensions
+        vertices = cube_vertices * self.dimensions
         return self.position + self.orientation.apply(vertices)
 
 
