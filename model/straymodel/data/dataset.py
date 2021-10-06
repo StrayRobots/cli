@@ -37,7 +37,7 @@ def _to_transform(translation_rotation):
     return T
 
 class Stray3DBoundingBoxScene(Dataset):
-    def __init__(self, path, image_size=(640, 480), out_size=(60, 80)):
+    def __init__(self, path, image_size=(640, 480), out_size=(80, 60)):
         self.scene_path = path
         self.scene = Scene(path)
         self.image_width = image_size[0]
@@ -67,7 +67,14 @@ class Stray3DBoundingBoxScene(Dataset):
         image = torch.from_numpy(image).float()
 
         center_map = np.zeros((1, self.out_height, self.out_width), dtype=np.float32)
-        corner_map = np.zeros((16, self.out_height, self.out_width), dtype=np.float32)
+
+        x_range = np.arange(self.out_width)
+        y_range = np.arange(self.out_height)
+
+        corner_map_x = np.tile(x_range, (self.out_height, 1))
+        corner_map_y = np.tile(y_range, (self.out_width, 1)).T
+        corner_map_stack = np.stack([corner_map_x, corner_map_y])
+        corner_map = np.tile(corner_map_stack, (8, 1, 1))
 
         T_CW = np.linalg.inv(self.scene.poses[idx])
 
@@ -75,7 +82,7 @@ class Stray3DBoundingBoxScene(Dataset):
         assert len(self.scene.bounding_boxes) == 1
         #TODO: handle case where center is not in frame.
 
-        for i, bounding_box in enumerate(self.scene.bounding_boxes):
+        for bounding_box in self.scene.bounding_boxes:
             center_C = transform(T_CW, bounding_box.position[None])[0]
             center_point = self.camera.project(center_C)
             # Let's set the heatmap radius to 1/4 of the bounding box's diameter.
@@ -87,14 +94,14 @@ class Stray3DBoundingBoxScene(Dataset):
             lengthscale = np.sqrt(size**2/20.0)
 
             paint_heatmap(center_map[0], center_point, lengthscale)
-
+            
             # Corner map.
             vertices = bounding_box.vertices()
             projected = self.camera.project(vertices, T_CW)
             for j, point in enumerate(projected):
-                where_support = center_map[0] > 0.0
                 #TODO: blend corners in proportion to the support in case the centers overlap.
-                corner_map[j*2:j*2+2, where_support] = (point - center_point[0])[:, None]
+                corner_map[j*2] = point[0] - corner_map[j*2]
+                corner_map[j*2 +1] = point[1] - corner_map[j*2+1]
         return image, center_map, corner_map, torch.from_numpy(self.camera.camera_matrix), torch.from_numpy(center_C)
 
 class Stray3DBoundingBoxDetectionDataset(ConcatDataset):

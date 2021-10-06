@@ -11,12 +11,14 @@ def paint_heatmap(heatmap, points, lengthscale, radius=None):
     radius = math.ceil(4.5 * lengthscale)
     hit = False
     for point in points:
-        point_int = np.round(point).astype(np.int)
-        for j in range(max(point_int[1] - radius, 0), min(point_int[1] + radius, heatmap.shape[0])):
-            for i in range(max(point_int[0] - radius, 0), min(point_int[0] + radius, heatmap.shape[1])):
-                hit = True
-                coordinate = np.array([i, j], dtype=point.dtype) + 0.5
-                heatmap[j, i] = rbf(point, coordinate, lengthscale)
+        point_x, point_y = point
+        for y in range(heatmap.shape[0]):
+            for x in range(heatmap.shape[1]):
+                #TODO: maybe somehting accordong to the bbox dimensions vs circle
+                if np.sqrt(np.linalg.norm(y-point_y)**2+np.linalg.norm(x-point_x)**2) <= radius:
+                    hit = True
+                    coordinate = np.array([x, y], dtype=point.dtype)
+                    heatmap[y, x] = rbf(point, coordinate, lengthscale) + 0.5
     if hit:
         heatmap /= heatmap.max()
 

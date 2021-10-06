@@ -6,7 +6,7 @@ from torchvision.models.mobilenetv2 import ConvBNActivation
 
 
 class StrayNet(torch.nn.Module):
-    def __init__(self, features_out=17, dropout=0.2):
+    def __init__(self, dropout=0.2):
         super(StrayNet, self).__init__()
         backbone = mobilenetv3.mobilenet_v3_large(pretrained=True, dilated=True).features
 
@@ -32,31 +32,47 @@ class StrayNet(torch.nn.Module):
             ConvBNActivation(64, 64, kernel_size=3, stride=1),
             nn.Conv2d(64, 1, kernel_size=1, stride=1, bias=True)
         )
-        self.regression_head = nn.Sequential(
+        self.depthmap_head = nn.Sequential(
             ConvBNActivation(64, 64, kernel_size=3, stride=1),
-            nn.Conv2d(64, features_out, kernel_size=1, stride=1, bias=True)
+            nn.Conv2d(64, 1, kernel_size=1, stride=1, bias=True)
+        )
+        self.corners_head = nn.Sequential(
+            ConvBNActivation(64, 64, kernel_size=3, stride=1),
+            nn.Conv2d(64, 16, kernel_size=1, stride=1, bias=True)
         )
 
         # Most values are zero so initialize with a large negative bias.
         self.heatmap_head[-1].bias.data = torch.log(torch.ones(1) * 0.01)
         # Guess 1m away for depth.
-        self.regression_head[-1].bias.data[0] = 1.0
+        self.depthmap_head[-1].bias.data[0] = 1.0
 
     def forward(self, x):
         features = self.backbone(x)
         features_high = self.upsample(features['high'])
         features = self.dropout(torch.cat([features['low'], features_high], dim=1))
         features = self.intermediate(features)
-        return self.heatmap_head(features), self.regression_head(features)
+        return self.heatmap_head(features), self.depthmap_head(features), self.corners_head(features)
 
     def eval(self, train=False):
-        self.backbone.eval()
-        super(StrayNet, self).eval()
+        for net in self.networks:
+           net.eval()
 
     def train(self, train=True):
-        self.backbone.train()
-        super(StrayNet, self).train()
+        for net in self.networks:
+           net.train()
+
+    @property
+    def networks(self):
+        return [
+            self.backbone,
+            self.upsample,
+            self.intermediate,
+            self.dropout,
+            self.heatmap_head,
+            self.depthmap_head,
+            self.corners_head
+        ]
 
     def to(self, device):
-        self.backbone.to(device)
-        super(StrayNet, self).to(device)
+       for net in self.networks:
+           net.to(device)
