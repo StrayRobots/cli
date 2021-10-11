@@ -25,15 +25,7 @@ class Camera:
     def scale(self, new_size):
         scale_x = new_size[0] / self.size[0]
         scale_y = new_size[1] / self.size[1]
-        fx = self.camera_matrix[0, 0]
-        fy = self.camera_matrix[1, 1]
-        cx = self.camera_matrix[0, 2]
-        cy = self.camera_matrix[1, 2]
-        new_K = np.eye(3)
-        new_K[0, 0] = self.camera_matrix[0, 0] * scale_x
-        new_K[1, 1] = self.camera_matrix[1, 1] * scale_y
-        new_K[0, 2] = self.camera_matrix[0, 2] * scale_x
-        new_K[1, 2] = self.camera_matrix[1, 2] * scale_y
+        new_K = get_scaled_camera_matrix(self.camera_matrix, scale_x, scale_y)
         return Camera(new_size, new_K, self.distortion)
 
 def scale_intrinsics(o3d_intrinsics, new_width, new_height):
@@ -48,4 +40,12 @@ def scale_intrinsics(o3d_intrinsics, new_width, new_height):
     fx, fy = fx * scale_x, fy * scale_y
     cx, cy = cx * scale_x, fy * scale_y
     return o3d.camera.PinholeCameraIntrinsic(int(new_width), int(new_height), fx, fy, cx, cy)
+
+def get_scaled_camera_matrix(camera_matrix, width_scale, height_scale):
+    K = np.eye(3)
+    K[0, 0] = camera_matrix[0, 0] * width_scale
+    K[1, 1] = camera_matrix[1, 1] * height_scale
+    K[0, 2] = camera_matrix[0, 2] * width_scale
+    K[1, 2] = camera_matrix[1, 2] * height_scale
+    return K
 

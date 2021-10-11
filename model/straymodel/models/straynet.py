@@ -30,11 +30,13 @@ class StrayNet(torch.nn.Module):
         self.dropout = nn.Dropout(p=dropout, inplace=True)
         self.heatmap_head = nn.Sequential(
             ConvBNActivation(64, 64, kernel_size=3, stride=1),
-            nn.Conv2d(64, 1, kernel_size=1, stride=1, bias=True)
+            nn.Conv2d(64, 1, kernel_size=1, stride=1, bias=True),
+            nn.Sigmoid() #TODO: better ideas to clamp these to [0,1]?
         )
         self.depthmap_head = nn.Sequential(
             ConvBNActivation(64, 64, kernel_size=3, stride=1),
-            nn.Conv2d(64, 1, kernel_size=1, stride=1, bias=True)
+            nn.Conv2d(64, 1, kernel_size=1, stride=1, bias=True),
+            nn.ReLU(inplace=True)
         )
         self.corners_head = nn.Sequential(
             ConvBNActivation(64, 64, kernel_size=3, stride=1),
@@ -42,9 +44,9 @@ class StrayNet(torch.nn.Module):
         )
 
         # Most values are zero so initialize with a large negative bias.
-        self.heatmap_head[-1].bias.data = torch.log(torch.ones(1) * 0.01)
+        self.heatmap_head[-2].bias.data = torch.log(torch.ones(1) * 0.01)
         # Guess 1m away for depth.
-        self.depthmap_head[-1].bias.data[0] = 1.0
+        self.depthmap_head[-2].bias.data[0] = 1.0
 
     def forward(self, x):
         features = self.backbone(x)
@@ -54,15 +56,15 @@ class StrayNet(torch.nn.Module):
         return self.heatmap_head(features), self.depthmap_head(features), self.corners_head(features)
 
     def eval(self, train=False):
-        for net in self.networks:
+        for net in self._get_networks():
            net.eval()
 
     def train(self, train=True):
-        for net in self.networks:
+        for net in self._get_networks():
            net.train()
 
-    @property
-    def networks(self):
+    #Torch Script saving does not allow this to be a @property
+    def _get_networks(self):
         return [
             self.backbone,
             self.upsample,
@@ -74,5 +76,5 @@ class StrayNet(torch.nn.Module):
         ]
 
     def to(self, device):
-       for net in self.networks:
+       for net in self._get_networks():
            net.to(device)
