@@ -43,7 +43,6 @@ class Stray3DBoundingBoxScene(Dataset):
 
     def _get_numpy_image(self, idx):
         image = cv2.imread(self.color_images[idx])
-        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         image = cv2.resize(image, (self.image_width, self.image_height))
         image = np.moveaxis(image, -1, 0) / 255.0
         return image
@@ -58,11 +57,12 @@ class Stray3DBoundingBoxScene(Dataset):
 
         T_CW = np.linalg.inv(self.scene.poses[idx])
 
-        # Only single instances supported for now.
-        assert len(self.scene.bounding_boxes) == 1
         #TODO: handle case where center is not in frame.
 
-        for bounding_box in self.scene.bounding_boxes:
+        for i, bounding_box in enumerate(self.scene.bounding_boxes):
+            #TODO: handle cases with multiple boxes
+            if i > 0:
+                break
             center_C = transform(T_CW, bounding_box.position[None])[0]
             center_point = self.map_camera.project(center_C)
             # Let's set the heatmap radius to 1/4 of the bounding box's diameter.
@@ -82,7 +82,6 @@ class Stray3DBoundingBoxScene(Dataset):
             corner_map = np.copy(self.blank_corner_map)
             for j, point in enumerate(projected):
                 #TODO: blend corners in proportion to the support in case the centers overlap.
-                #COMMENT: Let corner maps be full here, take support into account only in loss
                 corner_map[j*2] = point[0] - corner_map[j*2]
                 corner_map[j*2 +1] = point[1] - corner_map[j*2+1]
             size = bounding_box.dimensions

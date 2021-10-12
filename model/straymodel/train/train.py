@@ -82,7 +82,8 @@ def train(scenes, batch_size, split_size, progress_save_folder, num_workers, num
 
     train_dataset, test_dataset = random_split(dataset, [train_size, test_size])
     train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=shuffle, num_workers=num_workers)
-    test_loader = DataLoader(test_dataset, batch_size=1, shuffle=False, num_workers=num_workers)
+    test_loader = DataLoader(test_dataset, batch_size=1, shuffle=shuffle, num_workers=num_workers)
+    os.makedirs(progress_save_folder, exist_ok=True)
     save_dataset_snapshot(train_loader, progress_save_folder)
 
     model = StrayNet()

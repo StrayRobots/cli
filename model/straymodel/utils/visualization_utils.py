@@ -24,7 +24,7 @@ def draw_epnp_box(cv_image, corners, camera, size):
                 if np.linalg.norm(vertex1-vertex2) == 1:
                     p1 = (int(corner1.flatten()[0]), int(corner1.flatten()[1]))
                     p2 = (int(corner2.flatten()[0]), int(corner2.flatten()[1]))
-                    cv_image = cv2.line(cv_image, p1, p2, (0, 255, 0), 3)
+                    cv_image = cv2.line(cv_image, p1, p2, (255, 0, 0), 3)
     return cv_image
 
 def draw_box(cv_image, corners):
@@ -33,7 +33,7 @@ def draw_box(cv_image, corners):
             if np.linalg.norm(vertex1-vertex2) == 1:
                 p1 = (int(corner1.flatten()[0]), int(corner1.flatten()[1]))
                 p2 = (int(corner2.flatten()[0]), int(corner2.flatten()[1]))
-                cv_image = cv2.line(cv_image, p1, p2, (0, 100, 0), 3)
+                cv_image = cv2.line(cv_image, p1, p2, (0, 0, 255), 3)
     return cv_image
 
 def save_example(image, heatmap, corner_map, camera, size, folder, idx):
@@ -47,11 +47,12 @@ def save_example(image, heatmap, corner_map, camera, size, folder, idx):
     corners = extract_image_corners_from_corner_map(corner_map, where_support, map_width, map_height, width_scale, height_scale)
 
     #Draw heatmap
-    cv_image = np.moveaxis(image*255, 0, -1).astype(np.uint8)
+    cv_image = np.ascontiguousarray(np.moveaxis(image*255, 0, -1), dtype=np.uint8)
     cv_heatmap = np.moveaxis(heatmap*255, 0, -1).astype(np.uint8)
     cv_heatmap = cv2.applyColorMap(cv_heatmap, cv2.COLORMAP_JET)
     cv_heatmap = cv2.resize(cv_heatmap, (image_width, image_height))
-    cv_image = cv2.addWeighted(cv_image, 0.5, cv_heatmap, 0.4, 0)
+    cv_image = cv2.addWeighted(cv_image, 0.65, cv_heatmap, 0.35, 0)
+
     #Draw epnp box
     cv_image = draw_epnp_box(cv_image, corners, camera, size)
     #Draw box directly from corners
