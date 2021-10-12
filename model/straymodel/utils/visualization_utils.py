@@ -44,7 +44,7 @@ def save_example(image, heatmap, corner_map, camera, size, folder, idx):
     camera = get_scaled_camera_matrix(camera, width_scale, height_scale)
 
     where_support = heatmap[0] > 0.0
-    corners = extract_image_corners_from_corner_map(corner_map, where_support, width_scale, height_scale)
+    corners = extract_image_corners_from_corner_map(corner_map, where_support, map_width, map_height, width_scale, height_scale)
 
     #Draw heatmap
     cv_image = np.moveaxis(image*255, 0, -1).astype(np.uint8)
@@ -71,13 +71,13 @@ def save_dataset_snapshot(dataloader, folder, batches=1):
             save_example(image.numpy(), heatmap.numpy(), corner_map.numpy(), camera.numpy(), size.numpy(), batch_folder, j)
 
 
-def extract_image_corners_from_corner_map(corner_map, where_support, width_scale, height_scale):
+def extract_image_corners_from_corner_map(corner_map, where_support, map_width, map_height, width_scale, height_scale):
     corners = []
-    x_range = np.arange(80)
-    y_range = np.arange(60)
+    x_range = np.arange(map_width)
+    y_range = np.arange(map_height)
 
-    corner_map_x = np.tile(x_range, (60, 1))
-    corner_map_y = np.tile(y_range, (80, 1)).T
+    corner_map_x = np.tile(x_range, (map_height, 1))
+    corner_map_y = np.tile(y_range, (map_width, 1)).T
 
     if np.sum(where_support) == 0:
         return np.zeros((8,2), dtype=np.float32)
