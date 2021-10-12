@@ -53,7 +53,7 @@ class BoundingBoxLoss(_Loss):
 
     def forward(self, p_heatmap, p_depth, p_corners, gt_heatmap, gt_corners, Ks, gt_points):
         center_loss = self.integral_loss(spatial_softmax(p_heatmap), p_depth, Ks, gt_points)
-        l2_heatmap_loss = F.mse_loss(p_heatmap, gt_heatmap)
+        l2_heatmap_loss = F.mse_loss(spatial_softmax(p_heatmap), gt_heatmap)
         where_support = (gt_heatmap > 0.0).repeat(1, 16, 1, 1)
         corner_loss = F.l1_loss(p_corners[where_support], gt_corners[where_support])
         return self.center_weight * center_loss, self.heatmap_weight * l2_heatmap_loss, self.corner_weight * corner_loss

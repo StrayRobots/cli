@@ -20,5 +20,5 @@ def paint_heatmap(heatmap, points, lengthscale, radius=None):
                     coordinate = np.array([x, y], dtype=point.dtype)
                     heatmap[y, x] = rbf(point, coordinate, lengthscale) + 0.5
     if hit:
-        heatmap /= heatmap.max()
+        heatmap /= np.sum(heatmap)
 

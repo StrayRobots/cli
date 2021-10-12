@@ -4,7 +4,7 @@ from torch.utils.data import DataLoader
 from straymodel.models.straynet import StrayNet
 import torch.optim as optim
 import torch
-from straymodel.train.loss import BoundingBoxLoss
+from straymodel.train.loss import BoundingBoxLoss, spatial_softmax
 from straymodel.utils.visualization_utils import save_example, save_dataset_snapshot
 import os
 from torch.utils.data import random_split
@@ -29,7 +29,7 @@ def eval_loop(test_loader, device, model, loss_function, epoch, progress_save_fo
         test_epoch_heatmap_loss += heatmap_loss.item()
 
         if i < (save_examples-1):
-            save_example(images[0].cpu().numpy(), p_heatmaps[0].detach().cpu().numpy(), p_corners[0].detach().cpu().numpy(), cameras[0].cpu().numpy(), sizes[0].cpu().numpy(), epoch_dir, i)
+            save_example(images[0].cpu().numpy(), spatial_softmax(p_heatmaps[0].detach().cpu().numpy()), p_corners[0].detach().cpu().numpy(), cameras[0].cpu().numpy(), sizes[0].cpu().numpy(), epoch_dir, i)
 
     if epoch % save_model_every_epoch == 0:
         script_model = torch.jit.script(model)

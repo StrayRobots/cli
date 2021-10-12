@@ -31,7 +31,6 @@ class StrayNet(torch.nn.Module):
         self.heatmap_head = nn.Sequential(
             ConvBNActivation(64, 64, kernel_size=3, stride=1),
             nn.Conv2d(64, 1, kernel_size=1, stride=1, bias=True),
-            nn.Sigmoid() #TODO: better ideas to clamp these to [0,1]?
         )
         self.depthmap_head = nn.Sequential(
             ConvBNActivation(64, 64, kernel_size=3, stride=1),
@@ -44,7 +43,7 @@ class StrayNet(torch.nn.Module):
         )
 
         # Most values are zero so initialize with a large negative bias.
-        self.heatmap_head[-2].bias.data = torch.log(torch.ones(1) * 0.01)
+        self.heatmap_head[-1].bias.data = torch.log(torch.ones(1) * 0.01)
         # Guess 1m away for depth.
         self.depthmap_head[-2].bias.data[0] = 1.0
 
