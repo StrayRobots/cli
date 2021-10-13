@@ -10,6 +10,7 @@ tmp_dir="$(mktemp -d)"
 install_dir="$HOME/.stray"
 platform="$(get_platform)"
 endpoint="https://stray-builds.ams3.digitaloceanspaces.com"
+ANALYTICS_URL="https://app.strayrobots.io/event"
 
 download() {
   curl --proto '=https' --tlsv1.2 --show-error --fail --location "$1" --output "$2"
