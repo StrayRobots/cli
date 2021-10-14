@@ -6,7 +6,7 @@ CONTAINER_PREFIX="strayrobots/"
 ANALYTICS_URL="https://app.strayrobots.io/event"
 VERSION="1.0.0"
 
-if [ STRAY_DEV ]
+if [ "$STRAY_DEV" != "" ]
     then
         CONTAINER_PREFIX=""
         BIN_DIR=""
