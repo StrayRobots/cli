@@ -1,4 +1,5 @@
 from straymodel.data.dataset import Stray3DBoundingBoxDetectionDataset
+from straymodel.data.objectron_dataset import ConcatObjectronDataset
 import click
 from torch.utils.data import DataLoader
 from straymodel.models.straynet import StrayNet
@@ -25,7 +26,7 @@ def eval_loop(test_loader, device, model, loss_function, epoch, progress_save_fo
     
         center_loss, heatmap_loss, corner_loss = loss_function(p_heatmaps, p_depthmaps, p_corners, center_maps, heatmaps, cameras, centers)
         test_epoch_corner_loss += corner_loss.item()
-        test_epoch_center_loss += center_loss.item()
+        #test_epoch_center_loss += center_loss.item()
         test_epoch_heatmap_loss += heatmap_loss.item()
 
         if i < (save_examples-1):
@@ -57,7 +58,7 @@ def train_loop(train_loader, device, optimizer, model, loss_function, epoch):
         optimizer.step()
 
         epoch_corner_loss += corner_loss.item()
-        epoch_center_loss += center_loss.item()
+        #epoch_center_loss += center_loss.item()
         epoch_heatmap_loss += heatmap_loss.item()
         
 
@@ -75,8 +76,8 @@ def train_loop(train_loader, device, optimizer, model, loss_function, epoch):
 @click.option('--corner-loss-coef', type=int, default=1)
 @click.option('--shuffle', is_flag=True)
 def train(scenes, batch_size, split_size, progress_save_folder, num_workers, num_epochs, heatmap_loss_coef, center_loss_coef, corner_loss_coef, shuffle):
-    dataset = Stray3DBoundingBoxDetectionDataset(scenes, out_size=(80, 60))
-
+    #dataset = Stray3DBoundingBoxDetectionDataset(scenes, out_size=(80, 60))
+    dataset = ConcatObjectronDataset(scenes, image_size=(480, 640), out_size=(60, 80))
     train_size = int(split_size * len(dataset))
     test_size = len(dataset) - train_size
 
