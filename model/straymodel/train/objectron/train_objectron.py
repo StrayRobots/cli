@@ -12,7 +12,6 @@ from straymodel.train.objectron.utils import *
 @click.command()
 @click.argument('tfdata', nargs=1)
 @click.option('--batch-size', type=int, default=2)
-@click.option('--split-size', type=float, default=0.8)
 @click.option('--progress-save-folder', default="./")
 @click.option('--num-workers', type=int, default=1)
 @click.option('--num-epochs', type=int, default=1)
@@ -20,7 +19,7 @@ from straymodel.train.objectron.utils import *
 @click.option('--center-loss-coef', type=int, default=1)
 @click.option('--corner-loss-coef', type=int, default=1)
 @click.option('--shuffle', is_flag=True)
-def train(tfdata, batch_size, split_size, progress_save_folder, num_workers, num_epochs, heatmap_loss_coef, center_loss_coef, corner_loss_coef, shuffle):
+def train(tfdata, batch_size, progress_save_folder, num_workers, num_epochs, heatmap_loss_coef, center_loss_coef, corner_loss_coef, shuffle):
 
     os.makedirs(progress_save_folder, exist_ok=True)
     #Disable GPU from tf to avoid OOM
