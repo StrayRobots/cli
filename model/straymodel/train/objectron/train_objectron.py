@@ -16,10 +16,8 @@ from straymodel.train.objectron.utils import *
 @click.option('--num-workers', type=int, default=1)
 @click.option('--num-epochs', type=int, default=1)
 @click.option('--heatmap-loss-coef', type=int, default=1)
-@click.option('--center-loss-coef', type=int, default=1)
 @click.option('--corner-loss-coef', type=int, default=1)
-@click.option('--shuffle', is_flag=True)
-def train(tfdata, batch_size, progress_save_folder, num_workers, num_epochs, heatmap_loss_coef, center_loss_coef, corner_loss_coef, shuffle):
+def train(tfdata, batch_size, progress_save_folder, num_workers, num_epochs, heatmap_loss_coef, corner_loss_coef):
 
     os.makedirs(progress_save_folder, exist_ok=True)
     #Disable GPU from tf to avoid OOM
@@ -34,7 +32,7 @@ def train(tfdata, batch_size, progress_save_folder, num_workers, num_epochs, hea
         device = "cpu"
     model.to(device)
 
-    loss_function = BoundingBoxLoss(center_loss_coef, heatmap_loss_coef, corner_loss_coef)
+    loss_function = BoundingBoxLoss(heatmap_loss_coef, corner_loss_coef)
     optimizer = optim.Adam(model.parameters())
     blank_corner_map, blank_heatmap = get_blank_maps()
 
