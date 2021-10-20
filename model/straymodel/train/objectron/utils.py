@@ -1,15 +1,7 @@
-from straymodel.data.dataset import Stray3DBoundingBoxDetectionDataset
-from straymodel.data.objectron_dataset import ConcatObjectronDataset
-import click
-from torch.utils.data import DataLoader
-from straymodel.models.straynet import StrayNet
-import torch.optim as optim
 import torch
-from straymodel.train.loss import BoundingBoxLoss, spatial_softmax
-from straymodel.utils.visualization_utils import save_example, save_dataset_snapshot
+from straymodel.utils.visualization_utils import save_example
 import os
-from torch.utils.data import random_split
-import objectron_features as features
+from straymodel.train.objectron import objectron_features as features
 import tensorflow as tf
 import numpy as np
 from straymodel.utils.heatmap_utils import paint_heatmap

@@ -54,7 +54,9 @@ def save_example(image, heatmap, corner_map, camera, size, folder, idx):
     cv_image = cv2.addWeighted(cv_image, 0.65, cv_heatmap, 0.35, 0)
 
     #Draw epnp box
-    cv_image = draw_epnp_box(cv_image, corners, camera, size)
+
+    #TODO: matching of the 2D and 3D points needs to be done
+    #cv_image = draw_epnp_box(cv_image, corners, camera, size)
     #Draw box directly from corners
     cv_image = draw_box(cv_image, corners)
 
