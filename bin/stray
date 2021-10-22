@@ -223,7 +223,7 @@ calibration-subcommand() {
                 exit 1
             fi
             docker run -it -v $scene_dir:/home/user/data/ \
-                -v $target_yaml:/home/user/workspace/target.yaml ${CONTAINER_PREFIX}calibrate:latest run $@ 
+                -v $target_yaml:/home/user/workspace/target.yaml ${CONTAINER_PREFIX}calibrate:latest run $@
         elif [ "$task" = "imu_noise" ]; then
             docker run -v $scene_dir:/home/user/data/ -v $target_yaml:/home/user/workspace/target.yaml \
                 -v $camera_yaml:/home/user/workspace/camera.yaml -it ${CONTAINER_PREFIX}calibrate:latest run $@
@@ -234,9 +234,14 @@ calibration-subcommand() {
             echo "Unrecognized calibration task $task. Try intrinsics or camera_imu."
         fi
     elif [ "$2" = "generate" ]; then
-        target_yaml=$3
+        target_yaml=$(absolute_path $3)
         shift 2
         log_event "calibration-generate:start"
+        if [ ! -f $target_yaml ]
+        then
+            echo "Target file $target_yaml does not exist."
+            exit 1
+        fi
         docker run -v `pwd`:/home/user/data/ \
             -v $target_yaml:/home/user/workspace/target.yaml ${CONTAINER_PREFIX}calibrate:latest generate
     elif [ "$2" = "scale" ]; then
