@@ -43,7 +43,7 @@ RUN cd /home/user/pangolin && git checkout dd801d244db3a8e27b7fe8020cd751404aa81
   make install
 
 RUN git clone https://github.com/StrayRobots/ORB_SLAM3.git /home/user/orbslam && \
-  cd /home/user/orbslam && git checkout 2c9dc486d97995b577dbf895418dd3f70983cf5c
+  cd /home/user/orbslam && git checkout defae2b81772dfd613d8c90914c4b1787250beda
 
 RUN cd /home/user/orbslam/Thirdparty/DBoW2 && mkdir build && cd build && cmake .. -DCMAKE_BUILD_TYPE=Release \
   && make -j10
@@ -54,7 +54,7 @@ RUN cd /home/user/orbslam/Thirdparty/g2o/ && mkdir build && cd build && \
 RUN cd /home/user/orbslam/Vocabulary && tar -xf ORBvoc.txt.tar.gz
 
 RUN cd /home/user/orbslam/ && mkdir build && cd build && cmake .. -DCMAKE_BUILD_TYPE=Release && \
-  make -j2 o3d
+  make -j o3d
 
 COPY --chown=user:sudo straylib /tmp/straylib
 WORKDIR /tmp/straylib
