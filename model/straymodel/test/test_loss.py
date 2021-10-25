@@ -4,7 +4,7 @@ import cv2
 import numpy as np
 from torch import optim
 from straymodel.train.loss import *
-from straymodel.heatmap_utils import paint_heatmap
+from straymodel.utils.heatmap_utils import paint_heatmap
 import torch.nn.functional as F
 from scipy.spatial.transform import Rotation
 
@@ -22,7 +22,6 @@ class LossTestCase(unittest.TestCase):
         point2d, _ = cv2.projectPoints(keypoint[None, None, :], np.zeros(3), np.zeros(3), K, D)
         point2d = point2d.ravel()[None]
         paint_heatmap(heatmap[0, 0], point2d, 10.0)
-        self.assertAlmostEqual(heatmap.max(), 1.0)
         self.assertEqual(heatmap.min(), 0.0)
 
         heatmap = torch.tensor(heatmap)
@@ -101,6 +100,7 @@ class LossTestCase(unittest.TestCase):
         center2d = center2d.ravel()
         heatmap = np.zeros((1, 1, HEIGHT, WIDTH))
         paint_heatmap(heatmap[0, 0], center2d[None], 1.0)
+        heatmap /= heatmap.sum()
         corners = np.zeros((1, 16, HEIGHT, WIDTH))
         for i, point in enumerate(points2d):
             vector = center2d - point
@@ -111,9 +111,11 @@ class LossTestCase(unittest.TestCase):
         depth = np.ones((1, 1, HEIGHT, WIDTH)) * center[2]
         heatmap, depth, corners, center = torch.tensor(heatmap), torch.tensor(depth), torch.tensor(corners), torch.tensor(center)
         K_tensor = torch.tensor(K)
-        heatmap /= heatmap.sum()
-        value = loss(heatmap, depth, corners, heatmap, corners, K_tensor, center[None])
-        self.assertAlmostEqual(value.item(), 0.0, 2)
+        heatmap /= heatmap.max()
+        center_loss, heatmap_loss, corner_loss = loss(torch.log(heatmap + 1e-16), depth, corners, heatmap, corners, K_tensor, center[None])
+        self.assertAlmostEqual(center_loss.item(), 0.0, 2)
+        self.assertAlmostEqual(heatmap_loss.item(), 0.0, 2)
+        self.assertAlmostEqual(corner_loss.item(), 0.0, 2)
 
         p_heatmap = torch.log(heatmap + 1e-6).requires_grad_(True)
         p_depth = depth.clone().requires_grad_(True)
@@ -122,7 +124,8 @@ class LossTestCase(unittest.TestCase):
         schedule = optim.lr_scheduler.StepLR(optimizer, gamma=0.1, step_size=500)
         for _ in range(2000):
             optimizer.zero_grad()
-            value = loss(spatial_softmax(p_heatmap), p_depth, p_corners, heatmap, corners, K_tensor, center[None])
+            values = loss(p_heatmap, p_depth, p_corners, heatmap, corners, K_tensor, center[None])
+            value = sum(values)
             value.backward()
             optimizer.step()
             schedule.step()

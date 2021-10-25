@@ -74,6 +74,3 @@ class StrayNet(torch.nn.Module):
             self.corners_head
         ]
 
-    def to(self, device):
-       for net in self._get_networks():
-           net.to(device)

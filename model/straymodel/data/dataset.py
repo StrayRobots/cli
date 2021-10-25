@@ -75,7 +75,8 @@ class Stray3DBoundingBoxScene(Dataset):
 
             heatmap = np.copy(self.blank_heatmap)
             paint_heatmap(heatmap[0], center_point, lengthscale)
-            
+            heatmap[0] /= heatmap.sum()
+
             # Corner map.
             vertices = bounding_box.vertices()
             projected = self.map_camera.project(vertices, T_CW)

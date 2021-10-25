@@ -49,10 +49,11 @@ def get_heatmap(data, blank_heatmap):
     top_point = top[:, 0, :][0]
     bottom, _ = cv2.projectPoints((translation + I[1] * diagonal_fraction)[None], R, np.zeros(3), scaled_intrinsics, np.zeros(4))
     bottom_point = bottom[:, 0, :][0]
-    size = np.linalg.norm(top_point - bottom_point)
+    size = np.linalg.norm(top_point - bottom_point) / 4.0
     lengthscale = np.sqrt(size**2/20.0)
     center_point = points_2d[:3][:2]*np.array([OUT_WIDTH, OUT_HEIGHT])
     paint_heatmap(heatmap[0], [center_point], lengthscale)
+    heatmap_max = heatmap.max()
     return heatmap
 
 def get_corner_maps(data, blank_corner_map):
