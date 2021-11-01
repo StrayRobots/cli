@@ -130,7 +130,7 @@ class ObjectronData(pl.LightningDataModule):
                     pin_memory=torch.cuda.is_available())
 
     def val_dataloader(self):
-        files = [f for f in os.listdir(self.objectron_dir) if '.txt' not in f and 'test' in f]
+        files = [f for f in os.listdir(self.objectron_dir) if '.txt' not in f and 'test' in f][:3]
         blank_corner_map, blank_heatmap = get_blank_maps()
         datasets = (TFRecordDataset(os.path.join(self.objectron_dir, f),
             os.path.join(tmp_dir, index_pattern.format(f))) for f in files)
