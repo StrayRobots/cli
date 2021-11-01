@@ -53,8 +53,11 @@ def read_frames(flags, color_images):
             timing[num] = ts
     else:
         with open(frames_path, 'rt') as f:
+            first_line = f.readline()
+            f.seek(0)
             reader = csv.reader(f)
-            next(reader) # header
+            if first_line[0] == 't':
+                next(reader) # skip header
             for line in reader:
                 timestamp = line[0]
                 frame = line[1].strip()

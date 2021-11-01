@@ -36,7 +36,6 @@ RUN apt-get install -y software-properties-common && add-apt-repository ppa:dead
 RUN apt-get update
 RUN apt-get install -y build-essential python3.8 python3.8-distutils
 
-
 RUN rm -rf /var/lib/apt/lists/*
 
 # create a non-root user
@@ -84,16 +83,11 @@ RUN chmod +x /home/user/workspace/imu/run.sh
 COPY --chown=user:sudo docker/calibrate/camera_imu/ /home/user/workspace/camera_imu
 RUN chmod +x /home/user/workspace/camera_imu/run.sh
 
-# Copy hand_eye related files.
-COPY --chown=user:sudo docker/calibrate/hand_eye/ /home/user/workspace/hand_eye
-RUN chmod +x /home/user/workspace/hand_eye/run.sh
-
 # Copy General files.
 COPY docker/calibrate/entrypoint.sh /home/user/workspace/entrypoint.sh
 COPY docker/calibrate/convert_format.py /home/user/workspace/convert_format.py
 COPY docker/calibrate/extract_calibration.py /home/user/workspace/extract_calibration.py
 COPY docker/calibrate/create_target.py /home/user/workspace/create_target.py
-
 
 
 ENTRYPOINT ["/home/user/workspace/entrypoint.sh"]
