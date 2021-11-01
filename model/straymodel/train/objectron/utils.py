@@ -25,7 +25,7 @@ def get_blank_maps():
     return blank_corner_map, blank_heatmap
 
 def get_image(data):
-    data['image'] = cv2.imdecode(data['image/encoded'], -1)
+    data['image'] = cv2.cvtColor(cv2.imdecode(data['image/encoded'], -1), cv2.COLOR_BGR2RGB)
     data['image'] = data['image'].astype(np.float32) / 255.0
     return np.transpose(data['image'], [2, 0, 1])
 

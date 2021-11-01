@@ -6,9 +6,11 @@ import numpy as np
 from straymodel.train.objectron.objectron_loss import BoundingBoxLoss
 import os
 from straymodel.train.objectron.utils import *
+from straymodel.utils.visualization_utils import render_example
 from tfrecord.torch.dataset import TFRecordDataset
 from tfrecord import iterator_utils
 import warnings
+import pytorch_lightning as pl
 
 tmp_dir = "/tmp/bbox3d_train"
 tf_record_pattern = "{}"
@@ -36,32 +38,6 @@ class ShufflePool(torch.utils.data.IterableDataset):
             except StopIteration:
                 yield pool.pop(index)
 
-
-
-def create_dataset(tfrecord_directory):
-    files = [f for f in os.listdir(tfrecord_directory) if '.txt' not in f]
-    blank_corner_map, blank_heatmap = get_blank_maps()
-    splits = {}
-    for path in files:
-        splits[path] = 1.0 / float(len(files))
-
-    indices = os.path.join(tmp_dir, index_pattern)
-    datasets = (TFRecordDataset(os.path.join(tfrecord_directory, f),
-        os.path.join(tmp_dir, index_pattern.format(f))) for f in files)
-    dataset = ShufflePool(torch.utils.data.ChainDataset(datasets), 1024)
-
-    def is_valid(xy):
-        return xy[0]
-
-    def get_record(xy):
-        return xy[1]
-
-    return (dataset
-            .map(unpack_record(blank_corner_map, blank_heatmap))
-            .filter(is_valid)
-            .map(get_record)
-            )
-
 def ensure_index(tfdata_path):
     os.makedirs(tmp_dir, exist_ok=True)
     from tfrecord.tools import tfrecord2idx
@@ -74,74 +50,156 @@ def ensure_index(tfdata_path):
             print(f"Creating index for {filename}")
             tfrecord2idx.create_index(path, os.path.join(tmp_dir, filename + '.index'))
 
+class Objectron(pl.LightningModule):
+    def __init__(self, heatmap_loss_coef, corner_loss_coef, lr):
+        super().__init__()
+        self.lr = lr
+        self.model = StrayNet()
+        self.heatmap_loss_coef = heatmap_loss_coef
+        self.corner_loss_coef = corner_loss_coef
+        self.loss_function = BoundingBoxLoss(heatmap_loss_coef, corner_loss_coef)
+        self.save_hyperparameters()
+
+    def forward(self, x):
+        return self.model(x)
+
+    def training_step(self, batch, batch_idx):
+        images, heatmaps, corner_maps, intrinsics, sizes = batch
+        p_heatmaps, _, p_corners = self(images)
+        heatmap_loss, corner_loss = self.loss_function(p_heatmaps, p_corners, heatmaps, corner_maps)
+        loss = heatmap_loss + corner_loss
+        self.log('train_loss', loss)
+        self.log('train_heatmap_loss', heatmap_loss)
+        self.log('train_corner_loss', corner_loss)
+        return loss
+
+    def validation_step(self, batch, batch_idx):
+        images, heatmaps, corner_maps, intrinsics, sizes = batch
+        p_heatmaps, _, p_corners = self(images)
+        heatmap_loss, corner_loss = self.loss_function(p_heatmaps, p_corners, heatmaps, corner_maps)
+        loss = heatmap_loss + corner_loss
+        self.log('val_loss', loss)
+        self.log('val_heatmap_loss', heatmap_loss)
+        self.log('val_corner_loss', corner_loss)
+        if batch_idx == 0:
+            index = np.random.randint(0, p_heatmaps.shape[0])
+            heatmap = torch.sigmoid(p_heatmaps[index])
+            image = images[index]
+            corner_image = render_example(images[index].cpu().numpy(), torch.sigmoid(p_heatmaps[index]).detach().cpu().numpy(),
+                    p_corners[index].detach().cpu().numpy(), intrinsics[index].detach().cpu().numpy(), sizes[index].detach().cpu().numpy())
+            self.logger.experiment.add_image('image', (image * 255.0).cpu().to(torch.uint8), 0)
+            self.logger.experiment.add_image('p_heatmap', heatmap, 0)
+            corner_image = np.transpose(corner_image, [2, 0, 1])
+            self.logger.experiment.add_image('p_corners', corner_image, 0)
+        return loss
+
+    def configure_optimizers(self):
+        return optim.Adam(self.model.parameters(), lr=self.lr)
+
+class ObjectronData(pl.LightningDataModule):
+    def __init__(self, objectron_dir, batch_size, num_workers):
+        super().__init__()
+        self.objectron_dir = objectron_dir
+        self.batch_size = batch_size
+        self.num_workers = num_workers
+
+    def prepare_data(self):
+        ensure_index(self.objectron_dir)
+
+    def train_dataloader(self):
+        files = [f for f in os.listdir(self.objectron_dir) if '.txt' not in f and 'train' in f]
+        blank_corner_map, blank_heatmap = get_blank_maps()
+
+        datasets = (TFRecordDataset(os.path.join(self.objectron_dir, f),
+            os.path.join(tmp_dir, index_pattern.format(f))) for f in files)
+        dataset = ShufflePool(torch.utils.data.ChainDataset(datasets), 1024)
+
+        def is_valid(xy):
+            return xy[0]
+
+        def get_record(xy):
+            return xy[1]
+
+        dataset = (dataset
+                .map(unpack_record(blank_corner_map, blank_heatmap))
+                .filter(is_valid)
+                .map(get_record))
+        return torch.utils.data.DataLoader(dataset,
+                    num_workers=self.num_workers,
+                    batch_size=self.batch_size,
+                    pin_memory=torch.cuda.is_available())
+
+    def val_dataloader(self):
+        files = [f for f in os.listdir(self.objectron_dir) if '.txt' not in f and 'test' in f]
+        blank_corner_map, blank_heatmap = get_blank_maps()
+        datasets = (TFRecordDataset(os.path.join(self.objectron_dir, f),
+            os.path.join(tmp_dir, index_pattern.format(f))) for f in files)
+        dataset = torch.utils.data.ChainDataset(datasets)
+
+        def is_valid(xy):
+            return xy[0]
+
+        def get_record(xy):
+            return xy[1]
+
+        dataset = (dataset
+                .map(unpack_record(blank_corner_map, blank_heatmap))
+                .filter(is_valid)
+                .map(get_record))
+        return torch.utils.data.DataLoader(dataset,
+                    num_workers=self.num_workers,
+                    batch_size=self.batch_size * 2,
+                    pin_memory=torch.cuda.is_available())
+
+
 @click.command()
 @click.argument('tfdata', nargs=1)
 @click.option('--batch-size', type=int, default=2)
-@click.option('--progress-save-folder', default="./")
+@click.option('--progress-save-folder', default="~/lightning")
 @click.option('--num-workers', type=int, default=1)
 @click.option('--num-epochs', type=int, default=1)
 @click.option('--heatmap-loss-coef', type=float, default=1.0)
 @click.option('--corner-loss-coef', type=float, default=1.0)
 @click.option('--lr', type=float, default=1e-3)
+@click.option('--fp16', is_flag=True)
+@click.option('--tune', is_flag=True)
+@click.option('--restore', type=str)
 def train(tfdata, batch_size, progress_save_folder, num_workers, num_epochs,
-        heatmap_loss_coef, corner_loss_coef, lr):
-    ensure_index(tfdata)
-
-    os.makedirs(progress_save_folder, exist_ok=True)
-
-    model = StrayNet()
-
-    #TODO: set device globally
-    if torch.cuda.is_available():
-        device = "cuda:0"
+        heatmap_loss_coef, corner_loss_coef, lr, fp16, tune,
+        restore):
+    if restore:
+        model = Objectron.load_from_checkpoint(restore,
+                heatmap_loss_coef=heatmap_loss_coef,
+                corner_loss_coef=corner_loss_coef,
+                lr=lr)
     else:
-        device = "cpu"
-    model.to(device)
+        model = Objectron(heatmap_loss_coef, corner_loss_coef, lr)
 
-    loss_function = BoundingBoxLoss(heatmap_loss_coef, corner_loss_coef)
-    optimizer = optim.Adam(model.parameters(), lr=lr)
+    if torch.cuda.is_available():
+        gpus = 1
+    else:
+        gpus = None
 
-    for epoch in range(num_epochs):
-        print(f"Epoch {epoch}")
-        dataset = create_dataset(tfdata)
-        dataloader = torch.utils.data.DataLoader(dataset,
-                batch_size=batch_size,
-                num_workers=num_workers,
-                pin_memory=device=='cuda:0')
-        for i, batch in enumerate(dataloader):
-            optimizer.zero_grad()
+    config = {
+        'gpus': gpus,
+        'accumulate_grad_batches': {
+            0: 1,
+            num_epochs // 4: 2,
+            num_epochs // 2: 4
+        },
+        'max_epochs': num_epochs
+    }
+    if fp16:
+        config['precision'] = 16
 
-            images, heatmaps, corner_maps, intrinsics, sizes = batch
+    train = pl.Trainer(**config)
 
-            if i == 0 and epoch == 0:
-                sample_folder = os.path.join(progress_save_folder, "sample")
-                os.makedirs(sample_folder, exist_ok=True)
-                save_objectron_sample(sample_folder, images.numpy(), heatmaps.numpy(), corner_maps.numpy(), intrinsics, sizes)
+    datamodule = ObjectronData(tfdata, batch_size=batch_size, num_workers=num_workers)
 
-            images = images.to(device)
-            heatmaps = heatmaps.to(device)
-            corner_maps = corner_maps.to(device)
-            p_heatmaps, _, p_corners = model(images)
+    if tune:
+        train.tune(model, datamodule=datamodule)
 
-            if i == 0:
-                epoch_folder = os.path.join(progress_save_folder, f"epoch_{epoch}")
-                os.makedirs(epoch_folder, exist_ok=True)
-                save_objectron_sample(epoch_folder, images.cpu().numpy(), torch.sigmoid(p_heatmaps).detach().cpu().numpy(), p_corners.detach().cpu().numpy(), intrinsics, sizes)
-                #Don't train on this single batch
-                continue
-
-            heatmap_loss, corner_loss = loss_function(p_heatmaps, p_corners, heatmaps, corner_maps)
-            loss = heatmap_loss + corner_loss
-            loss.backward()
-            optimizer.step()
-            print(f"Batch {i} heatmap: {heatmap_loss.item():.04f} corner: {corner_loss.item():.04f}", end='\r')
-        print("")
-
-        #Saves model every epoch
-        script_model = torch.jit.script(model)
-        torch.jit.save(script_model, os.path.join(epoch_folder, "model.pt"))
-
-
+    train.fit(model, datamodule=datamodule)
 
 if __name__ == "__main__":
     train()

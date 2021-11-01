@@ -36,7 +36,7 @@ def draw_box(cv_image, corners):
                 cv_image = cv2.line(cv_image, p1, p2, (0, 0, 255), 3)
     return cv_image
 
-def save_example(image, heatmap, corner_map, camera, size, folder, idx):
+def render_example(image, heatmap, corner_map, camera, size):
     _, image_height, image_width = image.shape
     _, map_height, map_width = heatmap.shape
     width_scale = image_width / map_width
@@ -54,12 +54,13 @@ def save_example(image, heatmap, corner_map, camera, size, folder, idx):
     cv_image = cv2.addWeighted(cv_image, 0.65, cv_heatmap, 0.35, 0)
 
     #Draw epnp box
-
     #TODO: matching of the 2D and 3D points needs to be done
     #cv_image = draw_epnp_box(cv_image, corners, camera, size)
     #Draw box directly from corners
-    cv_image = draw_box(cv_image, corners)
+    return draw_box(cv_image, corners)
 
+def save_example(image, heatmap, corner_map, camera, size, folder, idx):
+    cv_image = render_example(image, heatmap, corner_map, camera, size)
     cv2.imwrite(os.path.join(folder, f"image_{idx}.png"), cv_image)
 
 def save_dataset_snapshot(dataloader, folder, batches=1):
