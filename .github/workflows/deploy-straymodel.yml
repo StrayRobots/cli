@@ -5,8 +5,6 @@ on:
     branches: [ main ]
     paths:
       - 'model/setup.py' #Only push when version bumps happen so package versions can be mapped to commits
-  pull_request:
-    branches: [ main ]
 
 jobs:
   deploy:
