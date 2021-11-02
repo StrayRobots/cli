@@ -2,11 +2,13 @@ import argparse
 import os
 import numpy as np
 import open3d as o3d
+from straylib.scene import Scene
 from scipy.spatial.transform import Rotation
 
 def read_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('scene')
+    parser.add_argument('--voxel-size', default=0.005, type=float)
     parser.add_argument('--trajectory', '-t')
     parser.add_argument('--debug', action='store_true')
     return parser.parse_args()
@@ -22,6 +24,10 @@ def read_trajectory(pose_ids, path):
         T[:3, 3] = [tx, ty, tz]
         poses.append((pose_id, T))
     return poses
+
+def read_trajectory_log(scene_path):
+    scene = Scene(scene_path)
+    return [(f"{i:06}", T) for i, T in enumerate(scene.poses)]
 
 def write_trajectory(poses, flags):
     with open(os.path.join(flags.scene, 'scene', 'trajectory.log'), 'wt') as f:
@@ -71,11 +77,16 @@ def main():
     pose_ids = [i.split('.')[0] for i in color_images]
     pose_ids.sort()
 
-    poses = read_trajectory(pose_ids, flags.trajectory)
-    os.makedirs(os.path.join(flags.scene, 'scene'), exist_ok=True)
-    write_trajectory(poses, flags)
+    trajectory_path = os.path.join(flags.scene, 'scene', 'trajectory.log')
+    if os.path.exists(trajectory_path):
+        poses = read_trajectory_log(flags.scene)
+    else:
+        poses = read_trajectory(pose_ids, flags.trajectory)
+        os.makedirs(os.path.join(flags.scene, 'scene'), exist_ok=True)
+        write_trajectory(poses, flags)
+
     volume = o3d.pipelines.integration.ScalableTSDFVolume(
-        voxel_length=0.01, # In meters.
+        voxel_length=flags.voxel_size, # In meters.
         sdf_trunc=0.04,
         color_type=o3d.pipelines.integration.TSDFVolumeColorType.RGB8)
 

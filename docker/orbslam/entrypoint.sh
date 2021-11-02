@@ -12,11 +12,9 @@ validate_scene() {
     fi
 }
 
-integrate_scene() {
-    validate_scene $1
-    i=$((i + 1))
+slam_step() {
+    i=0
     args=("$@")
-    echo "args: $@"
     sleep=1
     debug=0
     for arg in "$@"
@@ -35,8 +33,7 @@ integrate_scene() {
         fi
         i=$((i + 1))
     done
-    i=0
-    echo "Settings $settings"
+
     if [ -n "$settings" ]
     then
         echo "Overriding SLAM settings"
@@ -57,15 +54,38 @@ integrate_scene() {
         ./o3d ../../Vocabulary/ORBvoc.txt /home/user/workspace/settings.yaml $1 $sleep
     fi
 
+    popd > /dev/null
+}
+
+integrate_scene() {
+    validate_scene $1
+
+    if [ -f "$1/scene/trajectory.log" ]
+    then
+        echo "Scene already has trajectory. Skipping SLAM step."
+    else
+        slam_step $@
+    fi
+
     echo "Integrating scene."
-    
-    python3.8 /home/user/workspace/integrate.py $1 --trajectory CameraTrajectory.txt
+
+    i=0
+    args=("$@")
+    voxel_size="0.005"
+    for arg in "$@"
+    do
+        if [ "${args[i]}" = "--voxel-size" ]
+        then
+            voxel_size=${args[i+1]}
+        fi
+        i=$((i + 1))
+    done
+
+    python3.8 /home/user/workspace/integrate.py $1 --trajectory CameraTrajectory.txt --voxel-size $voxel_size
 
     echo "Integrating point cloud."
 
     python3.8 /home/user/workspace/integrate_pointcloud.py $1
-
-    popd > /dev/null
 }
 
 success=0

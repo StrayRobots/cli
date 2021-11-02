@@ -18,7 +18,7 @@ RUN apt-get update -y && apt-get install -y \
   libssl-dev \
   libomp-dev \
   libboost-serialization-dev \
-  wget 
+  wget
 
 RUN rm -rf /var/lib/apt/lists/*
 
@@ -54,7 +54,7 @@ RUN cd /home/user/orbslam/Thirdparty/g2o/ && mkdir build && cd build && \
 RUN cd /home/user/orbslam/Vocabulary && tar -xf ORBvoc.txt.tar.gz
 
 RUN cd /home/user/orbslam/ && mkdir build && cd build && cmake .. -DCMAKE_BUILD_TYPE=Release && \
-  make -j2 o3d
+  make -j o3d
 
 COPY --chown=user:sudo straylib /tmp/straylib
 WORKDIR /tmp/straylib
