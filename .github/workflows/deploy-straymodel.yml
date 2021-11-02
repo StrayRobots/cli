@@ -34,7 +34,7 @@ jobs:
       - name: Build and upload
         run: |
             pip install wheel
-            pushd "model/" > /dev/null
+            pushd "straymodel/" > /dev/null
             python setup.py bdist_egg --exclude-source-files
             straymodel_egg="$(find dist/straymodel-*.egg)"
             wheel convert $straymodel_egg
