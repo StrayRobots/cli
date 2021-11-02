@@ -39,7 +39,7 @@ jobs:
             straymodel_egg="$(find dist/straymodel-*.egg)"
             wheel convert $straymodel_egg
             straymodel_wheel="$(basename $(find straymodel-*.whl))"
-            straymodel_destination="s3://stray-builds/straymodel/$straymodel_wheel"
+            straymodel_destination="s3://stray-builds/straymodel-debug/$straymodel_wheel"
             s3cmd put ${straymodel_wheel} "$straymodel_destination"
             s3cmd setacl "$straymodel_destination" --acl-public
             popd > /dev/null
