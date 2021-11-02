@@ -38,8 +38,9 @@ class OrientedBoundingBoxDetector(object):
         return vector / np.linalg.norm(vector)
 
     def get_point_3d_from_depth(self, instance, depth):
+        x, y = instance["bounding_box"]["center"]
+        width, height, rotation  = instance["bounding_box"]["width"], instance["bounding_box"]["height"], instance["bounding_box"]["rotation"]
         mask = np.float32(np.zeros((self.image_height, self.image_width, 3)))
-        x, y, width, height, rotation = instance["x"], instance["y"], instance["width"]*self.depth_box_scale, instance["height"]*self.depth_box_scale, instance["rotation"]
         rect = ((x, y), (width, height), rotation)
         cv_box = cv2.boxPoints(rect)
         cv_box = np.int0(cv_box)
@@ -52,7 +53,7 @@ class OrientedBoundingBoxDetector(object):
         return self.get_ray(x, y)*length
 
     def get_point_3d_from_height(self, instance, z):
-        x, y = instance["x"], instance["y"]
+        x, y = instance["bounding_box"]["center"]
         plane_C = Plane(point=[0, 0, z], normal=[0, 0, -1])
         ray = self.get_ray(x, y)
         line_C = Line([0, 0, 0], ray)

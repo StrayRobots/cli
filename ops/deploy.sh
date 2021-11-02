@@ -29,7 +29,7 @@ make_wheel() {
 }
 
 deploy_wheels() {
-  pushd "$source_dir/model/" > /dev/null
+  pushd "$source_dir/straymodel/" > /dev/null
   make_wheel
   wheel_file="$(basename $(find straymodel-*))"
   echo "wheel: $wheel_file uploading to $s3_bucket/straymodel/$wheel_file"
