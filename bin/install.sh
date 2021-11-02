@@ -61,6 +61,11 @@ add_to_path() {
   fi
 }
 
+install_python_env_requirements() {
+  pip install torch torchvision
+  pip install 'git+https://github.com/StrayRobots/detectron2.git'
+}
+
 install_python_env() {
   download "$endpoint/cli/$platform/$arch/latest/install_env.sh" "install_env.sh"
   chmod +x install_env.sh
@@ -70,7 +75,7 @@ install_python_env() {
   model_wheel_name="straymodel-$version-py38-none-any.whl"
   lib_wheel_name="straylib-$version-py38-none-any.whl"
   label_wheel_name="straylabel-$version-py38-none-any.whl"
-  echo "$lib_wheel_name"
+  install_python_env_requirements
   download "$endpoint/straymodel/$model_wheel_name" "$model_wheel_name"
   download "$endpoint/straylib/$lib_wheel_name" "$lib_wheel_name"
   download "$endpoint/straylabel/$label_wheel_name" "$label_wheel_name"
