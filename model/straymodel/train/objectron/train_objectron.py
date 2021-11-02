@@ -87,10 +87,10 @@ class Objectron(pl.LightningModule):
             image = images[index]
             corner_image = render_example(images[index].cpu().numpy(), torch.sigmoid(p_heatmaps[index]).detach().cpu().numpy(),
                     p_corners[index].detach().cpu().numpy(), intrinsics[index].detach().cpu().numpy(), sizes[index].detach().cpu().numpy())
-            self.logger.experiment.add_image('image', (image * 255.0).cpu().to(torch.uint8), 0)
-            self.logger.experiment.add_image('p_heatmap', heatmap, 0)
+            self.logger.experiment.add_image('image', (image * 255.0).cpu().to(torch.uint8), self.global_step)
+            self.logger.experiment.add_image('p_heatmap', heatmap, self.global_step)
             corner_image = np.transpose(corner_image, [2, 0, 1])
-            self.logger.experiment.add_image('p_corners', corner_image, 0)
+            self.logger.experiment.add_image('p_corners', corner_image, self.global_step)
         return loss
 
     def configure_optimizers(self):
