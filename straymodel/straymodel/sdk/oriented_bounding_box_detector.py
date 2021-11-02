@@ -71,18 +71,19 @@ class OrientedBoundingBoxDetector(object):
                 "instance_id": i,
                 "category_id": category,
                 "confidence": confidence,
-                "x": bbox[0],
-                "y": bbox[1],
-                "width" : bbox[2],
-                "height": bbox[3],
-                "rotation": -bbox[4]
+                "bounding_box": {
+                    "center": [bbox[0], bbox[1]],
+                    "width" : bbox[2],
+                    "height": bbox[3],
+                    "rotation": -bbox[4]
+                }
             }
             if z is not None:
                 point_3d = self.get_point_3d_from_height(instance, z)
             else:
                 point_3d = self.get_point_3d_from_depth(instance, depth)
 
-            instance["point_3d"] = point_3d
+            instance["center_3d"] = point_3d
             predictions.append(instance)
 
         return predictions
