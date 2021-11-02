@@ -12,7 +12,7 @@ setup(
     ],
     packages=find_packages(),
     python_requires=">=3.8",
-    install_requires=["click", "tensorboard", "cmake", "fvcore", "torchvision", "torch", "trimesh", "pyrender", "opencv-python"],
+    install_requires=["click", "tensorboard", "cmake", "fvcore", "torchvision", "torch", "trimesh", "pyrender", "opencv-python", "omegaconf", "scikit-spatial"],
     setup_requires=["fvcore", "torch==1.9", "torchvision==0.10"],
     dependency_links=["https://download.pytorch.org/whl/cu111/torch_stable.html", "git+git://github.com/facebookresearch/fvcore.git@2d073f1b713f6ff3bb310af9a4313a5e8e03f49c"],
     entry_points={
