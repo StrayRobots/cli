@@ -38,10 +38,10 @@ class OrientedBoundingBoxDetector(object):
         return vector / np.linalg.norm(vector)
 
     def get_point_3d_from_depth(self, instance, depth):
-        center = instance["bounding_box"]["center"]
+        x, y = instance["bounding_box"]["center"]
         width, height, rotation  = instance["bounding_box"]["width"], instance["bounding_box"]["height"], instance["bounding_box"]["rotation"]
         mask = np.float32(np.zeros((self.image_height, self.image_width, 3)))
-        rect = (center, (width, height), rotation)
+        rect = ((x, y), (width, height), rotation)
         cv_box = cv2.boxPoints(rect)
         cv_box = np.int0(cv_box)
         cv2.fillConvexPoly(mask, cv_box, (0,255,0))
