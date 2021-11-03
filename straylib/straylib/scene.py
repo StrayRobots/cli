@@ -10,6 +10,26 @@ from straylib import camera
 class NotASceneException(ValueError):
     pass
 
+cube_vertices = np.array([
+    [-1., -1., -1.],
+    [-1., -1.,  1.],
+    [-1.,  1., -1.],
+    [-1.,  1.,  1.],
+    [ 1., -1., -1.],
+    [ 1., -1.,  1.],
+    [ 1.,  1., -1.],
+    [ 1.,  1.,  1.]], dtype=np.float32) * 0.5
+
+cube_indices = np.array([
+    [0., 0., 0.],
+    [0., 0.,  1.],
+    [0.,  1., 0.],
+    [0.,  1.,  1.],
+    [ 1., 0., 0.],
+    [ 1., 0.,  1.],
+    [ 1.,  1., 0.],
+    [ 1.,  1.,  1.]], dtype=np.float32)
+
 class BoundingBox:
     def __init__(self, data):
         self.position = np.array(data['position'])
@@ -48,6 +68,10 @@ class BoundingBox:
                 outside = trimesh.intersections.slice_mesh_plane(mesh, normal, origin)
                 background = trimesh.util.concatenate(background, outside)
         return background
+
+    def vertices(self):
+        vertices = cube_vertices * self.dimensions
+        return self.position + self.orientation.apply(vertices)
 
 
 class Keypoint:
@@ -126,7 +150,7 @@ class Scene:
         return len(self.poses)
 
     def camera(self):
-        return camera.Camera(self.camera_matrix, np.zeros(4))
+        return camera.Camera((self.frame_width, self.frame_height), self.camera_matrix, np.zeros(4))
 
     @property
     def poses(self):
@@ -161,7 +185,7 @@ class Scene:
             if not k.instance_id in categories:
                 categories.append(k.instance_id)
         return categories
-    
+
     @property
     def objects(self):
         """
