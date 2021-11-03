@@ -18,7 +18,7 @@ RUN apt-get update -y && apt-get install -y \
   libssl-dev \
   libomp-dev \
   libboost-serialization-dev \
-  wget 
+  wget
 
 RUN rm -rf /var/lib/apt/lists/*
 
