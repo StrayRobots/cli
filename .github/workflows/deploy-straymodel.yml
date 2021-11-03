@@ -5,6 +5,7 @@ on:
     branches: [ main ]
     paths:
       - 'model/setup.py' #Only push when version bumps happen so package versions can be mapped to commits
+
 jobs:
   deploy:
     name: Build and push
@@ -31,7 +32,7 @@ jobs:
       - name: Build and upload
         run: |
             pip install wheel
-            pushd "model/" > /dev/null
+            pushd "straymodel/" > /dev/null
             python setup.py bdist_egg --exclude-source-files
             straymodel_egg="$(find dist/straymodel-*.egg)"
             wheel convert $straymodel_egg

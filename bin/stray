@@ -5,11 +5,13 @@ BIN_DIR="$HOME/.stray/env/bin/"
 CONTAINER_PREFIX="strayrobots/"
 ANALYTICS_URL="https://app.strayrobots.io/event"
 VERSION="1.0.0"
+PULL_IMAGES=true
 
 if [ "$STRAY_DEV" != "" ]
     then
         CONTAINER_PREFIX=""
         BIN_DIR=""
+        PULL_IMAGES=false
 fi
 
 absolute_path() {
@@ -113,6 +115,10 @@ model-bake-command() {
         i=$((i + 1))
     done
 
+    if [ "$PULL_IMAGES" = true ] ; then
+        docker pull strayrobots/detectron2:latest
+    fi
+
     CMD="$CMD --gpus all -it ${CONTAINER_PREFIX}detectron2:latest $DOCKER_ARGS"
     eval $CMD
 }
@@ -149,6 +155,11 @@ studio-integrate() {
         fi
         i=$((i + 1))
     done
+
+    if [ "$PULL_IMAGES" = true ] ; then
+        docker pull strayrobots/integrate:latest
+    fi
+
     if [ -n "$debug" ]
     then
         if [[ $OSTYPE == 'darwin'* ]]
@@ -215,6 +226,10 @@ calibration-subcommand() {
             i=$((i + 1))
         done
 
+        if [ "$PULL_IMAGES" = true ] ; then
+            docker pull strayrobots/calibrate:latest
+        fi
+
         if [ "$task" = "intrinsics" ]; then
             if [ "$target_yaml" = "" ] || [ "$scene_dir" = "" ]; then
                 echo "Both scene and target needs to be provided."
@@ -241,9 +256,14 @@ calibration-subcommand() {
             echo "Unrecognized calibration task $task. Try intrinsics or camera_imu."
         fi
     elif [ "$2" = "generate" ]; then
-        target_yaml=$3
+        target_yaml=$(absolute_path $3)
         shift 2
         log_event "calibration-generate:start"
+        if [ ! -f $target_yaml ]
+        then
+            echo "Target file $target_yaml does not exist."
+            exit 1
+        fi
         docker run -v `pwd`:/home/user/data/ \
             -v $target_yaml:/home/user/workspace/target.yaml ${CONTAINER_PREFIX}calibrate:latest generate
     elif [ "$2" = "scale" ]; then

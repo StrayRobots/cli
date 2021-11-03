@@ -1,2 +1,0 @@
-git+https://github.com/facebookresearch/detectron2.git@v0.4
-https://stray-wheels.nyc3.digitaloceanspaces.com/straylib-0.0.1-py38-none-any.whl

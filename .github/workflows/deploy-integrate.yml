@@ -20,6 +20,12 @@ jobs:
         with:
           username: ${{ secrets.DOCKER_HUB_USER }}
           password: ${{ secrets.DOCKER_HUB_PASSWORD }}
+          
+      - name: Set up QEMU action
+        uses: docker/setup-qemu-action@v1
+          
+      - name: Set up Docker Buildx action
+        uses: docker/setup-buildx-action@v1
       
       - name: Extract metadata (tags, labels) for Docker
         id: meta
@@ -31,11 +37,12 @@ jobs:
         uses: docker/build-push-action@ad44023a93711e3deb337508980b4b5e9bcdc5dc
         with:
           context: ./
+          platforms: linux/amd64,linux/arm64
           file: ./docker/orbslam/Dockerfile
           push: true
           tags: strayrobots/integrate:latest
-          cache-from: type=registry,ref=strayrobots/integrate:latest
-          cache-to: type=inline
+          cache-from: type=registry,ref=strayrobots/integrate:buildcache
+          cache-to: type=registry,ref=strayrobots/integrate:buildcache,mode=max
 
 
 
