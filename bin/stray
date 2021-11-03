@@ -239,6 +239,13 @@ calibration-subcommand() {
             fi
             docker run -it -v $scene_dir:/home/user/data/ \
                 -v $target_yaml:/home/user/workspace/target.yaml ${CONTAINER_PREFIX}calibrate:latest run $@
+        elif [ "$task" = "hand_eye" ]; then
+            shift 2
+            xhost + 127.0.0.1
+            nvidia-docker run -it -v $scene_dir:/home/user/data/ \
+                -e DISPLAY=$DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix:rw \
+                -v $target_yaml:/home/user/workspace/target.yaml ${CONTAINER_PREFIX}hand-eye:latest run $@
+            xhost - 127.0.0.1
         elif [ "$task" = "imu_noise" ]; then
             docker run -v $scene_dir:/home/user/data/ -v $target_yaml:/home/user/workspace/target.yaml \
                 -v $camera_yaml:/home/user/workspace/camera.yaml -it ${CONTAINER_PREFIX}calibrate:latest run $@

@@ -30,12 +30,11 @@ RUN apt-get update && apt-get install -y \
 	wget \
 	autoconf automake \
 	libceres-dev \
-	libdw-dev 
+	libdw-dev
 
 RUN apt-get install -y software-properties-common && add-apt-repository ppa:deadsnakes/ppa
 RUN apt-get update
 RUN apt-get install -y build-essential python3.8 python3.8-distutils
-
 
 RUN rm -rf /var/lib/apt/lists/*
 
@@ -77,17 +76,19 @@ RUN wget https://bootstrap.pypa.io/get-pip.py && \
 
 RUN python3.8 -m pip install --user pillow pyyaml
 
-
-
-
 COPY --chown=user:sudo docker/calibrate/imu/ /home/user/workspace/imu
 RUN chmod +x /home/user/workspace/imu/run.sh
+
+# Copy camera_imu related files.
 COPY --chown=user:sudo docker/calibrate/camera_imu/ /home/user/workspace/camera_imu
 RUN chmod +x /home/user/workspace/camera_imu/run.sh
+
+# Copy General files.
 COPY docker/calibrate/entrypoint.sh /home/user/workspace/entrypoint.sh
 COPY docker/calibrate/convert_format.py /home/user/workspace/convert_format.py
 COPY docker/calibrate/extract_calibration.py /home/user/workspace/extract_calibration.py
 COPY docker/calibrate/create_target.py /home/user/workspace/create_target.py
+
 
 ENTRYPOINT ["/home/user/workspace/entrypoint.sh"]
 

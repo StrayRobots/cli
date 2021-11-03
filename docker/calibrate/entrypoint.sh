@@ -42,6 +42,10 @@ then
   then
     echo "Calibrating camera to imu."
     /home/user/workspace/camera_imu/run.sh $@
+  elif [ "$task" = "hand_eye" ]
+  then
+    echo "Running hand-eye calibration."
+    /home/user/workspace/hand_eye/run.sh $@
   else
     echo "Unrecognized calibration task $task."
     exit 1
