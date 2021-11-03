@@ -43,7 +43,7 @@ def render_example(image, heatmap, corner_map, camera, size):
     height_scale = image_height / map_height
     camera = get_scaled_camera_matrix(camera, width_scale, height_scale)
 
-    where_support = heatmap[0] > 0.0001 #TODO: a better threshold, softmaxed predicted values are unlikely exactly zero?
+    where_support = heatmap[0] > 0.1
     corners = extract_image_corners_from_corner_map(corner_map, where_support, map_width, map_height, width_scale, height_scale)
 
     #Draw heatmap
