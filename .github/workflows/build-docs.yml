@@ -14,6 +14,8 @@ jobs:
     steps:
       - name: Check out repository code
         uses: actions/checkout@v2
+        with:
+          lfs: true
 
       - name: Setup mdBook
         uses: peaceiris/actions-mdbook@v1
@@ -44,5 +46,6 @@ jobs:
           else
             git status
             git add . && git commit -m "Building docs from ${{ github.sha  }}" && git push origin main
+            git lfs push --all origin main
           fi
 
