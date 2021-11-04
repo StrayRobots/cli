@@ -35,7 +35,7 @@ RUN wheel convert $(find dist/straylib-*.egg)
 RUN pip install "$(basename $(find straylib-*.whl))"
 RUN rm -rf /tmp/straylib
 
-COPY --chown=user:sudo model /tmp/straymodel
+COPY --chown=user:sudo straymodel /tmp/straymodel
 WORKDIR /tmp/straymodel
 RUN python setup.py bdist_egg --exclude-source-files
 RUN wheel convert $(find dist/straymodel-*.egg)
