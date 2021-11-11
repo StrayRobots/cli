@@ -147,7 +147,7 @@ class Scene:
             self._keypoints.append(Keypoint(keypoint))
 
     def __len__(self):
-        return len(self.poses)
+        return len(self.get_image_filepaths())
 
     def camera(self):
         return camera.Camera((self.frame_width, self.frame_height), self.camera_matrix, np.zeros(4))

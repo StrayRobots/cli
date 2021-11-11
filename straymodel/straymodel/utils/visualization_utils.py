@@ -36,7 +36,7 @@ def draw_box(cv_image, corners):
                 cv_image = cv2.line(cv_image, p1, p2, (0, 0, 255), 3)
     return cv_image
 
-def render_example(image, heatmap, corner_map, camera, size):
+def render_example(image, heatmap, corner_map, camera):
     _, image_height, image_width = image.shape
     _, map_height, map_width = heatmap.shape
     width_scale = image_width / map_width

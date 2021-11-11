@@ -9,18 +9,24 @@ import cv2
 from pathlib import Path
 from skvideo import io
 
-def _resize_camera_matrix(camera_matrix, scale_x, scale_y):
+def _resize_and_rotate_camera_matrix(camera_matrix, scale_x, scale_y, rotate):
     if scale_x == 1.0 and scale_y == 1.0:
         return camera_matrix
-    fx = camera_matrix[0, 0]
-    fy = camera_matrix[1, 1]
-    cx = camera_matrix[0, 2]
-    cy = camera_matrix[1, 2]
+    if rotate is not None:
+        fy = camera_matrix[0, 0]
+        fx = camera_matrix[1, 1]
+        cy = camera_matrix[0, 2]
+        cx = camera_matrix[1, 2]
+    else:
+        fx = camera_matrix[0, 0]
+        fy = camera_matrix[1, 1]
+        cx = camera_matrix[0, 2]
+        cy = camera_matrix[1, 2]
     return np.array([[fx * scale_x, 0.0, cx * scale_x],
         [0., fy * scale_y, cy * scale_y],
         [0., 0., 1.0]])
 
-def write_frames(dataset, every, rgb_out_dir, width, height):
+def write_frames(dataset, every, rgb_out_dir, width, height, rotate):
     rgb_video = os.path.join(dataset, 'rgb.mp4')
     video = io.FFmpegReader(rgb_video)
     for i, frame in enumerate(video.nextFrame()):
@@ -28,6 +34,12 @@ def write_frames(dataset, every, rgb_out_dir, width, height):
             continue
         print(f"Writing rgb frame {i:06}" + " " * 10, end='\r')
         frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
+
+        if rotate == "cw":
+            frame = cv2.rotate(frame, cv2.ROTATE_90_CLOCKWISE)
+        elif rotate == "ccw":
+            frame = cv2.rotate(frame, cv2.ROTATE_90_COUNTERCLOCKWISE)
+            
         full_width = frame.shape[1]
         full_height = frame.shape[0]
         frame = cv2.resize(frame, (width, height))
@@ -37,12 +49,16 @@ def write_frames(dataset, every, rgb_out_dir, width, height):
     video.close()
     return full_width, full_height
 
-def resize_depth(depth, width, height):
-    out = cv2.resize(depth, (width, height), interpolation=cv2.INTER_NEAREST_EXACT)
+def resize_and_rotate_depth(frame, width, height, rotate):
+    if rotate == "cw":
+        frame = cv2.rotate(frame, cv2.ROTATE_90_CLOCKWISE)
+    elif rotate == "ccw":
+        frame = cv2.rotate(frame, cv2.ROTATE_90_COUNTERCLOCKWISE)
+    out = cv2.resize(frame, (width, height), interpolation=cv2.INTER_NEAREST_EXACT)
     out[out < 10] = 0
     return out
 
-def write_depth(dataset, every, depth_out_dir):
+def write_depth(dataset, every, depth_out_dir, width, height, rotate):
     depth_dir_in = os.path.join(dataset, 'depth')
     confidence_dir = os.path.join(dataset, 'confidence')
     files = sorted(os.listdir(depth_dir_in))
@@ -58,12 +74,13 @@ def write_depth(dataset, every, depth_out_dir):
         else:
             confidence = np.ones_like(depth_file, dtype=np.uint8) * 2
         depth[confidence < 2] = 0
+        depth = resize_and_rotate_depth(depth, width, height, rotate)
         cv2.imwrite(os.path.join(depth_out_dir, number + '.png'), depth)
 
-def write_intrinsics(dataset, out, width, height, full_width, full_height):
+def write_intrinsics(dataset, out, width, height, full_width, full_height, rotate):
     intrinsics = np.loadtxt(os.path.join(dataset, 'camera_matrix.csv'), delimiter=',')
     data = {}
-    intrinsics_scaled = _resize_camera_matrix(intrinsics, width / full_width, height / full_height)
+    intrinsics_scaled = _resize_and_rotate_camera_matrix(intrinsics, width / full_width, height / full_height, rotate)
     data['intrinsic_matrix'] = [intrinsics_scaled[0, 0], 0.0, 0.0,
             0.0, intrinsics_scaled[1, 1], 0.0,
             intrinsics_scaled[0, 2], intrinsics_scaled[1, 2], 1.0]
@@ -131,8 +148,9 @@ def validate_scene_path(scene_path) -> str:
 @click.option('--every', type=int, default=1, help="Keep only every n-th frame. 1 keeps every frame, 2 keeps every other and so forth.")
 @click.option('--width', '-w', type=int, default=1920)
 @click.option('--height', '-h', type=int, default=1440)
+@click.option('--rotate', '-r', type=click.Choice(["cw", "ccw"]))
 @click.option('--intrinsics', type=str, help="Path to the intrinsic parameters to use (for example calibrated parameters from stray calibration run). Defaults to factory parameters.")
-def main(scenes, out, every, width, height, intrinsics):
+def main(scenes, out, every, width, height, rotate, intrinsics):
     """
     Command for importing scenes from the Stray Scanner format to the Stray Dataset format.
 
@@ -165,9 +183,9 @@ def main(scenes, out, every, width, height, intrinsics):
         os.makedirs(rgb_out)
         os.makedirs(depth_out)
 
-        write_depth(scene_path, every, depth_out)
+        write_depth(scene_path, every, depth_out, width, height, rotate)
         full_width, full_height = write_frames(
-            scene_path, every, rgb_out, width, height)
+            scene_path, every, rgb_out, width, height, rotate)
 
         copy_rgb(scene_path, target_path)
         copy_imu(scene_path, target_path)
@@ -177,7 +195,7 @@ def main(scenes, out, every, width, height, intrinsics):
             if os.path.exists(os.path.join(scene_path, 'camera_matrix.csv')):
                 print("Writing factory intrinsics.", end='\n')
                 write_intrinsics(scene_path, target_path, width,
-                         height, full_width, full_height)
+                         height, full_width, full_height, rotate)
             else:
                 print("Warning: no camera matrix found, skipping.")
         else:
