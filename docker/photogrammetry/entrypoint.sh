@@ -1,6 +1,9 @@
 #!/bin/bash
 
 set -e
+
+python3.8 validate_license.py
+
 python3.8 filter_images.py $1
 pushd Meshroom-2021.1.0-av2.4.0-centos7-cuda10.2 > /dev/null
 ./meshroom_batch -i $1/filtered_color --cache $1/MeshroomCache
