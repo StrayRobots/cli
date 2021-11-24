@@ -24,14 +24,14 @@ def read_meshroom_intrinsics(path):
     intrisics["width"] = float(meshroom_intrinsics["width"])
     intrisics["intrinsic_matrix"] = [float(meshroom_intrinsics["pxFocalLength"]), 0.0, 0.0, 0.0, float(meshroom_intrinsics["pxFocalLength"]), 0.0, float(meshroom_intrinsics["principalPoint"][0]), float(meshroom_intrinsics["principalPoint"][1]), 1.0]
     intrisics["distortion_coefficients"] = [float(i) for i in meshroom_intrinsics["distortionParams"]]
-    
+
     return intrisics
 
 def read_meshroom_trajectory(path):
     poses = []
     with open(path) as f:
         data = json.load(f)
-    
+
     for pose in data["poses"]:
         pose_id = pose["poseId"]
         for view in data["views"]:
@@ -48,8 +48,6 @@ def read_meshroom_trajectory(path):
                 poses.append((image_idx, T))
     return sorted(poses)
 
-
-
 def main():
     flags = read_args()
 
@@ -60,6 +58,9 @@ def main():
     mesh_dir_path = os.path.join(flags.scene, "MeshroomCache", "Texturing")
     mesh_dir = os.listdir(mesh_dir_path)[0]
     mesh_path =  os.path.join(mesh_dir_path, mesh_dir, "texturedMesh.obj")
+    if not os.path.exists(mesh_path):
+        print("Mesh reconstruction step failed. Aborting.")
+        exit(1)
 
     intrinsics = read_meshroom_intrinsics(meshroom_trajectory_path)
 
@@ -69,7 +70,18 @@ def main():
     os.makedirs(os.path.join(flags.scene, "scene"), exist_ok=True)
 
     mesh = trimesh.load(mesh_path)
-    mesh.visual = mesh.visual.to_color()
+    if isinstance(mesh, trimesh.Scene):
+        out_mesh = trimesh.Trimesh()
+        for _, geometry in mesh.geometry.items():
+            geometry.visual = geometry.visual.to_color()
+            modified = trimesh.Trimesh(vertices=geometry.vertices, faces=geometry.faces,
+                    vertex_colors=geometry.visual.vertex_colors)
+            out_mesh = trimesh.Trimesh(vertices=np.concatenate([out_mesh.vertices, modified.vertices]),
+                    faces=np.concatenate([out_mesh.faces, modified.faces + out_mesh.vertices.shape[0]]),
+                    vertex_colors=np.concatenate([out_mesh.visual.vertex_colors, modified.visual.vertex_colors]))
+        mesh = out_mesh
+    else:
+        mesh.visual = mesh.visual.to_color()
     trimesh.exchange.export.export_mesh(mesh, os.path.join(flags.scene, "scene", "integrated.ply"), file_type="ply", resolver=None)
     shutil.copy(meshroom_trajectory_path, os.path.join(flags.scene, "cameras.sfm"))
 

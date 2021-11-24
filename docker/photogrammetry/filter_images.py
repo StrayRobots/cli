@@ -4,7 +4,7 @@ import shutil
 
 @click.command()
 @click.argument('scenes', nargs=-1)
-@click.option('--every', default=100)
+@click.option('--every', default=60)
 def main(scenes, every):
     for scene in scenes:
         color_path = os.path.join(scene, "color")

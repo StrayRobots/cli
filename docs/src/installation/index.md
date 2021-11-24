@@ -6,6 +6,8 @@ The script installs the tool and Studio into your home directory into a folder c
 
 To install Docker, follow the instructions [here](https://docs.docker.com/get-docker/).
 
+If you want to use the `photogrammetry` command, this requires CUDA through Nvidia Docker. To install this, follow the instructions [here](https://github.com/NVIDIA/nvidia-docker).
+
 Other commands are implemented as Python scripts. These will are installed into a Python environment that is downloaded by the installer into the `.stray` directory.
 
 To install the toolkit run this command in your shell:

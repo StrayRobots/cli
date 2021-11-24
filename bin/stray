@@ -18,6 +18,13 @@ absolute_path() {
     echo "$(cd "$(dirname "$1")"; pwd)/$(basename "$1")"
 }
 
+check_data_dir() {
+    if [ ! -d "$1" ]; then
+        echo "data directory does not exist: $1"
+        exit 1
+    fi
+}
+
 log_event() {
     if [ "$DO_NOT_TRACK" = "" ]; then
         (curl --request POST --url $ANALYTICS_URL --header 'Content-Type: application/json' --data "{ \"name\": \"cli:$1\", \"version\": \"$VERSION\" }" 2> /dev/null > /dev/null &)
@@ -177,10 +184,7 @@ studio-integrate() {
 
 studio-subcommand() {
     scene_dir="$(absolute_path $3)"
-    if [ ! -d "$scene_dir" ]; then
-        echo "data directory does not exist: $scene_dir"
-        exit 1
-    fi
+    check_data_dir $scene_dir
 
     if [ "$2" = "integrate" ]
     then
@@ -199,6 +203,24 @@ studio-subcommand() {
     else
         echo "Verb $2 not supported by studio subcommand."
         exit 1
+    fi
+}
+
+photogrammetry-subcommand() {
+    shift
+    scene_dir="$(absolute_path $2)"
+    check_data_dir $scene_dir
+
+    if [ "$PULL_IMAGES" = "true" ]; then
+        docker pull strayrobots/photogrammetry:latest
+    fi
+
+    if [ "$1" = "run" ]
+    then
+        shift
+        log_event "photogrammetry:start"
+        nvidia-docker run -it -v $scene_dir:/home/user/data ${CONTAINER_PREFIX}photogrammetry:latest /home/user/data $@
+        log_event "photogrammetry:end"
     fi
 }
 
@@ -316,6 +338,9 @@ then
 elif [ "$1" = "studio" ]
 then
     studio-subcommand $@
+elif [ "$1" = "photogrammetry" ]
+then
+    photogrammetry-subcommand $@
 elif [ "$1" = "calibration" ]
 then
     calibration-subcommand $@
