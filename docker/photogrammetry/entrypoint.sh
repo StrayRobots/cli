@@ -2,6 +2,8 @@
 
 set -e
 
+python3.8 validate_license.py
+
 orbslam_settings_path=/tmp/orbslam_settings.yaml
 
 skip_slam=0
