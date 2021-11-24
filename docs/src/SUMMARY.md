@@ -17,5 +17,3 @@
     - [Integrating a Scene](./tutorials/integrating.md)
 - [Telemetry](./privacy/index.md)
 - [Support](./support/index.md)
-
-

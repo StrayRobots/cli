@@ -8,10 +8,12 @@
 }
 
 html {
-    font-family: "Open Sans", sans-serif;
+    font-family: 'DM Sans';
     color: var(--fg);
     background-color: var(--bg);
     text-size-adjust: none;
+    background-color: white;
+    color: #090e1a;
 }
 
 body {
@@ -21,7 +23,7 @@ body {
 }
 
 code {
-    font-family: "Source Code Pro", Consolas, "Ubuntu Mono", Menlo, "DejaVu Sans Mono", monospace, monospace !important;
+    font-family: "Inconsolata", Consolas, "Ubuntu Mono", Menlo, "DejaVu Sans Mono", monospace, monospace !important;
     font-size: 0.875em; /* please adjust the ace font size accordingly in editor.js */
 }
 
@@ -95,7 +97,7 @@ h6:target::before {
 .content img, .content video { max-width: 100%; }
 .content .header:link,
 .content .header:visited {
-    color: var(--fg);
+    color: #090e1a;
 }
 .content .header:link,
 .content .header:visited:hover {
