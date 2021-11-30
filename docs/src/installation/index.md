@@ -1,4 +1,4 @@
-# Install
+# Stray toolkit
 
 The Stray Command Line Tool and Stray Studio can be installed using our install script. We currently support macOS and Linux based systems.
 

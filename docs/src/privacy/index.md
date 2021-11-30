@@ -1,3 +1,4 @@
+![Stray Toolkit](/images/stray-logo.png)
 # Telemetry
 
 The Stray Command Line Tool collects anononymous usage statistics about general usage of the tool. Participation is optional and you can opt out if you like.

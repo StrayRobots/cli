@@ -1,3 +1,4 @@
+![Stray Studio Interface](/images/stray-logo.png)
 # Commands
 
 ## [`stray dataset`](/commands/dataset.md)
