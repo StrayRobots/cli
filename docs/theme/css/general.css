@@ -8,12 +8,8 @@
 }
 
 html {
-    font-family: 'DM Sans';
-    color: var(--fg);
-    background-color: var(--bg);
+    font-family: 'system-ui';
     text-size-adjust: none;
-    background-color: white;
-    color: #090e1a;
 }
 
 body {
@@ -23,13 +19,22 @@ body {
 }
 
 code {
-    font-family: "Inconsolata", Consolas, "Ubuntu Mono", Menlo, "DejaVu Sans Mono", monospace, monospace !important;
+    font-family: 'system-ui' !important;
     font-size: 0.875em; /* please adjust the ace font size accordingly in editor.js */
 }
 
 /* Don't change font size in headers. */
 h1 code, h2 code, h3 code, h4 code, h5 code, h6 code {
     font-size: unset;
+    background-color: #333;
+
+}
+
+/* Don't change font size in headers. */
+a code {
+    font-size: unset;
+    background-color: #f6f7f6;
+
 }
 
 .left { float: left; }
