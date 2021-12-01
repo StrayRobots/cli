@@ -7,8 +7,6 @@ on:
       - 'straylib/**'
       - 'docker/orbslam/**'
       - '.github/workflows/deploy-integrate.yml'
-  pull_request:
-    branches: [main]
 
 jobs:
   deploy:
