@@ -1,3 +1,4 @@
+![Stray Toolkit](/images/stray-logo.png)
 # Tutorials
 
 In these tutorials, we walk you through the different workflows of the Stray toolkit.

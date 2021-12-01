@@ -1,3 +1,4 @@
+![Stray Studio Interface](/images/stray-logo.png)
 # Formats
 
 ## [Data](/formats/data.md)

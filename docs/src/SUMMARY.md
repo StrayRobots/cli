@@ -1,6 +1,6 @@
 # Summary
 
-- [Installation](./installation/index.md)
+- [Installation](./toolkit/index.md)
 - [Commands](./commands/index.md)
     - [Dataset](./commands/dataset.md)
     - [Studio](./commands/studio.md)
@@ -19,5 +19,3 @@
 - [Telemetry](./privacy/index.md)
 - [Terms of Service](./terms/terms-of-service.md)
 - [Support](./support/index.md)
-
-
