@@ -1,6 +1,6 @@
 # Summary
 
-- [Stray Toolkit](./toolkit/index.md)
+- [Installation](./toolkit/index.md)
 - [Commands](./commands/index.md)
     - [Dataset](./commands/dataset.md)
     - [Studio](./commands/studio.md)

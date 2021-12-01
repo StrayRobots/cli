@@ -4,6 +4,8 @@
 
 set -e
 
+python3.8 validate_license.py
+
 validate_scene() {
     if [ ! -d "$1/color" ] || [ ! -d "$1/depth" ] || [ ! -f "$1/camera_intrinsics.json" ]
     then

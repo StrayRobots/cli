@@ -71,6 +71,7 @@ COPY docker/orbslam/integrate.py /home/user/workspace/integrate.py
 COPY docker/orbslam/integrate_pointcloud.py /home/user/workspace/integrate_pointcloud.py
 COPY docker/orbslam/make_settings.py /home/user/workspace/make_settings.py
 COPY docker/orbslam/default_settings.yaml /home/user/workspace/default_settings.yaml
+COPY docker/validate_license.py /home/user/workspace/validate_license.py 
 
 ENTRYPOINT ["/home/user/workspace/entrypoint.sh"]
 CMD []
