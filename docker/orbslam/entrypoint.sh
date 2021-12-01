@@ -83,7 +83,7 @@ integrate_scene() {
         i=$((i + 1))
     done
 
-    python3.8 /home/user/workspace/integrate.py $1 --trajectory CameraTrajectory.txt --voxel-size $voxel_size
+    python3.8 /home/user/workspace/integrate.py $1 --trajectory /home/user/orbslam/Examples/RGB-D/CameraTrajectory.txt --voxel-size $voxel_size
 
     echo "Integrating point cloud."
 

@@ -74,7 +74,7 @@ def main():
     intrinsic = o3d.io.read_pinhole_camera_intrinsic(os.path.join(scene_path, 'camera_intrinsics.json'))
 
     color_images = os.listdir(os.path.join(flags.scene, 'color'))
-    pose_ids = [i.split('.')[0] for i in color_images]
+    pose_ids = [i.split('.')[0] for i in color_images if '.jpg' in i]
     pose_ids.sort()
 
     trajectory_path = os.path.join(flags.scene, 'scene', 'trajectory.log')
@@ -84,6 +84,7 @@ def main():
         poses = read_trajectory(pose_ids, flags.trajectory)
         os.makedirs(os.path.join(flags.scene, 'scene'), exist_ok=True)
         write_trajectory(poses, flags)
+    
 
     volume = o3d.pipelines.integration.ScalableTSDFVolume(
         voxel_length=flags.voxel_size, # In meters.
