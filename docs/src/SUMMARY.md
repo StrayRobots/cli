@@ -17,6 +17,7 @@
     - [Importing Data](./tutorials/import.md)
     - [Integrating a Scene](./tutorials/integrating.md)
 - [Telemetry](./privacy/index.md)
+- [Terms of Service](./terms/terms-of-service.md)
 - [Support](./support/index.md)
 
 
