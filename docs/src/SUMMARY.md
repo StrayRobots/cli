@@ -4,6 +4,7 @@
 - [Commands](./commands/index.md)
     - [Dataset](./commands/dataset.md)
     - [Studio](./commands/studio.md)
+    - [Photogrammetry](./commands/photogrammetry.md)
     - [Model](./commands/model.md)
     - [Calibration](./commands/calibration.md)
 - [Formats](./formats/index.md)
@@ -16,4 +17,5 @@
     - [Importing Data](./tutorials/import.md)
     - [Integrating a Scene](./tutorials/integrating.md)
 - [Telemetry](./privacy/index.md)
+- [Terms of Service](./terms/terms-of-service.md)
 - [Support](./support/index.md)
