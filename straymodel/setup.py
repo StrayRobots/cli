@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="straymodel",
-    version="0.0.1",
+    version="0.0.2",
     author="Stray Robots",
     author_email="ken@strayrobots.io",
     description="Stray Robots modeling and learning library.",
