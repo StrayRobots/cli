@@ -5,6 +5,7 @@ import math
 import numpy as np
 import cv2
 from skspatial.objects import Plane, Line
+import torch
 
 def load_config(model_path, minimum_confidence):
     config = get_cfg()
@@ -12,7 +13,6 @@ def load_config(model_path, minimum_confidence):
         config.merge_from_file(os.path.join(model_path, "config.yaml"))
     
     config.MODEL.WEIGHTS = os.path.join(model_path, "output", "model_final.pth")
-    config.MODEL.DEVICE = 'cpu'
     config.MODEL.ROI_HEADS.SCORE_THRESH_TEST = minimum_confidence
     return config
 
@@ -20,6 +20,12 @@ def load_config(model_path, minimum_confidence):
 class OrientedBoundingBoxDetector(object):
     def __init__(self, model, image_width, image_height, fx, fy, depth_scale, minimum_confidence=0.9, depth_box_scale=0.5):
         self.cfg = load_config(model, minimum_confidence)
+        if (not os.getenv("STRAY_DETECTION_FORCE_CPU", "0") == "1") and torch.cuda.is_available():
+            self.cfg.MODEL.DEVICE = "cuda:0"
+            print("Using GPU for detection")
+        else:
+            self.cfg.MODEL.DEVICE = "cpu"
+            print("Using CPU for detection")
         self.predictor = DefaultPredictor(self.cfg)
         self.image_width = image_width
         self.image_height = image_height
