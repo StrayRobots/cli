@@ -5,6 +5,7 @@ on:
     branches: [ main ]
     paths:
       - 'straymodel/setup.py' #Only push when version bumps happen so package versions can be mapped to commits
+      - '.github/workflows/deploy-straymodel.yml'
 
 jobs:
   deploy:
