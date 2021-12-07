@@ -15,6 +15,7 @@
 - [Tutorials](./tutorials/index.md)
     - [Importing Data](./tutorials/import.md)
     - [Integrating a Scene](./tutorials/integrating.md)
+    - [Annotating a Scene](./tutorials/annotating.md)
 - [Telemetry](./privacy/index.md)
 - [Support](./support/index.md)
 

@@ -42,6 +42,8 @@ Plays through images in the scene with overlayed 3d annotations.
 
 `b` switches to the bounding box tool.
 
+`r` switches to the rectangle tool.
+
 
 ## Help
 
