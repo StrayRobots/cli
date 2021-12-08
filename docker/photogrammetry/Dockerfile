@@ -35,7 +35,7 @@ RUN wget https://bootstrap.pypa.io/get-pip.py
 RUN python3.8 get-pip.py
 RUN rm get-pip.py
 
-RUN pip3 install --user open3d opencv-python scipy numpy PyYAML click trimesh && rm -rf /user/.cache
+RUN pip3 install --user open3d opencv-python scipy numpy PyYAML click trimesh requests && rm -rf /user/.cache
 
 RUN git clone https://github.com/stevenlovegrove/Pangolin.git --recursive /home/user/pangolin
 RUN cd /home/user/pangolin && git checkout dd801d244db3a8e27b7fe8020cd751404aa818fd && mkdir build && cd build && \
@@ -72,6 +72,7 @@ COPY docker/photogrammetry/prepare_scene.py /home/user/workspace/prepare_scene.p
 COPY docker/photogrammetry/default_settings.yaml /home/user/workspace/default_settings.yaml
 COPY docker/photogrammetry/make_settings.py /home/user/workspace/make_settings.py
 COPY docker/photogrammetry/combine_trajectories.py /home/user/workspace/combine_trajectories.py
+COPY docker/validate_license.py /home/user/workspace/validate_license.py 
 
 
 

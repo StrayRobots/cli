@@ -46,15 +46,15 @@ RUN git clone https://github.com/StrayRobots/ORB_SLAM3.git /home/user/orbslam &&
   cd /home/user/orbslam && git checkout defae2b81772dfd613d8c90914c4b1787250beda
 
 RUN cd /home/user/orbslam/Thirdparty/DBoW2 && mkdir build && cd build && cmake .. -DCMAKE_BUILD_TYPE=Release \
-  && make -j10
+  && make -j5
 
 RUN cd /home/user/orbslam/Thirdparty/g2o/ && mkdir build && cd build && \
-  cmake .. -DCMAKE_BUILD_TYPE=Release && make -j10
+  cmake .. -DCMAKE_BUILD_TYPE=Release && make -j5
 
 RUN cd /home/user/orbslam/Vocabulary && tar -xf ORBvoc.txt.tar.gz
 
 RUN cd /home/user/orbslam/ && mkdir build && cd build && cmake .. -DCMAKE_BUILD_TYPE=Release && \
-  make -j o3d
+  make  o3d
 
 COPY --chown=user:sudo straylib /tmp/straylib
 WORKDIR /tmp/straylib
@@ -71,6 +71,7 @@ COPY docker/orbslam/integrate.py /home/user/workspace/integrate.py
 COPY docker/orbslam/integrate_pointcloud.py /home/user/workspace/integrate_pointcloud.py
 COPY docker/orbslam/make_settings.py /home/user/workspace/make_settings.py
 COPY docker/orbslam/default_settings.yaml /home/user/workspace/default_settings.yaml
+COPY docker/validate_license.py /home/user/workspace/validate_license.py 
 
 ENTRYPOINT ["/home/user/workspace/entrypoint.sh"]
 CMD []

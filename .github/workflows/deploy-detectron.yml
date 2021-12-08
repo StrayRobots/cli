@@ -4,10 +4,9 @@ on:
   push:
     branches: [ main ]
     paths:
-      - 'straymodel/**'
-      - 'straylib/**'
+      - 'straymodel/setup.py'
+      - 'straylib/setup.py'
       - 'docker/detectron2/**'
-      - '.github/workflows/deploy-detectron.yml'
 
 jobs:
   deploy:

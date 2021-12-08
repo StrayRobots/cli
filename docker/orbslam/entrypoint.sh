@@ -4,6 +4,8 @@
 
 set -e
 
+python3.8 validate_license.py
+
 validate_scene() {
     if [ ! -d "$1/color" ] || [ ! -d "$1/depth" ] || [ ! -f "$1/camera_intrinsics.json" ]
     then
@@ -81,7 +83,7 @@ integrate_scene() {
         i=$((i + 1))
     done
 
-    python3.8 /home/user/workspace/integrate.py $1 --trajectory CameraTrajectory.txt --voxel-size $voxel_size
+    python3.8 /home/user/workspace/integrate.py $1 --trajectory /home/user/orbslam/Examples/RGB-D/CameraTrajectory.txt --voxel-size $voxel_size
 
     echo "Integrating point cloud."
 

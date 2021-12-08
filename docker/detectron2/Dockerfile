@@ -45,5 +45,7 @@ RUN rm -rf /tmp/straymodel
 ENV FVCORE_CACHE="/tmp"
 
 COPY docker/detectron2/entrypoint.sh /home/user/workspace/entrypoint.sh
+COPY docker/validate_license.py /home/user/workspace/validate_license.py 
+
 ENTRYPOINT ["/home/user/workspace/entrypoint.sh"]
 CMD []

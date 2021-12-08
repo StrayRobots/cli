@@ -40,7 +40,7 @@ def read_meshroom_trajectory(path):
     poses = []
     with open(path) as f:
         data = json.load(f)
-    
+
     for pose in data["poses"]:
         pose_id = pose["poseId"]
         for view in data["views"]:
@@ -71,9 +71,14 @@ def main():
     trajectory_path = os.path.join(flags.scene, "CameraTrajectory.txt")
     meshroom_trajectory_path = os.path.join(flags.scene, "cameras.sfm")
 
-    trajectory = read_trajectory(trajectory_path)
+
     meshroom_trajectory = read_meshroom_trajectory(meshroom_trajectory_path)
 
+    if not os.path.exists(trajectory_path):
+        write_trajectory(meshroom_trajectory, flags)
+        return
+
+    trajectory = read_trajectory(trajectory_path)
     trajectory_dict = dict(trajectory)
 
     T = meshroom_trajectory[0][1] #Transform slam frames to start from first meshroom frame
@@ -84,8 +89,8 @@ def main():
     #Calculate average scale of matched frames between slam / meshroom
     for i in range(0, len(meshroom_trajectory)):
         mr_T_0X = meshroom_trajectory[i][1]
-        pose_id = int(meshroom_trajectory[i][0]) 
-        if pose_id in trajectory_dict.keys(): 
+        pose_id = int(meshroom_trajectory[i][0])
+        if pose_id in trajectory_dict.keys():
             slam_T_0X = copy.deepcopy(trajectory_dict[pose_id])
             slam_T_0X_prescale = T @ slam_T_0X
             mr_translation = mr_T_0X[:3, 3]
@@ -98,7 +103,7 @@ def main():
     fixed_poses = []
     slam_T_0X = T
     lost_count = 0
-    
+
     #Transform slam frames to meshroom coordinates and scale
     for pose_id in pose_ids:
         if int(pose_id) in trajectory_dict.keys():
@@ -109,12 +114,12 @@ def main():
             print("Lost pose", lost_count, pose_id)
             lost_count += 1
         fixed_poses.append((pose_id, slam_T_0X))
-    
+
     write_trajectory(fixed_poses, flags)
 
 
-    
-    
+
+
 
 if __name__ == "__main__":
     main()

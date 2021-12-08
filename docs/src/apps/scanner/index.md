@@ -1,3 +1,4 @@
+![Stray Toolkit](/images/stray-logo.png)
 # Stray Scanner
 
 Stray Scanner is an iOS app for collecting RGB-D datasets. It can be downloaded from the [App Store](https://apps.apple.com/us/app/stray-scanner/id1557051662).
