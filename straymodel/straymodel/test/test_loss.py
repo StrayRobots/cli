@@ -3,7 +3,7 @@ import torch
 import cv2
 import numpy as np
 from torch import optim
-from straymodel.train.loss import *
+from straymodel.loss_functions.loss import *
 from straymodel.utils.heatmap_utils import paint_heatmap
 import torch.nn.functional as F
 from scipy.spatial.transform import Rotation

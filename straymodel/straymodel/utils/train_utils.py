@@ -52,6 +52,7 @@ def get_heatmap(data, blank_heatmap):
     size = np.linalg.norm(top_point - bottom_point) / 4.0
     lengthscale = np.sqrt(size**2/20.0)
     center_point = points_2d[:3][:2]*np.array([OUT_WIDTH, OUT_HEIGHT])
+
     paint_heatmap(heatmap[0], [center_point], lengthscale)
     heatmap_max = heatmap.max()
     return heatmap
@@ -80,6 +81,8 @@ def unpack_record(blank_corner_map, blank_heatmap):
             corner_maps = torch.from_numpy(get_corner_maps(data, blank_corner_map)).float()
             intrinsics = data['camera/intrinsics'].reshape((3, 3))
             sizes = data['object/scale']
-            return True, (images, heatmaps, corner_maps, intrinsics, sizes)
+            centers = data['point_3d'][:3]
+
+            return True, (images, heatmaps, corner_maps, intrinsics, centers, sizes)
     return inner
 
