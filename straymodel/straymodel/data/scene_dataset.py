@@ -1,11 +1,7 @@
-import os
 import numpy as np
-import pandas as pd
 import torch
 import cv2
 from straylib.scene import Scene
-from straylib.camera import Camera
-from scipy.spatial.transform import Rotation as R
 from straymodel.utils.heatmap_utils import paint_heatmap
 from torch.utils.data import Dataset, ConcatDataset
 I = np.eye(3)
@@ -13,7 +9,7 @@ I = np.eye(3)
 def transform(T, vectors):
     return (T[:3, :3] @ vectors[:, :, None])[:, :, 0] + T[:3, 3]
 class Stray3DBoundingBoxScene(Dataset):
-    def __init__(self, path, image_size=(640, 480), out_size=(80, 60)):
+    def __init__(self, path, image_size=(480, 640), out_size=(60, 80)):
         self.scene_path = path
         self.scene = Scene(path)
         self.image_width = image_size[0]
@@ -44,7 +40,9 @@ class Stray3DBoundingBoxScene(Dataset):
     def _get_numpy_image(self, idx):
         image = cv2.imread(self.color_images[idx])
         image = cv2.resize(image, (self.image_width, self.image_height))
-        image = np.moveaxis(image, -1, 0) / 255.0
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        image = image.astype(np.float32) / 255.0
+        image = np.transpose(image, [2, 0, 1])
         return image
 
 
@@ -63,6 +61,8 @@ class Stray3DBoundingBoxScene(Dataset):
             #TODO: handle cases with multiple boxes
             if i > 0:
                 break
+
+            #TODO: camera coordinates should be positive z pointing towards the viewer (as in objectron)
             center_C = transform(T_CW, bounding_box.position[None])[0]
             center_point = self.map_camera.project(center_C)
             # Let's set the heatmap radius to 1/4 of the bounding box's diameter.
@@ -75,7 +75,6 @@ class Stray3DBoundingBoxScene(Dataset):
 
             heatmap = np.copy(self.blank_heatmap)
             paint_heatmap(heatmap[0], center_point, lengthscale)
-            heatmap[0] /= heatmap.sum()
 
             # Corner map.
             vertices = bounding_box.vertices()
@@ -95,4 +94,3 @@ class Stray3DBoundingBoxDetectionDataset(ConcatDataset):
         for scene_path in scene_paths:
             scenes.append(Stray3DBoundingBoxScene(scene_path, *args, **kwargs))
         super().__init__(scenes)
-
