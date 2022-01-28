@@ -6,6 +6,7 @@ import numpy as np
 import json
 import csv
 import cv2
+from scipy.spatial.transform import Rotation
 from pathlib import Path
 from skvideo import io
 
@@ -39,7 +40,7 @@ def write_frames(dataset, every, rgb_out_dir, width, height, rotate):
             frame = cv2.rotate(frame, cv2.ROTATE_90_CLOCKWISE)
         elif rotate == "ccw":
             frame = cv2.rotate(frame, cv2.ROTATE_90_COUNTERCLOCKWISE)
-            
+
         full_width = frame.shape[1]
         full_height = frame.shape[0]
         frame = cv2.resize(frame, (width, height))
@@ -47,6 +48,7 @@ def write_frames(dataset, every, rgb_out_dir, width, height, rotate):
         params = [int(cv2.IMWRITE_JPEG_QUALITY), 90]
         cv2.imwrite(frame_path, frame, params)
     video.close()
+    print('\r')
     return full_width, full_height
 
 def resize_and_rotate_depth(frame, width, height, rotate):
@@ -114,6 +116,35 @@ def copy_frame_metadata(scene_path, target_path):
                 timestamp = line[0]
                 frame = line[1]
                 writer.writerow([timestamp, frame])
+
+def write_trajectory(scene_path, target_path):
+    """
+    Writes the ARKit visual odometry to the trajectory log.
+    """
+    odometry_csv = os.path.join(scene_path, 'odometry.csv')
+    scene_dir_out = os.path.join(target_path, 'scene')
+    os.makedirs(scene_dir_out)
+    trajectory_log = os.path.join(scene_dir_out, 'trajectory.log')
+    with open(odometry_csv, 'rt') as in_file:
+        reader = csv.reader(in_file)
+        header = next(reader)
+        poses = []
+        for line in reader:
+            _, _, x, y, z, qx, qy, qz, qw = line
+            R = Rotation.from_quat([qx, qy, qz, qw])
+            pose = np.eye(4)
+            pose[:3, :3] = R.as_matrix()
+            pose[:3, 3] = [x, y, z]
+            poses.append(pose)
+
+        T_WI = poses[0]
+        T_IW = np.linalg.inv(T_WI)
+
+        with open(trajectory_log, 'wt') as out_file:
+            for i, T_WC in enumerate(poses):
+                out_file.write(f"{i:06}\n")
+                T_IC = T_IW @ T_WC
+                np.savetxt(out_file, T_IC, delimiter=' ')
 
 def validate_scene_path(scene_path) -> str:
     """
@@ -190,6 +221,7 @@ def main(scenes, out, every, width, height, rotate, intrinsics):
         copy_rgb(scene_path, target_path)
         copy_imu(scene_path, target_path)
         copy_frame_metadata(scene_path, target_path)
+        write_trajectory(scene_path, target_path)
 
         if intrinsics is None:
             if os.path.exists(os.path.join(scene_path, 'camera_matrix.csv')):

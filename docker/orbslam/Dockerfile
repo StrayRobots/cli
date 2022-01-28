@@ -34,7 +34,7 @@ RUN wget https://bootstrap.pypa.io/get-pip.py
 RUN python3.8 get-pip.py
 RUN rm get-pip.py
 
-RUN pip3 install --user open3d opencv-python scipy numpy PyYAML && rm -rf /user/.cache
+RUN pip3 install --user open3d==0.14.1 opencv-python scipy numpy PyYAML && rm -rf /user/.cache
 
 RUN git clone https://github.com/stevenlovegrove/Pangolin.git --recursive /home/user/pangolin
 RUN cd /home/user/pangolin && git checkout dd801d244db3a8e27b7fe8020cd751404aa818fd && mkdir build && cd build && \
@@ -71,7 +71,7 @@ COPY docker/orbslam/integrate.py /home/user/workspace/integrate.py
 COPY docker/orbslam/integrate_pointcloud.py /home/user/workspace/integrate_pointcloud.py
 COPY docker/orbslam/make_settings.py /home/user/workspace/make_settings.py
 COPY docker/orbslam/default_settings.yaml /home/user/workspace/default_settings.yaml
-COPY docker/validate_license.py /home/user/workspace/validate_license.py 
+COPY docker/validate_license.py /home/user/workspace/validate_license.py
 
 ENTRYPOINT ["/home/user/workspace/entrypoint.sh"]
 CMD []
