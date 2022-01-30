@@ -128,9 +128,16 @@ def write_trajectory(scene_path, target_path):
     with open(odometry_csv, 'rt') as in_file:
         reader = csv.reader(in_file)
         header = next(reader)
+        old = False
+        if len(header) == 7:
+            # < version 1.2 which doesn't include the frame id and timestamps.
+            extract_pose = lambda line: line
+        else:
+            extract_pose = lambda line: line[2:]
+
         poses = []
         for line in reader:
-            _, _, x, y, z, qx, qy, qz, qw = line
+            x, y, z, qx, qy, qz, qw = extract_pose(line)
             R = Rotation.from_quat([qx, qy, qz, qw])
             pose = np.eye(4)
             pose[:3, :3] = R.as_matrix()
@@ -218,10 +225,10 @@ def main(scenes, out, every, width, height, rotate, intrinsics):
         full_width, full_height = write_frames(
             scene_path, every, rgb_out, width, height, rotate)
 
+        write_trajectory(scene_path, target_path)
         copy_rgb(scene_path, target_path)
         copy_imu(scene_path, target_path)
         copy_frame_metadata(scene_path, target_path)
-        write_trajectory(scene_path, target_path)
 
         if intrinsics is None:
             if os.path.exists(os.path.join(scene_path, 'camera_matrix.csv')):

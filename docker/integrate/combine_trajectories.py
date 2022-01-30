@@ -58,6 +58,57 @@ def find_cameras_sfm(cache):
             continue
         return cameras_path
 
+def compute_average_scale_diff(slam_trajectory, meshroom_trajectory):
+    N = len(slam_trajectory)
+    assert N == len(meshroom_trajectory)
+    translations_slam = np.stack([T[:3, 3] for _, T in slam_trajectory])
+    translations_meshroom = np.stack([T[:3, 3] for _, T in meshroom_trajectory])
+
+    # Calculate difference between subsequent keyframes in slam vs. meshroom. Figure
+    # out what the scale difference is from these.
+    distances_slam = np.zeros(N-1)
+    distances_meshroom = np.zeros(N-1)
+    for i in range(N-1):
+        distances_slam[i] = np.linalg.norm(translations_slam[i+1] - translations_slam[i])
+        distances_meshroom[i] = np.linalg.norm(translations_meshroom[i+1] - translations_meshroom[i])
+    return np.abs(distances_slam / distances_meshroom).mean()
+
+def scale_trajectory(trajectory, scale):
+    out = []
+    for k, T in trajectory:
+        T_scaled = T.copy()
+        T_scaled[:3, 3] = scale * T[:3, 3]
+        out.append((k, T_scaled))
+    return out
+
+def align_slam_trajectory(slam_poses, meshroom_trajectory):
+    """
+    Fix the slam trajectory such that each segment between keyframes
+    starts exactly at the previous keyframe and tracks from there.
+    Could do something fancier where we morph the tracked trajectory such that it
+    both starts and ends at the keyframe poses.
+    """
+    aligned_poses = slam_poses.copy()
+    for i, (pose_id, T_WP) in enumerate(meshroom_trajectory):
+        if i+1 >= len(meshroom_trajectory):
+            segment_slice = slice(int(pose_id), len(aligned_poses))
+        else:
+            next_pose_id = meshroom_trajectory[i+1][0]
+            segment_slice = slice(int(pose_id), int(next_pose_id))
+        segment = slam_poses[segment_slice]
+
+        # Make segment relative to first pose in the segment.
+        T_IW = np.linalg.inv(segment[0])
+        segment = [T_IW @ T for T in segment]
+
+        # Transfer segment to track starting from the last keyframe.
+        segment = [T_WP @ T for T in segment]
+        aligned_poses[segment_slice] = segment
+
+    return aligned_poses
+
+
+
 
 def main():
     flags = read_args()
@@ -70,49 +121,21 @@ def main():
     meshroom_trajectory = read_meshroom_trajectory(meshroom_trajectory_path)
 
     trajectory_dict = dict([(i, p) for i, p in enumerate(scene.poses)])
+    slam_trajectory = [(k, trajectory_dict[int(k)]) for k, v in meshroom_trajectory]
 
-    T = meshroom_trajectory[0][1] #Transform slam frames to start from first meshroom frame
+    average_scale_difference = compute_average_scale_diff(slam_trajectory, meshroom_trajectory)
+    meshroom_trajectory = scale_trajectory(meshroom_trajectory, average_scale_difference)
 
-    origin_translation = T[:3, 3]
-    scales = []
+    # Fix the poses such that the first pose is the origin in both cases.
+    T_IW = np.linalg.inv(scene.poses[0])
+    slam_trajectory = [T_IW @ T for T in scene.poses]
 
-    #Calculate average scale of matched frames between slam / meshroom
-    for i in range(0, len(meshroom_trajectory)):
-        mr_T_0X = meshroom_trajectory[i][1]
-        pose_id = int(meshroom_trajectory[i][0])
-        if pose_id in trajectory_dict:
-            slam_T_0X = copy.deepcopy(trajectory_dict[pose_id])
-            slam_T_0X_prescale = T @ slam_T_0X
-            mr_translation = mr_T_0X[:3, 3]
-            slam_translation = slam_T_0X_prescale[:3, 3]
-            diff_slam_origin = np.linalg.norm(slam_translation-origin_translation)
-            if np.linalg.norm(diff_slam_origin) < 1e-6:
-                calculated_scale = 1.0
-            else:
-                calculated_scale = (np.linalg.norm(mr_translation-origin_translation) / diff_slam_origin)
-            scales.append(calculated_scale)
+    T_IW = np.linalg.inv(meshroom_trajectory[0][1])
+    meshroom_trajectory = [(k, T_IW @ T) for k, T in meshroom_trajectory]
 
+    poses_aligned = align_slam_trajectory(slam_trajectory, meshroom_trajectory)
 
-    scale = np.mean(scales)
-    fixed_poses = []
-    slam_T_0X = T
-    lost_count = 0
-
-    #Transform slam frames to meshroom coordinates and scale
-    for pose_id in pose_ids:
-        if int(pose_id) in trajectory_dict:
-            slam_T_0X = trajectory_dict[int(pose_id)]
-            slam_T_0X[:3, 3] *= scale
-            slam_T_0X = T @ slam_T_0X
-        else:
-            print("Lost pose", lost_count, pose_id)
-            lost_count += 1
-        fixed_poses.append((pose_id, slam_T_0X))
-
-    write_trajectory(fixed_poses, flags)
-
-
-
+    write_trajectory(list(enumerate(poses_aligned)), flags)
 
 
 if __name__ == "__main__":

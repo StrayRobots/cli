@@ -123,7 +123,7 @@
                 "describerTypes": [
                     "sift"
                 ],
-                "describerPreset": "ultra",
+                "describerPreset": "normal",
                 "maxNbFeatures": 0,
                 "describerQuality": "ultra",
                 "contrastFiltering": "GridSort",

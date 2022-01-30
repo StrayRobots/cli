@@ -4,7 +4,7 @@ set -e
 BIN_DIR="$HOME/.stray/env/bin/"
 CONTAINER_PREFIX="strayrobots/"
 ANALYTICS_URL="https://app.strayrobots.io/event"
-VERSION="1.0.0"
+VERSION="1.1.0"
 PULL_IMAGES=true
 
 if [ "$STRAY_DEV" != "" ]

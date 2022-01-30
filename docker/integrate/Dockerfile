@@ -59,7 +59,6 @@ COPY docker/integrate/pipeline.mg /home/user/workspace/pipeline.mg
 COPY docker/orbslam/integrate.py /home/user/workspace/integrate.py
 COPY docker/orbslam/integrate_pointcloud.py /home/user/workspace/integrate_pointcloud.py
 
-
 ENTRYPOINT ["/home/user/workspace/entrypoint.sh"]
 CMD []
 
