@@ -63,7 +63,6 @@ add_to_path() {
 
 install_python_env_requirements() {
   pip install torch torchvision
-  pip install 'git+https://github.com/StrayRobots/detectron2.git'
 }
 
 install_python_env() {
