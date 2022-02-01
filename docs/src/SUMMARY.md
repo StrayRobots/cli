@@ -5,7 +5,6 @@
     - [Dataset](./commands/dataset.md)
     - [Studio](./commands/studio.md)
     - [Photogrammetry](./commands/photogrammetry.md)
-    - [Model](./commands/model.md)
     - [Calibration](./commands/calibration.md)
 - [Formats](./formats/index.md)
     - [Data](./formats/data.md)

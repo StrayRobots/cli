@@ -51,106 +51,6 @@ label-subcommand() {
     fi
 }
 
-validate-model-bake-flags() {
-    model_found=false
-    i=0
-    args=("$@")
-    for arg in "$@"
-    do
-        if [ $arg = "--model" ]
-        then
-            if [ ! -d "${args[i+1]}" ]
-            then
-                echo "Model ${args[i+1]} does not exist"
-                exit 1
-            else
-                model_found=true
-            fi
-        fi
-        i=$((i + 1))
-    done
-    if [ ! model_found ]
-    then
-        echo "Missing the --model flag"
-        exit 1
-    fi
-}
-
-model-bake-command() {
-    validate-model-bake-flags $@
-    CMD="docker run "
-    DOCKER_ARGS=""
-    #Add scenes
-    for arg in "$@"
-    do
-        if [ $arg = "--model" ] || [ $arg = "--num-gpus" ] || [ $arg = "--resume" ] || [ $arg = "--segmentation" ] || [ $arg = "--bbox-from-mask" ]
-        then
-            break #All scenes mounted
-        else
-            if [ -d $arg ]
-            then
-                scene_base=$(basename $arg)
-                CMD="$CMD -v $arg:/home/user/workspace/data/$scene_base"
-                DOCKER_ARGS="$DOCKER_ARGS /home/user/workspace/data/$scene_base"
-            fi
-        fi
-    done
-
-    #Grab flags
-    i=0
-    args=("$@")
-    for arg in "$@"
-    do
-        if [ $arg = "--model" ]
-        then
-            CMD="$CMD -v ${args[i+1]}:/home/user/workspace/detectron2-model "
-            DOCKER_ARGS="$DOCKER_ARGS --model /home/user/workspace/detectron2-model"
-
-        elif [ "${args[i]}" = "--num-gpus" ]
-        then
-            DOCKER_ARGS="$DOCKER_ARGS --num-gpus ${args[i+1]}"
-        elif [ "${args[i]}" = "--resume" ]
-        then
-            DOCKER_ARGS="$DOCKER_ARGS --resume"
-        elif [ "${args[i]}" = "--segmentation" ]
-        then
-            DOCKER_ARGS="$DOCKER_ARGS --segmentation"
-        elif [ "${args[i]}" = "--bbox-from-mask" ]
-        then
-            DOCKER_ARGS="$DOCKER_ARGS --bbox-from-mask"
-        fi
-        i=$((i + 1))
-    done
-
-    if [ "$PULL_IMAGES" = true ] ; then
-        docker pull strayrobots/detectron2:latest
-    fi
-
-    CMD="$CMD --gpus all -it ${CONTAINER_PREFIX}detectron2:latest $DOCKER_ARGS"
-    eval $CMD
-}
-
-model-subcommand() {
-    if [ $# -lt 2 ]
-        then
-            echo "Not enough arguments supplied"
-            exit 1
-    fi
-    if [ "$2" = "generate" ]
-    then
-        ${BIN_DIR}stray-model-generate "${@:3}"
-    elif [ "$2" = "bake" ]
-    then
-        log_event "model-bake:start"
-        model-bake-command "${@:3}"
-    elif [ "$2" = "evaluate" ]
-    then
-        ${BIN_DIR}stray-model-evaluate "${@:3}"
-    else
-        echo "Incorrect verb"
-    fi
-}
-
 studio-integrate() {
     i=$((i + 1))
     args=("$@")
@@ -332,9 +232,6 @@ then
 elif [ "$1" = "label" ]
 then
     label-subcommand $@
-elif [ "$1" = "model" ]
-then
-    model-subcommand $@
 elif [ "$1" = "studio" ]
 then
     studio-subcommand $@
