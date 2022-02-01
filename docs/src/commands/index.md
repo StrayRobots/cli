@@ -11,6 +11,9 @@ The `studio` subcommand is used to create integrated scenes from [datasets](/for
 ## [`stray calibration`](/commands/calibration.md)
 The `calibration` subcommand is used to generate calibration targets and find intrinsic parameters of cameras.
 
+## [`stray export`](/commands/export.md)
+The `export` subcommand is used to export Stray datasets into other formats, such as the YOLO dataset format.
+
 
 ## Help
 

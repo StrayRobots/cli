@@ -27,7 +27,8 @@ setup(
             'straylib-dataset-import=scripts.dataset_import:main',
             'straylib-dataset-cut=scripts.cut:main',
             'straylib-dataset-bake=scripts.bake:main',
-            'straylib-dataset-show=scripts.show:main'
+            'straylib-dataset-show=scripts.show:main',
+            'straylib-dataset-export=scripts.dataset_export:main'
         ]
     }
 )

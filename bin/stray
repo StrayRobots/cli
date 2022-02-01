@@ -226,6 +226,12 @@ dataset-subcommand() {
     fi
 }
 
+export-subcommand() {
+    log_event "dataset-export:start"
+    shift
+    straylib-dataset-export $@
+}
+
 if [ "$1" = "--version" ] || [ "$1" = "-v" ]
 then
     echo "Stray Robots CLI version $VERSION"
@@ -244,6 +250,9 @@ then
 elif [ "$1" = "dataset" ]
 then
     dataset-subcommand $@
+elif [ "$1" = "export" ]
+then
+    export-subcommand $@
 else
     echo "Can't recognize subcommand $1."
 fi
