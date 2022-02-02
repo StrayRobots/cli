@@ -40,7 +40,7 @@ Now export with the command:
 stray export --train train --validation validation --out yolo_dataset
 ```
 
-The `yolo_dataset` directory will now contain .
+The `yolo_dataset` directory will contain a dataset in the yolo format that can be used in training a model.
 
 ## Training YOLO
 
