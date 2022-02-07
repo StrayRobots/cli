@@ -229,7 +229,7 @@ dataset-subcommand() {
 export-subcommand() {
     log_event "dataset-export:start"
     shift
-    straylib-dataset-export $@
+    ${BIN_DIR}straylib-dataset-export $@
 }
 
 if [ "$1" = "--version" ] || [ "$1" = "-v" ]
