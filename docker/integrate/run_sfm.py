@@ -5,6 +5,7 @@ import shutil
 import numpy as np
 import subprocess
 import sqlite3
+import utils
 from straylib.scene import Scene
 from scipy.spatial.transform import Rotation
 
@@ -65,13 +66,14 @@ class Runner:
         c = sqlite3.connect(self.database_path)
         color_images = self.scene.get_image_filepaths()
         with open(os.path.join(self.sparse_dir, 'images.txt'), 'wt') as images_txt:
-            poses = self.scene.poses
+            vio_poses = utils.read_vio_trajectory(self.flags.scene)
             for index, image_index in enumerate(self.selected_views.tolist()):
                 image = color_images[image_index]
-                T_WC = poses[image_index]
-                R_WC = Rotation.from_matrix(T_WC[:3, :3])
-                q = R_WC.as_quat()
-                xyz = T_WC[:3, 3]
+                T_WC = vio_poses[image_index]
+                T_CW = np.linalg.inv(T_WC)
+                R_CW = Rotation.from_matrix(T_CW[:3, :3])
+                q = R_CW.as_quat()
+                xyz = T_CW[:3, 3]
                 name = os.path.basename(image)
                 images_txt.write(f"{index} {q[3]} {q[0]} {q[1]} {q[2]} {xyz[0]} {xyz[1]} {xyz[2]} {self.intrinsics_id} {name}\n\n")
 

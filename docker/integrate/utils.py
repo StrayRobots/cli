@@ -1,3 +1,5 @@
+import os
+import csv
 import numpy as np
 import struct
 from scipy.spatial.transform import Rotation
@@ -35,4 +37,19 @@ def read_images_bin(path):
                 'T_WC': T_WC
             })
     return images
+
+def read_vio_trajectory(scene_path):
+    path = os.path.join(scene_path, 'frames.csv')
+    poses = []
+    with open(path, 'rt') as f:
+        reader = csv.reader(f)
+        header = next(reader)
+        for line in reader:
+            x, y, z, qx, qy, qz, qw = [float(f) for f in line[2:9]]
+            pose = np.eye(4)
+            pose[:3, 3] = [x, y, z]
+            pose[:3, :3] = Rotation.from_quat([qx, qy, qz, qw]).as_matrix()
+            poses.append(pose)
+    return poses
+
 

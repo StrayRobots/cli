@@ -5,6 +5,7 @@ import json
 from scipy.spatial.transform import Rotation
 import copy
 from straylib.scene import Scene
+import csv
 import utils
 
 def read_args():
@@ -14,7 +15,9 @@ def read_args():
     return parser.parse_args()
 
 def write_trajectory(poses, flags):
-    with open(os.path.join(flags.scene, 'scene', 'trajectory.log'), 'wt') as f:
+    scene_dir = os.path.join(flags.scene, 'scene')
+    os.makedirs(scene_dir, exist_ok=True)
+    with open(os.path.join(scene_dir, 'trajectory.log'), 'wt') as f:
         for i, (pose_id, pose) in enumerate(poses):
             if i+1 < len(poses):
                 next_id = poses[i+1][0]
@@ -24,7 +27,6 @@ def write_trajectory(poses, flags):
             for row_index in range(4):
                 row = pose[row_index]
                 f.write(f"{row[0]} {row[1]} {row[2]} {row[3]}\n")
-
 
 def read_colmap_trajectory(path):
     images = utils.read_images_bin(os.path.join(path, 'images.bin'))
@@ -44,10 +46,10 @@ def find_cameras_sfm(cache):
             continue
         return cameras_path
 
-def compute_average_scale_diff(slam_trajectory, colmap_trajectory):
-    N = len(slam_trajectory)
+def compute_average_scale_diff(vio_trajectory, colmap_trajectory):
+    N = len(vio_trajectory)
     assert N == len(colmap_trajectory)
-    translations_slam = np.stack([T[:3, 3] for _, T in slam_trajectory])
+    translations_slam = np.stack([T[:3, 3] for _, T in vio_trajectory])
     translations_sfm = np.stack([T[:3, 3] for _, T in colmap_trajectory])
 
     # Calculate difference between subsequent keyframes in slam vs. sfm. Figure
@@ -67,7 +69,7 @@ def scale_trajectory(trajectory, scale):
         out.append((k, T_scaled))
     return out
 
-def align_slam_trajectory(slam_poses, colmap_trajectory):
+def align_trajectories(slam_poses, colmap_trajectory):
     """
     Fix the slam trajectory such that each segment between keyframes
     starts exactly at the previous keyframe and tracks from there.
@@ -93,32 +95,30 @@ def align_slam_trajectory(slam_poses, colmap_trajectory):
 
     return aligned_poses
 
-
-
-
 def main():
     flags = read_args()
 
     scene = Scene(flags.scene)
     color_images = scene.get_image_filepaths()
     pose_ids = [os.path.basename(i).split('.')[0] for i in color_images]
+    vio_poses = utils.read_vio_trajectory(flags.scene)
 
     colmap_trajectory = read_colmap_trajectory(flags.colmap_dir)
 
-    trajectory_dict = dict([(i, p) for i, p in enumerate(scene.poses)])
-    slam_trajectory = [(k, trajectory_dict[int(k)]) for k, v in colmap_trajectory]
+    trajectory_dict = dict([(i, p) for i, p in enumerate(vio_poses)])
+    vio_trajectory = [(k, trajectory_dict[int(k)]) for k, v in colmap_trajectory]
 
-    average_scale_difference = compute_average_scale_diff(slam_trajectory, colmap_trajectory)
+    average_scale_difference = compute_average_scale_diff(vio_trajectory, colmap_trajectory)
     colmap_trajectory = scale_trajectory(colmap_trajectory, average_scale_difference)
 
     # Fix the poses such that the first pose is the origin in both cases.
-    T_IW = np.linalg.inv(scene.poses[0])
-    slam_trajectory = [T_IW @ T for T in scene.poses]
+    T_IW = np.linalg.inv(vio_poses[0])
+    vio_trajectory = [T_IW @ T for T in vio_poses]
 
     T_IW = np.linalg.inv(colmap_trajectory[0][1])
     colmap_trajectory = [(k, T_IW @ T) for k, T in colmap_trajectory]
 
-    poses_aligned = align_slam_trajectory(slam_trajectory, colmap_trajectory)
+    poses_aligned = align_trajectories(vio_trajectory, colmap_trajectory)
 
     write_trajectory(list(enumerate(poses_aligned)), flags)
 
@@ -127,7 +127,7 @@ def main():
 
     # for _, T in colmap_trajectory:
     #     debugger.add_frame(T)
-    # # for T in slam_trajectory[::15]:
+    # # for T in vio_trajectory[::15]:
     # #     debugger.add_frame(T, color=np.array([0.0, 1.0, 0.0]))
 
     # for T in poses_aligned:

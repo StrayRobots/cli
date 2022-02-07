@@ -63,14 +63,14 @@ RUN wget https://bootstrap.pypa.io/get-pip.py
 RUN python3.8 get-pip.py
 RUN rm get-pip.py
 
+RUN pip3 install --user open3d==0.14.1 opencv-python scipy numpy PyYAML click trimesh requests && rm -rf /user/.cache
+
 COPY --chown=user:sudo straylib /tmp/straylib
 WORKDIR /tmp/straylib
 RUN python3.8 setup.py bdist_egg --exclude-source-files
 RUN wheel convert $(find dist/straylib-*.egg)
 RUN pip3.8 install "$(basename $(find straylib-*.whl))"
 RUN rm -rf /tmp/straylib
-
-RUN pip3 install --user open3d==0.14.1 opencv-python scipy numpy PyYAML click trimesh requests && rm -rf /user/.cache
 
 RUN mkdir /home/user/workspace
 WORKDIR /home/user/workspace

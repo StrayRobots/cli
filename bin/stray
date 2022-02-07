@@ -167,7 +167,7 @@ studio-integrate() {
         docker pull strayrobots/integrate:latest
     fi
 
-    docker run -it -v $scene_dir:/home/user/data ${CONTAINER_PREFIX}integrate2:latest /home/user/data $@
+    docker run -it -v $scene_dir:/home/user/data ${CONTAINER_PREFIX}integrate:latest /home/user/data $@
 }
 
 studio-subcommand() {

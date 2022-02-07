@@ -104,54 +104,20 @@ def copy_imu(scene_path, target_path):
     if os.path.exists(imu_csv):
         shutil.copy(imu_csv, os.path.join(target_path, 'imu.csv'))
 
-def copy_frame_metadata(scene_path, target_path):
+def write_frame_data(scene_path, target_path, every=1):
     odometry_csv = os.path.join(scene_path, 'odometry.csv')
     with open(odometry_csv, 'rt') as in_file:
         reader = csv.reader(in_file)
         header = next(reader)
         with open(os.path.join(target_path, 'frames.csv'), 'wt') as out_file:
             writer = csv.writer(out_file)
-            writer.writerow(['timestamp', 'frame'])
+            writer.writerow(['timestamp', 'frame', 'x', 'y', 'z', 'qx', 'qy', 'qz', 'qw'])
             for line in reader:
                 timestamp = line[0]
                 frame = line[1]
-                writer.writerow([timestamp, frame])
-
-def write_trajectory(scene_path, target_path):
-    """
-    Writes the ARKit visual odometry to the trajectory log.
-    """
-    odometry_csv = os.path.join(scene_path, 'odometry.csv')
-    scene_dir_out = os.path.join(target_path, 'scene')
-    os.makedirs(scene_dir_out)
-    trajectory_log = os.path.join(scene_dir_out, 'trajectory.log')
-    with open(odometry_csv, 'rt') as in_file:
-        reader = csv.reader(in_file)
-        header = next(reader)
-        old = False
-        if len(header) == 7:
-            # < version 1.2 which doesn't include the frame id and timestamps.
-            extract_pose = lambda line: line
-        else:
-            extract_pose = lambda line: line[2:]
-
-        poses = []
-        for line in reader:
-            x, y, z, qx, qy, qz, qw = extract_pose(line)
-            R = Rotation.from_quat([qx, qy, qz, qw])
-            pose = np.eye(4)
-            pose[:3, :3] = R.as_matrix()
-            pose[:3, 3] = [x, y, z]
-            poses.append(pose)
-
-        T_WI = poses[0]
-        T_IW = np.linalg.inv(T_WI)
-
-        with open(trajectory_log, 'wt') as out_file:
-            for i, T_WC in enumerate(poses):
-                out_file.write(f"{i:06}\n")
-                T_IC = T_IW @ T_WC
-                np.savetxt(out_file, T_IC, delimiter=' ')
+                if int(frame) % every != 0:
+                    continue
+                writer.writerow([timestamp, frame] + line[2:9])
 
 def validate_scene_path(scene_path) -> str:
     """
@@ -225,10 +191,9 @@ def main(scenes, out, every, width, height, rotate, intrinsics):
         full_width, full_height = write_frames(
             scene_path, every, rgb_out, width, height, rotate)
 
-        write_trajectory(scene_path, target_path)
         copy_rgb(scene_path, target_path)
         copy_imu(scene_path, target_path)
-        copy_frame_metadata(scene_path, target_path)
+        write_frame_data(scene_path, target_path, every)
 
         if intrinsics is None:
             if os.path.exists(os.path.join(scene_path, 'camera_matrix.csv')):
