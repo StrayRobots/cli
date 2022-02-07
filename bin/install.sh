@@ -13,9 +13,6 @@ endpoint="https://stray-builds.ams3.digitaloceanspaces.com"
 ANALYTICS_URL="https://app.strayrobots.io/event"
 
 download() {
-  echo "DPWNDNNDND"
-  echo $1
-  echo $2
   curl --proto '=https' --tlsv1.2 --show-error --fail --location "$1" --output "$2"
 }
 
