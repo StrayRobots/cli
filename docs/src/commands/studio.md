@@ -46,9 +46,9 @@ Plays through images in the scene with overlayed 3d annotations.
 
 `r` switches to the rectangle tool.
 
-`shift+1` switches to the mesh view.
+`shift+1` switches to the mesh view of the scene.
 
-`shift+2` switches to the point cloud view.
+`shift+2` switches to the point cloud view of the scene.
 
 
 ## Help

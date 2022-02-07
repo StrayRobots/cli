@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="straylib",
-    version="0.0.1",
+    version="0.0.2",
     author="Stray Robots",
     author_email="ken@strayrobots.io",
     description="Stray main utility library",
@@ -27,7 +27,8 @@ setup(
             'straylib-dataset-import=scripts.dataset_import:main',
             'straylib-dataset-cut=scripts.cut:main',
             'straylib-dataset-bake=scripts.bake:main',
-            'straylib-dataset-show=scripts.show:main'
+            'straylib-dataset-show=scripts.show:main',
+            'straylib-dataset-export=scripts.dataset_export:main'
         ]
     }
 )

@@ -9,6 +9,7 @@ specs:
   - python 3.8.11
   - numpy
   - conda
+  - ffmpeg
 
 installer_filename: install_env.sh
 

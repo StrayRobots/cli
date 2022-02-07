@@ -4,7 +4,7 @@ get_platform() {
   echo "$(uname | tr '[:upper:]' '[:lower:]')"
 }
 
-version="0.0.1"
+version="0.0.2"
 arch="$(uname -m)"
 tmp_dir="$(mktemp -d)"
 install_dir="$HOME/.stray"
@@ -63,7 +63,6 @@ add_to_path() {
 
 install_python_env_requirements() {
   pip install torch torchvision
-  pip install 'git+https://github.com/StrayRobots/detectron2.git'
 }
 
 install_python_env() {
@@ -74,12 +73,10 @@ install_python_env() {
   source "$HOME/.stray/env/bin/activate"
   model_wheel_name="straymodel-$version-py38-none-any.whl"
   lib_wheel_name="straylib-$version-py38-none-any.whl"
-  label_wheel_name="straylabel-$version-py38-none-any.whl"
   install_python_env_requirements
   download "$endpoint/straymodel/$model_wheel_name" "$model_wheel_name"
   download "$endpoint/straylib/$lib_wheel_name" "$lib_wheel_name"
-  download "$endpoint/straylabel/$label_wheel_name" "$label_wheel_name"
-  pip install $lib_wheel_name $model_wheel_name $label_wheel_name
+  pip install $lib_wheel_name $model_wheel_name
 }
 
 main() {
