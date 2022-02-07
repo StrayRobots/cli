@@ -4,15 +4,26 @@ set -e
 
 # python3.8 validate_license.py
 
-pushd Meshroom-2021.1.0-av2.4.0-centos7-cuda10.2 > /dev/null
+args=("$@")
+debug=0
+for arg in "$@"
+do
+    if [ "${args[i]}" = "--debug" ]
+    then
+        debug=1
+    fi
+    i=$((i + 1))
+done
 
-python3.8 /home/user/workspace/create_sfm.py $1 --out /tmp/cameras.sfm
+if [ "$debug" = "1" ];
+then
+  python3.8 /home/user/workspace/run_sfm.py /home/user/data --debug
+  python3.8 /home/user/workspace/combine_trajectories.py $1 --colmap-dir "/home/user/data/sfm/sfm/0"
+else
+  python3.8 /home/user/workspace/run_sfm.py /home/user/data
+  python3.8 /home/user/workspace/combine_trajectories.py $1 --colmap-dir "/tmp/sfm/sfm/0"
+fi
 
-./meshroom_batch --cache $1/MeshroomCache -i /tmp/cameras.sfm -p /home/user/workspace/pipeline.mg
-
-popd > /dev/null
-
-python3.8 /home/user/workspace/combine_trajectories.py $1
 python3.8 /home/user/workspace/integrate.py $1 --voxel-size 0.01
 python3.8 /home/user/workspace/integrate_pointcloud.py $1 --voxel-size 0.01
 rm -rf $1/MeshroomCache

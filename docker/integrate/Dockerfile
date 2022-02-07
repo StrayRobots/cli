@@ -1,16 +1,15 @@
-FROM nvidia/cuda:10.2-base
+FROM ubuntu:20.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update -y && apt-get install -y \
+  build-essential \
   git \
   xorg-dev \
   libglu1-mesa-dev \
   libpython2.7-dev \
-  python-opencv \
   python3.8-dev \
   python3.8-distutils \
   cmake \
-  python-pip \
   libglew-dev \
   libopencv-dev \
   libboost-dev \
@@ -18,10 +17,39 @@ RUN apt-get update -y && apt-get install -y \
   libssl-dev \
   libomp-dev \
   libboost-serialization-dev \
+  qtbase5-dev \
+  libqt5opengl5-dev \
+  libcgal-dev \
+  libsuitesparse-dev \
+  libatlas-base-dev \
+  libgflags-dev \
+  libfreeimage-dev \
+  libgoogle-glog-dev \
+  libboost-graph-dev \
+  libboost-test-dev \
+  libboost-system-dev \
+  libboost-filesystem-dev \
+  libboost-program-options-dev \
   wget \
   unzip
 
 RUN rm -rf /var/lib/apt/lists/*
+
+RUN git clone https://ceres-solver.googlesource.com/ceres-solver /tmp/ceres-solver/ && \
+  cd /tmp/ceres-solver && \
+  git checkout $(git describe --tags) && \
+  mkdir build && cd build && \
+  cmake .. -DBUILD_TESTING=OFF -DBUILD_EXAMPLES=OFF && \
+  make -j && \
+  make install && \
+  rm -rf /tmp/ceres-solver
+
+RUN git clone https://github.com/colmap/colmap /tmp/colmap
+RUN cd /tmp/colmap && git checkout dev && mkdir build && cd build && \
+  cmake .. -DCMAKE_BUILD_TYPE=Release && \
+  make -j && \
+  make install && \
+  rm -rf /tmp/colmap
 
 # create a non-root user
 ARG USER_ID=1000
@@ -47,13 +75,10 @@ RUN pip3 install --user open3d==0.14.1 opencv-python scipy numpy PyYAML click tr
 RUN mkdir /home/user/workspace
 WORKDIR /home/user/workspace
 
-RUN wget https://github.com/alicevision/meshroom/releases/download/v2021.1.0/Meshroom-2021.1.0-linux-cuda10.tar.gz
-RUN chown user:sudo /home/user/workspace/Meshroom-2021.1.0-linux-cuda10.tar.gz
-RUN tar -xf /home/user/workspace/Meshroom-2021.1.0-linux-cuda10.tar.gz
-
 COPY docker/integrate/entrypoint.sh /home/user/workspace/entrypoint.sh
-COPY docker/integrate/create_sfm.py /home/user/workspace/create_sfm.py
+COPY docker/integrate/run_sfm.py /home/user/workspace/run_sfm.py
 COPY docker/integrate/combine_trajectories.py /home/user/workspace/combine_trajectories.py
+COPY docker/integrate/utils.py /home/user/workspace/utils.py
 COPY docker/validate_license.py /home/user/workspace/validate_license.py
 COPY docker/integrate/pipeline.mg /home/user/workspace/pipeline.mg
 COPY docker/orbslam/integrate.py /home/user/workspace/integrate.py
