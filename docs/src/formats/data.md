@@ -16,9 +16,19 @@ Depth maps are encoded as 16 bit grayscale png images, where each value correspo
 
 ### `frames.csv`
 
+The `stray studio integrate` command assumes that there is some form of odometry running on the device that collected the dataset. These estimates are saved for each frame in this csv file along with their timestamps.
+
 CSV file containing timestamps for each frame. Columns:
 - `timestamp` A timestamp in seconds of when the frame was captured
 - `frame` The number of the frame. E.g. `000012`
+- `x` the x position relative to the first frame in meters.
+- `y` the y position relative to the first frame in meters.
+- `z` the z position relative to the first frame in meters.
+- `qx` quaternion x component for orientation, relative to the first frame.
+- `qy` quaternion y component for orientation, relative to the first frame.
+- `qz` quaternion z component for orientation, relative to the first frame.
+- `qw` quaternion w component for orientation, relative to the first frame.
+
 
 
 ### `imu.csv`
@@ -75,9 +85,12 @@ The width and height have to correspond to the size of the color images.
 
 In addition, the following data can be created with various Stray [commands](/commands/index.md):
 ### `scene`
-    - Contains a mesh file called `integrated.ply`
-    - Contains a camera pose trajectory file called `trajectory.log`
-    - Can be created with the `stray studio integrate` [command](/commands/studio.md#stray-studio-integrate)
+
+- `integrated.ply` is the reconstructed mesh of the scene
+- `cloud.ply` is a point cloud reconstruction of a scene.
+- `trajectory.log` contains optimized camera poses.
+
+The scene folder is the output of `stray studio integrate`.
 
 ### `annotations.json`
 A json file created by [Studio](/commands/studio.md#stray-studio-open) which contains annotations (keypoints, bounding boxes etc.) that have been added to the scene.
