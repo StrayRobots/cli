@@ -71,7 +71,6 @@ def main():
     trajectory_path = os.path.join(flags.scene, "CameraTrajectory.txt")
     meshroom_trajectory_path = os.path.join(flags.scene, "cameras.sfm")
 
-
     meshroom_trajectory = read_meshroom_trajectory(meshroom_trajectory_path)
 
     if not os.path.exists(trajectory_path):

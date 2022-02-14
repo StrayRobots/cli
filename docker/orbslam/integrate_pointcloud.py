@@ -20,11 +20,11 @@ def read_image(color_file, depth_file):
     depth_width, _ = depth.get_max_bound()
     width, _ = color.get_max_bound()
     scale = depth_width / width
-    color = o3d.t.geometry.Image.from_legacy_image(color)
+    color = o3d.t.geometry.Image.from_legacy(color)
     color = color.resize(scale, o3d.t.geometry.InterpType.Linear)
 
     return o3d.geometry.RGBDImage.create_from_color_and_depth(
-        color.to_legacy_image(),
+        color.to_legacy(),
         depth,
         depth_scale=1000,
         depth_trunc=2.5,
@@ -85,3 +85,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

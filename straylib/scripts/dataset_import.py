@@ -6,6 +6,7 @@ import numpy as np
 import json
 import csv
 import cv2
+from scipy.spatial.transform import Rotation
 from pathlib import Path
 from skvideo import io
 
@@ -39,7 +40,7 @@ def write_frames(dataset, every, rgb_out_dir, width, height, rotate):
             frame = cv2.rotate(frame, cv2.ROTATE_90_CLOCKWISE)
         elif rotate == "ccw":
             frame = cv2.rotate(frame, cv2.ROTATE_90_COUNTERCLOCKWISE)
-            
+
         full_width = frame.shape[1]
         full_height = frame.shape[0]
         frame = cv2.resize(frame, (width, height))
@@ -47,6 +48,7 @@ def write_frames(dataset, every, rgb_out_dir, width, height, rotate):
         params = [int(cv2.IMWRITE_JPEG_QUALITY), 90]
         cv2.imwrite(frame_path, frame, params)
     video.close()
+    print('\r')
     return full_width, full_height
 
 def resize_and_rotate_depth(frame, width, height, rotate):
@@ -102,18 +104,20 @@ def copy_imu(scene_path, target_path):
     if os.path.exists(imu_csv):
         shutil.copy(imu_csv, os.path.join(target_path, 'imu.csv'))
 
-def copy_frame_metadata(scene_path, target_path):
+def write_frame_data(scene_path, target_path, every=1):
     odometry_csv = os.path.join(scene_path, 'odometry.csv')
     with open(odometry_csv, 'rt') as in_file:
         reader = csv.reader(in_file)
         header = next(reader)
         with open(os.path.join(target_path, 'frames.csv'), 'wt') as out_file:
             writer = csv.writer(out_file)
-            writer.writerow(['timestamp', 'frame'])
+            writer.writerow(['timestamp', 'frame', 'x', 'y', 'z', 'qx', 'qy', 'qz', 'qw'])
             for line in reader:
                 timestamp = line[0]
                 frame = line[1]
-                writer.writerow([timestamp, frame])
+                if int(frame) % every != 0:
+                    continue
+                writer.writerow([timestamp, frame] + line[2:9])
 
 def validate_scene_path(scene_path) -> str:
     """
@@ -189,7 +193,7 @@ def main(scenes, out, every, width, height, rotate, intrinsics):
 
         copy_rgb(scene_path, target_path)
         copy_imu(scene_path, target_path)
-        copy_frame_metadata(scene_path, target_path)
+        write_frame_data(scene_path, target_path, every)
 
         if intrinsics is None:
             if os.path.exists(os.path.join(scene_path, 'camera_matrix.csv')):

@@ -17,10 +17,12 @@ The scene directory has to follow the [dataset format](/formats/data.md#dataset-
 |name|default|choices|description|
 |---|---|---|---|
 |`scenes`| | |Path to the directory containing the [scenes](/formats/data.md#dataset-format) to integrate|
+|`--voxel-size`| 0.01 (meters) | | Sets the grid size used when creating the mesh and point cloud of a scene. This can be roughly interpreted as the finest level of detail that will be distinguishable in the scene. The smaller the value, the more memory will be required and the longer the command will take.|
+|`--skip-mapping`| false | | If this is set, no image matching, mapping and bundle adjustment is performed and the poses in `scene/trajectory.log` are assumed to be perfect.|
 
 ## `stray studio open <scene>`
 
-Opens a scene in the Studio graphical interface. Before a scene can be opened, it has to be integrated with the [`integrate`](#stray-studio-integrate-scene-directory) command.
+Opens a scene in the Studio graphical user interface. Before a scene can be opened, it has to be integrated with the [`integrate`](#stray-studio-integrate-scene-directory) command.
 
 ## `stray studio preview <scene>`
 
@@ -32,7 +34,7 @@ Plays through images in the scene with overlayed 3d annotations.
 |---|---|---|---|
 |`scene`| | |Path to a single [scene](/formats/data.md#dataset-format) to open|
 
-#### Keyboard Shortcuts for the Studio graphical user interface
+#### Keyboard Shortcuts for Stray Studio
 
 `cmd+s` to save.
 

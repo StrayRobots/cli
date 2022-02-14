@@ -46,13 +46,13 @@ def read_image(color_file, depth_file):
     depth = o3d.io.read_image(depth_file)
     depth_width, _ = depth.get_max_bound()
     width, _ = color.get_max_bound()
-    depth = o3d.t.geometry.Image.from_legacy_image(depth)
+    depth = o3d.t.geometry.Image.from_legacy(depth)
     scale = width / depth_width
     depth = depth.resize(scale, o3d.t.geometry.InterpType.Nearest)
 
     return o3d.geometry.RGBDImage.create_from_color_and_depth(
         color,
-        depth.to_legacy_image(),
+        depth.to_legacy(),
         depth_scale=1000,
         depth_trunc=5,
         convert_rgb_to_intensity=False)
@@ -84,7 +84,7 @@ def main():
         poses = read_trajectory(pose_ids, flags.trajectory)
         os.makedirs(os.path.join(flags.scene, 'scene'), exist_ok=True)
         write_trajectory(poses, flags)
-    
+
 
     volume = o3d.pipelines.integration.ScalableTSDFVolume(
         voxel_length=flags.voxel_size, # In meters.
