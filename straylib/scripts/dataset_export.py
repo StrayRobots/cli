@@ -4,24 +4,28 @@ import shutil
 import argparse
 import yaml
 import numpy as np
-from straylib.export import bbox_2d_from_bbox_3d, bbox_2d_from_mesh
+from straylib.export import bbox_2d_from_bbox_3d, bbox_2d_from_mesh, bbox_2d_from_pointcloud
 
 def read_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--train', help='Dataset to use for training')
     parser.add_argument('--validation', '--val', help="Dataset to use for validation.")
+    parser.add_argument('--every', type=int, default=1, help="Subsamples the dataset by only grabbing every n-th frame.")
     parser.add_argument('--out', help="Where to save the exported dataset.")
-    parser.add_argument('--use-corners', action='store_true',
-            help="Create 2D bounding boxes from the 3D bounding corners instead of the scene mesh.")
+    parser.add_argument('--start', type=int, help="Where to start the numbering.")
+    parser.add_argument('--modality', type=str, default='mesh',
+            help="Determines what is used to compute the labels. Can be 'mesh', 'pointcloud', 'corners'.")
     return parser.parse_args()
 
-def _get_labels(scene, image, image_index, use_corners=False, objects=None):
+def _get_labels(scene, image, image_index, modality, objects=None):
     camera = scene.camera()
     T_WC = scene.poses[image_index]
     bboxes = []
     for i, bounding_box in enumerate(scene.bounding_boxes):
-        if use_corners:
+        if modality == 'corners':
             bbox = bbox_2d_from_bbox_3d(camera, T_WC, bounding_box)
+        elif modality == 'pointcloud':
+            bbox = bbox_2d_from_pointcloud(camera, T_WC, objects[i])
         else:
             object_mesh = objects[i]
             bbox = bbox_2d_from_mesh(camera, T_WC, object_mesh)
@@ -57,8 +61,11 @@ class DatasetExporter:
         train_scenes = [os.path.join(train_dataset, d) for d in os.listdir(train_dataset)]
         self.train_scenes = [p for p in train_scenes if os.path.isdir(p)]
         val_dataset = self.flags.validation
-        val_scenes = [os.path.join(val_dataset, d) for d in os.listdir(val_dataset)]
-        self.val_scenes = [p for p in val_scenes if os.path.isdir(p)]
+        if val_dataset is None:
+            self.val_scenes = []
+        else:
+            val_scenes = [os.path.join(val_dataset, d) for d in os.listdir(val_dataset)]
+            self.val_scenes = [p for p in val_scenes if os.path.isdir(p)]
 
     def _gather_metadata(self):
         class_ids = set()
@@ -74,23 +81,30 @@ class DatasetExporter:
         }
 
     def _process_scenes(self, input_scenes, out_image_dir):
-        i = 0
+        i = self.flags.start
         for scene_dir in input_scenes:
             scene = Scene(scene_dir)
             images = scene.get_image_filepaths()
             objects = None
-            if not self.flags.use_corners:
+            if self.flags.modality != 'corners':
                 objects = []
                 for bounding_box in scene.bounding_boxes:
-                    objects.append(bounding_box.cut(scene.mesh))
+                    if self.flags.modality == 'pointcloud':
+                        scene._read_point_cloud()
+                        object_cloud = bounding_box.cut_pointcloud(scene.point_cloud.vertices)
+                        objects.append(object_cloud)
+                    elif self.flags.modality == 'mesh':
+                        objects.append(bounding_box.cut(scene.mesh))
 
             for image_index, image in enumerate(images):
+                if int(image_index) % self.flags.every != 0:
+                    continue
                 ext = image.split('.')[-1]
                 filename = f"{i:08}"
                 out_image_path = os.path.join(out_image_dir, f"{filename}.{ext}")
                 print(f"Exporting image {out_image_path}", end='\r')
                 shutil.copy(image, out_image_path)
-                labels = _get_labels(scene, image, image_index, use_corners=self.flags.use_corners,
+                labels = _get_labels(scene, image, image_index, modality=self.flags.modality,
                         objects=objects)
                 label_file = os.path.join(out_image_dir, f"{filename}.txt")
                 with open(label_file, 'wt') as f:
@@ -99,8 +113,9 @@ class DatasetExporter:
                 i += 1
         print("")
 
-
     def run(self):
+        if self.flags.modality not in ['corners', 'pointcloud', 'mesh']:
+            raise NotImplementedError(f"Unknown modality {self.flags.modality}")
         os.makedirs(self.train_dir, exist_ok=True)
         os.makedirs(self.val_dir, exist_ok=True)
 
