@@ -53,6 +53,23 @@ class BoundingBox:
                 object_mesh = trimesh.intersections.slice_mesh_plane(object_mesh, -normal, origin)
         return object_mesh
 
+    def cut_pointcloud(self, pointcloud):
+        """
+        Returns the points which are inside the bounding box.
+        pointcloud: N x 3 np.array
+        returns: P x 3 points inside the bounding box
+        """
+        axes = np.eye(3)
+        points_local = self.orientation.inv().apply(pointcloud - self.position)
+        x_size = self.dimensions[0] * 0.5
+        y_size = self.dimensions[1] * 0.5
+        z_size = self.dimensions[2] * 0.5
+        inside_x = np.bitwise_and(points_local[:, 0] < x_size, points_local[:, 0] > -x_size)
+        inside_y = np.bitwise_and(points_local[:, 1] < y_size, points_local[:, 1] > -y_size)
+        inside_z = np.bitwise_and(points_local[:, 2] < z_size, points_local[:, 2] > -z_size)
+        mask = np.bitwise_and(np.bitwise_and(inside_x, inside_y), inside_z)
+        return pointcloud[mask]
+
     def background(self, mesh):
         """
         Cuts the object out of the mesh, removing everything inside the bounding box.

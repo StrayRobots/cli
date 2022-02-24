@@ -4,6 +4,7 @@ import os
 import pickle
 import pycocotools.mask as mask_util
 import cv2
+from straylib import linalg
 
 MISSING_SEGMENTATIONS = 1
 INCORRECT_NUMBER_OF_SEGMENTATIONS = 2
@@ -26,6 +27,22 @@ def bbox_2d_from_mesh(camera, T_WC, object_mesh):
     image_points = camera.project(vertices, T_CW)
     upper_left = image_points.min(axis=0)
     lower_right = image_points.max(axis=0)
+    return upper_left.tolist() + lower_right.tolist()
+
+def bbox_2d_from_pointcloud(camera, T_WC, pointcloud):
+    # filter out points behind camera.
+    T_CW = np.linalg.inv(T_WC)
+    pc_local = linalg.transform_points(T_CW, pointcloud)
+    pc = pointcloud[pc_local[:, 2] > 0.0]
+    if pc.shape[0] == 0:
+        return [0, 0, 0, 0]
+    points2d = camera.project(pc, np.linalg.inv(T_WC))
+    upper_left = points2d.min(axis=0)
+    image_size = np.array(camera.size)
+    upper_left = np.maximum(points2d.min(axis=0), 0)
+    upper_left = np.minimum(upper_left, image_size)
+    lower_right = np.maximum(points2d.max(axis=0), 0)
+    lower_right = np.minimum(lower_right, image_size)
     return upper_left.tolist() + lower_right.tolist()
 
 def get_bbox_3d_corners(camera, T_WC, bbox_3d):
