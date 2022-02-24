@@ -30,6 +30,7 @@ def _resize_and_rotate_camera_matrix(camera_matrix, scale_x, scale_y, rotate):
 def write_frames(dataset, every, rgb_out_dir, width, height, rotate):
     rgb_video = os.path.join(dataset, 'rgb.mp4')
     video = io.FFmpegReader(rgb_video)
+    fps = video.inputfps
     for i, frame in enumerate(video.nextFrame()):
         if i % every != 0:
             continue
@@ -49,7 +50,7 @@ def write_frames(dataset, every, rgb_out_dir, width, height, rotate):
         cv2.imwrite(frame_path, frame, params)
     video.close()
     print('\r')
-    return full_width, full_height
+    return full_width, full_height, fps
 
 def resize_and_rotate_depth(frame, width, height, rotate):
     if rotate == "cw":
@@ -65,12 +66,16 @@ def write_depth(dataset, every, depth_out_dir, width, height, rotate):
     confidence_dir = os.path.join(dataset, 'confidence')
     files = sorted(os.listdir(depth_dir_in))
     for i, filename in enumerate(files):
-        if '.npy' not in filename or i % every != 0:
+        file_extension = filename.split('.')[-1]
+        if file_extension not in ['npy', 'png'] or i % every != 0:
             continue
         number, _ = filename.split('.')
         depth_file = os.path.join(depth_dir_in, filename)
         confidence_file = os.path.join(confidence_dir, number + '.png')
-        depth = np.load(depth_file)
+        if file_extension == 'npy':
+            depth = np.load(depth_file)
+        else:
+            depth = cv2.imread(depth_file, -1)
         if os.path.exists(confidence_file):
             confidence = cv2.imread(confidence_file)[:, :, 0]
         else:
@@ -79,7 +84,7 @@ def write_depth(dataset, every, depth_out_dir, width, height, rotate):
         depth = resize_and_rotate_depth(depth, width, height, rotate)
         cv2.imwrite(os.path.join(depth_out_dir, number + '.png'), depth)
 
-def write_intrinsics(dataset, out, width, height, full_width, full_height, rotate):
+def write_intrinsics(dataset, out, width, height, full_width, full_height, rotate, fps):
     intrinsics = np.loadtxt(os.path.join(dataset, 'camera_matrix.csv'), delimiter=',')
     data = {}
     intrinsics_scaled = _resize_and_rotate_camera_matrix(intrinsics, width / full_width, height / full_height, rotate)
@@ -89,7 +94,7 @@ def write_intrinsics(dataset, out, width, height, full_width, full_height, rotat
     data['width'] = width
     data['height'] = height
     data['depth_scale'] = 1000.0
-    data['fps'] = 60.0
+    data['fps'] = fps
     data['depth_format'] = 'Z16'
     with open(os.path.join(out, 'camera_intrinsics.json'), 'wt') as f:
         f.write(json.dumps(data, indent=4, sort_keys=True))
@@ -188,7 +193,7 @@ def main(scenes, out, every, width, height, rotate, intrinsics):
         os.makedirs(depth_out)
 
         write_depth(scene_path, every, depth_out, width, height, rotate)
-        full_width, full_height = write_frames(
+        full_width, full_height, fps = write_frames(
             scene_path, every, rgb_out, width, height, rotate)
 
         copy_rgb(scene_path, target_path)
@@ -199,7 +204,7 @@ def main(scenes, out, every, width, height, rotate, intrinsics):
             if os.path.exists(os.path.join(scene_path, 'camera_matrix.csv')):
                 print("Writing factory intrinsics.", end='\n')
                 write_intrinsics(scene_path, target_path, width,
-                         height, full_width, full_height, rotate)
+                         height, full_width, full_height, rotate, fps)
             else:
                 print("Warning: no camera matrix found, skipping.")
         else:
