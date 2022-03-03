@@ -5,7 +5,7 @@ on:
     branches: [ main ]
     paths:
       - 'straylib/setup.py'
-      - 'docker/orbslam/**'
+      - 'docker/integrate/**'
 
 jobs:
   deploy:
@@ -37,7 +37,7 @@ jobs:
         with:
           context: ./
           platforms: linux/amd64,linux/arm64
-          file: ./docker/orbslam/Dockerfile
+          file: ./docker/integrate/Dockerfile
           push: true
           tags: strayrobots/integrate:latest
           cache-from: type=registry,ref=strayrobots/integrate:buildcache
