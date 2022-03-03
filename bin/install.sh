@@ -59,6 +59,9 @@ add_to_path() {
   if [ -f "$HOME/.bashrc" ]; then
     add_to_file_unless_exists "$line" "$HOME/.bashrc"
   fi
+  if [ -f "$HOME/.bash_profile" ]; then
+    add_to_file_unless_exists "$line" "$HOME/.bash_profile"
+  fi
 }
 
 install_python_env_requirements() {
