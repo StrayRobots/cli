@@ -6,6 +6,7 @@ on:
     paths:
       - 'straylib/setup.py'
       - 'docker/integrate/**'
+      - 'docker/orbslam/**'
 
 jobs:
   deploy:
