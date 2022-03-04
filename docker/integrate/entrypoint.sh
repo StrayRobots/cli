@@ -34,7 +34,7 @@ integrate_scene() {
     fi
   fi
   python3.8 /home/user/workspace/integrate.py $1 --voxel-size $voxel_size
-  python3.8 /home/user/workspace/integrate_pointcloud.py $1 $@ --voxel-size $voxel_size
+  python3.8 /home/user/workspace/integrate_pointcloud.py $1 --voxel-size $voxel_size
 }
 
 python3.8 validate_license.py
