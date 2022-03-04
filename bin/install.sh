@@ -58,6 +58,8 @@ add_to_path() {
   fi
   if [ -f "$HOME/.bashrc" ]; then
     add_to_file_unless_exists "$line" "$HOME/.bashrc"
+  elif [ -f "$HOME/.bash_profile" ]; then
+    add_to_file_unless_exists "$line" "$HOME/.bash_profile"
   fi
 }
 
