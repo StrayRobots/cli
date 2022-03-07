@@ -1,5 +1,8 @@
 
 # Data Specification
+
+This document describes the data format recorded by the [Stray Scanner iOS app](https://apps.apple.com/us/app/stray-scanner/id1557051662). Note, that it is slightly different from the [dataset format](/formats/data.md). Stray Scanner datasets can be converted using the [import command](/tutorials/import.md).
+
 The collected datasets are each contained in a folder, named after a random hash, for example `71de12f9`. A dataset folder has the following directory structure:
 
 ```
@@ -7,8 +10,8 @@ camera_matrix.csv
 odometry.csv
 imu.csv
 depth/
-  - 000000.npy
-  - 000001.npy
+  - 000000.png
+  - 000001.png
   - ...
 confidence/
   - 000000.png
@@ -19,7 +22,7 @@ rgb.mp4
 
 `rgb.mp4` is an HEVC encoded video, which contains the recorded data from the iPhone's camera.
 
-The `depth/` directory contains the depth maps. One `.npy` file per rgb frame. Each of these is a [Numpy matrix file](https://numpy.org/devdocs/reference/generated/numpy.lib.format.html) containing `uint16` values. They have a height of 192 elements and width of 256 elements. The values are the measured depth in millimeters, for that pixel position. These can be loaded using Numpy using the `np.load` function.
+The `depth/` directory contains the depth maps. One `.png` file per rgb frame. Each of these is a 16 bit grayscale png image. They have a height of 192 elements and width of 256 elements. The values are the measured depth in millimeters, for that pixel position. In [OpenCV](https://docs.opencv.org/4.5.5/), these can be read with `cv2.imread(depth_frame_path, -1)`.
 
 The `confidence/` directory contains confidence maps corresponding to each depth map. They are grayscale png files encoding 192 x 256 element matrices. The values are either 0, 1 or 2. A higher value means a higher confidence.
 

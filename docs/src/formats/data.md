@@ -29,21 +29,8 @@ CSV file containing timestamps for each frame. Columns:
 - `qz` quaternion z component for orientation, relative to the first frame.
 - `qw` quaternion w component for orientation, relative to the first frame.
 
-
-
-### `imu.csv`
-
-CSV file containing imu readings. The columns are as follows:
-- `timestamp` a timestamp in seconds, should be synchronized with the values in `frames.csv`
-- `a_x` acceleration in x direction in m/s^2
-- `a_y` acceleration in y direction in m/s^2
-- `a_z` acceleration in z direction in m/s^2
-- `alpha_x` rotation along the x axis in rad/s
-- `alpha_y` rotation along the y axis in rad/s
-- `alpha_z` rotation along the z axis in rad/s
-The depth maps do not have to be of the same size as the color images, but they do need to have the same aspect ratio.
-
 ### `camera_intrinsic.json`
+
 Contains the intrinsic parameters of the camera that was used to collect the `color` and `depth` files.
 It should contain a single object, with the following fields:
   - `depth_format` **string**, the data format of depth frames, currently only `Z16` is supported, meaning 16-bit grayscale
