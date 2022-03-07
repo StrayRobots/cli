@@ -2,6 +2,7 @@ import argparse
 import os
 import numpy as np
 import open3d as o3d
+import csv
 from straylib.scene import Scene
 from scipy.spatial.transform import Rotation
 
@@ -13,17 +14,20 @@ def read_args():
     parser.add_argument('--debug', action='store_true')
     return parser.parse_args()
 
-def read_trajectory(pose_ids, path):
-    poses = []
-    trajectory = np.loadtxt(path, delimiter=' ')
-    for pose_id, line in zip(pose_ids, trajectory):
-        ts, tx, ty, tz, qx, qy, qz, qw = line
-        rotation = Rotation.from_quat([qx, qy, qz, qw])
-        T = np.eye(4)
-        T[:3, :3] = rotation.as_matrix()
-        T[:3, 3] = [tx, ty, tz]
-        poses.append((pose_id, T))
-    return poses
+def read_frames_csv(scene_path, pose_ids):
+    path = os.path.join(scene_path, 'frames.csv')
+    poses = {}
+    with open(path, 'rt') as f:
+        reader = csv.reader(f)
+        header = next(reader)
+        for line in reader:
+            x, y, z, qx, qy, qz, qw = [float(f) for f in line[2:9]]
+            pose = np.eye(4)
+            pose[:3, 3] = [x, y, z]
+            pose[:3, :3] = Rotation.from_quat([qx, qy, qz, qw]).as_matrix()
+            pose_id = line[1]
+            poses[int(pose_id)] = pose
+    return [(pose_id, poses[int(pose_id)]) for pose_id in pose_ids]
 
 def read_trajectory_log(scene_path):
     scene = Scene(scene_path)
@@ -81,7 +85,7 @@ def main():
     if os.path.exists(trajectory_path):
         poses = read_trajectory_log(flags.scene)
     else:
-        poses = read_trajectory(pose_ids, flags.trajectory)
+        poses = read_frames_csv(flags.scene, pose_ids)
         os.makedirs(os.path.join(flags.scene, 'scene'), exist_ok=True)
         write_trajectory(poses, flags)
 
