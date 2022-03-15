@@ -6,7 +6,6 @@ CONTAINER_PREFIX="strayrobots/"
 ANALYTICS_URL="https://app.strayrobots.io/event"
 VERSION="1.1.0"
 PULL_IMAGES=true
-LICENSE_KEY_ARGS="-e STRAY_LICENSE_KEY=$STRAY_LICENSE_KEY"
 
 if [ "$STRAY_DEV" != "" ]
     then
@@ -29,87 +28,6 @@ check_data_dir() {
 log_event() {
     if [ "$DO_NOT_TRACK" = "" ]; then
         (curl --request POST --url $ANALYTICS_URL --header 'Content-Type: application/json' --data "{ \"name\": \"cli:$1\", \"version\": \"$VERSION\" }" 2> /dev/null > /dev/null &)
-    fi
-}
-
-label-subcommand() {
-    if [ $# -lt 2 ]
-        then
-            echo "Not enough arguments supplied"
-            exit 1
-    fi
-
-    if [ "$2" = "generate" ]
-    then
-        log_event "label-generate:start"
-        ${BIN_DIR}stray-label-generate "${@:3}"
-    elif [ "$2" = "show" ]
-    then
-        log_event "label-show:start"
-        ${BIN_DIR}stray-label-show "${@:3}"
-    else
-        echo "Incorrect verb"
-    fi
-}
-
-studio-integrate() {
-    i=$((i + 1))
-    args=("$@")
-    for arg in "$@"
-    do
-        if [ "${args[i]}" = "--debug" ]
-        then
-            debug=1
-        fi
-        i=$((i + 1))
-    done
-
-    if [ "$PULL_IMAGES" = true ] ; then
-        docker pull strayrobots/integrate:latest
-    fi
-
-    docker run -it $LICENSE_KEY_ARGS -v $scene_dir:/home/user/data ${CONTAINER_PREFIX}integrate:latest /home/user/data $@
-}
-
-studio-subcommand() {
-    scene_dir="$(absolute_path $3)"
-    check_data_dir $scene_dir
-
-    if [ "$2" = "integrate" ]
-    then
-        shift
-        log_event "studio-integrate:start"
-        studio-integrate $scene_dir $@
-        log_event "studio-integrate:end"
-    elif [ "$2" = "open" ]
-    then
-        log_event "studio-open:start"
-        studio $scene_dir
-    elif [ "$2" = "preview" ]
-    then
-        log_event "studio-preview:start"
-        stray-preview $scene_dir
-    else
-        echo "Verb $2 not supported by studio subcommand."
-        exit 1
-    fi
-}
-
-photogrammetry-subcommand() {
-    shift
-    scene_dir="$(absolute_path $2)"
-    check_data_dir $scene_dir
-
-    if [ "$PULL_IMAGES" = "true" ]; then
-        docker pull strayrobots/photogrammetry:latest
-    fi
-
-    if [ "$1" = "run" ]
-    then
-        shift
-        log_event "photogrammetry:start"
-        nvidia-docker run -it -v $scene_dir:/home/user/data ${CONTAINER_PREFIX}photogrammetry:latest /home/user/data $@
-        log_event "photogrammetry:end"
     fi
 }
 
@@ -177,71 +95,40 @@ calibration-subcommand() {
         fi
         docker run -v `pwd`:/home/user/data/ \
             -v $target_yaml:/home/user/workspace/target.yaml ${CONTAINER_PREFIX}calibrate:latest generate
-    elif [ "$2" = "scale" ]; then
-        shift 2
-        log_event "calibration-scale:start"
-        ${BIN_DIR}straylib-scale-calibration $@
     else
         "Verb $2 not supported by calibration subcommand. Try run or generate."
         exit 1
     fi
 }
 
-dataset-subcommand() {
-    if [ "$2" = "import" ]
-    then
-        shift 2
-        log_event "dataset-import:start"
-        ${BIN_DIR}straylib-dataset-import $@
-        log_event "dataset-import:end"
-    elif [ "$2" = "cut" ]
-    then
-        shift 2
-        log_event "dataset-cut:start"
-        ${BIN_DIR}straylib-dataset-cut $@
-    elif [ "$2" = "show" ]
-    then
-        shift 2
-        log_event "dataset-show:start"
-        ${BIN_DIR}straylib-dataset-show $@
-    elif [ "$2" = "bake" ]
-    then
-        shift 2
-        log_event "dataset-bake:start"
-        ${BIN_DIR}straylib-dataset-bake $@
-    else
-        echo "verb $2 not recognized by dataset command."
-        exit 1
-    fi
-}
-
-export-subcommand() {
-    log_event "dataset-export:start"
-    shift
-    ${BIN_DIR}straylib-dataset-export $@
-}
 
 if [ "$1" = "--version" ] || [ "$1" = "-v" ]
 then
     echo "Stray Robots CLI version $VERSION"
-elif [ "$1" = "label" ]
-then
-    label-subcommand $@
 elif [ "$1" = "studio" ]
 then
-    studio-subcommand $@
-elif [ "$1" = "photogrammetry" ]
+    scene_dir="$(absolute_path $2)"
+    check_data_dir $scene_dir
+    log_event "studio-open:start"
+    studio $scene_dir
+elif [ "$1" = "preview" ]
 then
-    photogrammetry-subcommand $@
+    scene_dir="$(absolute_path $2)"
+    check_data_dir $scene_dir
+    log_event "studio-preview:start"
+    stray-preview $scene_dir
+elif [ "$1" = "integrate" ]
+then
+    scene_dir="$(absolute_path $2)"
+    check_data_dir $scene_dir
+    log_event "integrate:start"
+    if [ "$PULL_IMAGES" = true ] ; then
+        docker pull strayrobots/integrate:latest
+    fi
+    docker run -it -v $scene_dir:/home/user/data ${CONTAINER_PREFIX}integrate:latest /home/user/data $@
 elif [ "$1" = "calibration" ]
 then
     calibration-subcommand $@
-elif [ "$1" = "dataset" ]
-then
-    dataset-subcommand $@
-elif [ "$1" = "export" ]
-then
-    export-subcommand $@
 else
     echo "Can't recognize subcommand $1."
 fi

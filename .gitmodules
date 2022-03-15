@@ -1,0 +1,3 @@
+[submodule "stray"]
+	path = stray
+	url = git@github.com:StrayRobots/stray.git

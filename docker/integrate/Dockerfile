@@ -40,14 +40,14 @@ RUN git clone https://ceres-solver.googlesource.com/ceres-solver /tmp/ceres-solv
   git checkout $(git describe --tags) && \
   mkdir build && cd build && \
   cmake .. -DBUILD_TESTING=OFF -DBUILD_EXAMPLES=OFF && \
-  make -j && \
+  make -j4 && \
   make install && \
   rm -rf /tmp/ceres-solver
 
 RUN git clone https://github.com/colmap/colmap /tmp/colmap
-RUN cd /tmp/colmap && git checkout dev && mkdir build && cd build && \
+RUN cd /tmp/colmap && git checkout tags/3.7 && mkdir build && cd build && \
   cmake .. -DCMAKE_BUILD_TYPE=Release && \
-  make -j && \
+  make -j4 && \
   make install && \
   rm -rf /tmp/colmap
 
@@ -65,12 +65,12 @@ RUN rm get-pip.py
 
 RUN pip3 install --user open3d==0.14.1 opencv-python scipy numpy PyYAML click trimesh requests && rm -rf /user/.cache
 
-COPY --chown=user:sudo straylib /tmp/straylib
-WORKDIR /tmp/straylib
+COPY --chown=user:sudo stray /tmp/stray
+WORKDIR /tmp/stray
 RUN python3.8 setup.py bdist_egg --exclude-source-files
-RUN wheel convert $(find dist/straylib-*.egg)
-RUN pip3.8 install "$(basename $(find straylib-*.whl))"
-RUN rm -rf /tmp/straylib
+RUN wheel convert $(find dist/stray-*.egg)
+RUN pip3.8 install "$(basename $(find stray-*.whl))"
+RUN rm -rf /tmp/stray
 
 RUN mkdir /home/user/workspace
 WORKDIR /home/user/workspace
@@ -79,10 +79,9 @@ COPY docker/integrate/entrypoint.sh /home/user/workspace/entrypoint.sh
 COPY docker/integrate/run_sfm.py /home/user/workspace/run_sfm.py
 COPY docker/integrate/combine_trajectories.py /home/user/workspace/combine_trajectories.py
 COPY docker/integrate/utils.py /home/user/workspace/utils.py
-COPY docker/validate_license.py /home/user/workspace/validate_license.py
 COPY docker/integrate/pipeline.mg /home/user/workspace/pipeline.mg
-COPY docker/orbslam/integrate.py /home/user/workspace/integrate.py
-COPY docker/orbslam/integrate_pointcloud.py /home/user/workspace/integrate_pointcloud.py
+COPY docker/integrate/integrate.py /home/user/workspace/integrate.py
+COPY docker/integrate/integrate_pointcloud.py /home/user/workspace/integrate_pointcloud.py
 
 ENTRYPOINT ["/home/user/workspace/entrypoint.sh"]
 CMD []

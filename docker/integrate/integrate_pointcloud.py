@@ -4,8 +4,8 @@ import math
 import numpy as np
 import open3d as o3d
 from scipy.spatial.transform import Rotation
-from straylib.camera import scale_intrinsics
-from straylib.scene import Scene
+from stray.camera import scale_intrinsics
+from stray.scene import Scene
 
 def read_args():
     parser = argparse.ArgumentParser()
@@ -85,4 +85,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

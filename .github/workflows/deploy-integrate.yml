@@ -4,9 +4,8 @@ on:
   push:
     branches: [ main ]
     paths:
-      - 'straylib/setup.py'
+      - 'stray/**'
       - 'docker/integrate/**'
-      - 'docker/orbslam/**'
 
 jobs:
   deploy:

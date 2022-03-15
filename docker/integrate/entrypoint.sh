@@ -37,8 +37,6 @@ integrate_scene() {
   python3.8 /home/user/workspace/integrate_pointcloud.py $1 --voxel-size $voxel_size
 }
 
-python3.8 validate_license.py
-
 if [ -f "/home/user/data/camera_intrinsics.json" ];
 then
   integrate_scene /home/user/data
