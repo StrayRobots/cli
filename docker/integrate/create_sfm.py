@@ -1,7 +1,7 @@
 import argparse
 import json
 import numpy as np
-from straylib.scene import Scene
+from stray.scene import Scene
 
 def read_args():
     parser = argparse.ArgumentParser()

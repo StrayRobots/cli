@@ -63,24 +63,6 @@ add_to_path() {
   fi
 }
 
-install_python_env_requirements() {
-  pip install torch torchvision
-}
-
-install_python_env() {
-  download "$endpoint/cli/$platform/$arch/latest/install_env.sh" "install_env.sh"
-  chmod +x install_env.sh
-  ./install_env.sh -bu -p $HOME/.stray/env
-
-  source "$HOME/.stray/env/bin/activate"
-  model_wheel_name="straymodel-$version-py38-none-any.whl"
-  lib_wheel_name="straylib-$version-py38-none-any.whl"
-  install_python_env_requirements
-  download "$endpoint/straymodel/$model_wheel_name" "$model_wheel_name"
-  download "$endpoint/straylib/$lib_wheel_name" "$lib_wheel_name"
-  pip install $lib_wheel_name $model_wheel_name
-}
-
 main() {
   set -e
   log_event "install:start"
@@ -97,8 +79,6 @@ main() {
   echo "Installing CLI."
   install_cli $install_dir
   add_to_path
-  echo "Installing Python environment."
-  install_python_env
 
   popd > /dev/null
 

@@ -6,7 +6,7 @@ import numpy as np
 import subprocess
 import sqlite3
 import utils
-from straylib.scene import Scene
+from stray.scene import Scene
 from scipy.spatial.transform import Rotation
 
 def read_args():

@@ -1,1 +1,0 @@
-from straymodel.sdk.oriented_bounding_box_detector import OrientedBoundingBoxDetector

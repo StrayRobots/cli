@@ -4,7 +4,7 @@ import numpy as np
 import json
 from scipy.spatial.transform import Rotation
 import copy
-from straylib.scene import Scene
+from stray.scene import Scene
 import csv
 import utils
 
@@ -121,18 +121,6 @@ def main():
     poses_aligned = align_trajectories(vio_trajectory, colmap_trajectory)
 
     write_trajectory(list(enumerate(poses_aligned)), flags)
-
-    # from straylib.debugger import VisualDebugger
-    # debugger = VisualDebugger()
-
-    # for _, T in colmap_trajectory:
-    #     debugger.add_frame(T)
-    # # for T in vio_trajectory[::15]:
-    # #     debugger.add_frame(T, color=np.array([0.0, 1.0, 0.0]))
-
-    # for T in poses_aligned:
-    #     debugger.add_frame(T, color=np.array([0.0,0.0, 1.0]))
-    # debugger.show()
 
 if __name__ == "__main__":
     main()

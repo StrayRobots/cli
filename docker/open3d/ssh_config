@@ -1,5 +1,0 @@
-
-HOST github.com
-  HostName github.com
-  IdentityFile /root/.ssh/id_integration
-

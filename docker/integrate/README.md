@@ -3,14 +3,14 @@
 
 ## Build image
 
-From the root of the repository, run `docker build -t photogrammetry . -f docker/photogrammetry/Dockerfile`.
+From the root of the repository, run `docker build -t integrate . -f docker/integrate/Dockerfile`.
 
 ## Push image to registry (requires login)
 
 Again, from the root, run:
 ```
-docker build -t photogrammetry . -f docker/photogrammetry/Dockerfile
-docker tag photogrammetry strayrobots/photogrammetry:latest && docker push strayrobots/photogrammetry:latest
+docker build -t integrate . -f docker/integrate/Dockerfile
+docker tag integrate strayrobots/integrate:latest && docker push strayrobots/integrate:latest
 ```
 
 ## The entrypoint validates a keygen.sh license key

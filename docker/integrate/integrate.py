@@ -3,7 +3,7 @@ import os
 import numpy as np
 import open3d as o3d
 import csv
-from straylib.scene import Scene
+from stray.scene import Scene
 from scipy.spatial.transform import Rotation
 
 def read_args():

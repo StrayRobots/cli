@@ -1,6 +1,0 @@
-pyrender
-trimesh
-scipy
-matplotlib
-pillow
-
