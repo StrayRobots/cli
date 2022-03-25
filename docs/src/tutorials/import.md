@@ -56,14 +56,12 @@ The directories are named using random hashes, for example "ac1ed2228f". This is
 
 ---
 
-Now that  we have moved over the scenes, we can import and convert them to our data format and into our dataset. This is done with the `stray dataset import` command:
+Now that  we have moved over the scenes, we can import and convert them to our data format and into our dataset. This is done with the `stray import` command:
 ```
-stray dataset import staging/* --out dataset/
+stray import staging/* --out dataset/
 ```
 
-Optionally, you can specify the resolution at which you want to import the dataset by appending `--width=<width> --height=<height>` to the command. For example, `stray dataset import staging/* --out dataset --width=1920 --height=1440`. Generally, we recommend a larger resolution, but sometimes, smaller can be easier to work with and can be good enough quality wise.
-
-To verify that the dataset was imported correctly, you can play through the image frames with the `stray dataset show dataset/*` command. This will play through the scenes one image at the time.
+Optionally, you can specify the resolution at which you want to import the dataset by appending `--width=<width> --height=<height>` to the command. For example, `stray import staging/* --out dataset --width=1920 --height=1440`. Generally, we recommend a larger resolution, but sometimes, smaller can be easier to work with and can be good enough quality wise.
 
 ## Concluding
 
