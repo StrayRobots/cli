@@ -14,6 +14,15 @@ if [ "$STRAY_DEV" != "" ]
         PULL_IMAGES=false
 fi
 
+check_python_package() {
+    python3 -c "\
+try:
+    import stray 
+except ImportError:
+    print('The stray package is not installed in your python environment, please refer to https://github.com/StrayRobots/stray for installation instructions.')
+    exit(1)"
+}
+
 absolute_path() {
     echo "$(cd "$(dirname "$1")"; pwd)/$(basename "$1")"
 }
@@ -129,6 +138,18 @@ then
 elif [ "$1" = "calibration" ]
 then
     calibration-subcommand $@
+elif [ "$1" = "show" ]
+then
+    check_python_package
+    stray-show "${@:2}"
+elif [ "$1" = "import" ]
+then
+    check_python_package
+    stray-import "${@:2}"
+elif [ "$1" = "export" ]
+then
+    check_python_package
+    stray-export "${@:2}"
 else
     echo "Can't recognize subcommand $1."
 fi
