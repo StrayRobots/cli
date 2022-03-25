@@ -15,12 +15,11 @@ if [ "$STRAY_DEV" != "" ]
 fi
 
 check_python_package() {
-    python3 -c "\
-try:
-    import stray 
-except ImportError:
-    print('The stray package is not installed in your python environment, please refer to https://github.com/StrayRobots/stray for installation instructions.')
-    exit(1)"
+    if ! command -v stray-import
+    then
+        echo "The stray package is not installed in your python environment, please refer to https://github.com/StrayRobots/stray for installation instructions."
+        exit 1
+    fi
 }
 
 absolute_path() {
