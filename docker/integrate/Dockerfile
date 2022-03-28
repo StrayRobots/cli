@@ -67,9 +67,7 @@ RUN pip3 install --user open3d==0.14.1 opencv-python scipy numpy PyYAML click tr
 
 COPY --chown=user:sudo stray /tmp/stray
 WORKDIR /tmp/stray
-RUN python3.8 setup.py bdist_egg --exclude-source-files
-RUN wheel convert $(find dist/stray-*.egg)
-RUN pip3.8 install "$(basename $(find stray-*.whl))"
+RUN pip3.8 install .
 RUN rm -rf /tmp/stray
 
 RUN mkdir /home/user/workspace
