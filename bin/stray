@@ -133,7 +133,7 @@ then
     if [ "$PULL_IMAGES" = true ] ; then
         docker pull strayrobots/integrate:latest
     fi
-    docker run -it -v $scene_dir:/home/user/data ${CONTAINER_PREFIX}integrate:latest /home/user/data $@
+    nvidia-docker run -it -v $scene_dir:/home/user/data ${CONTAINER_PREFIX}integrate:latest /home/user/data $@
 elif [ "$1" = "calibration" ]
 then
     calibration-subcommand $@

@@ -1,6 +1,7 @@
 import argparse
 import os
 import math
+import json
 import numpy as np
 import open3d as o3d
 from scipy.spatial.transform import Rotation
@@ -10,7 +11,6 @@ from stray.scene import Scene
 def read_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('scene')
-    parser.add_argument('--frames-per-fragment', '-f', type=int, default=50)
     parser.add_argument('--voxel-size', type=float, default=0.005)
     return parser.parse_args()
 
@@ -49,6 +49,8 @@ def create_fragment(trajectory, color_images, depth_images, intrinsics, voxel_si
     intrinsics_scaled = scale_intrinsics(intrinsics, *depth_image.get_max_bound())
     rgbd = read_image(color_images[0], depth_images[0])
     for i, (pose, color, depth) in enumerate(zip(trajectory, color_images, depth_images)):
+        if not os.path.exists(color) or not os.path.exists(depth):
+            continue
         print(f"reading frame {i}", end='\r')
         assert filename(color) == filename(depth)
         rgbd = read_image(color, depth)
@@ -57,6 +59,13 @@ def create_fragment(trajectory, color_images, depth_images, intrinsics, voxel_si
 
     return fragment.voxel_down_sample(voxel_size)
 
+def select_views(scene, fps):
+    count = len(scene)
+    if count < 200:
+        return np.arange(count)
+    else:
+        return np.arange(0, count, max(int(fps / 4.0), 1))
+
 def main():
     flags = read_args()
 
@@ -64,23 +73,24 @@ def main():
     camera_matrix = scene.camera_matrix
     intrinsics = o3d.camera.PinholeCameraIntrinsic(scene.frame_width, scene.frame_height, camera_matrix[0, 0],
             camera_matrix[1, 1], camera_matrix[0, 2], camera_matrix[1, 2])
-    trajectory = scene.poses
+    trajectory = np.stack(scene.poses)
     color_images = scene.get_image_filepaths()
     depth_images = scene.get_depth_filepaths()
 
     scene_cloud = o3d.geometry.PointCloud()
-    n_frames = min(len(color_images), len(depth_images))
-    n_fragments = math.ceil(n_frames / flags.frames_per_fragment)
-    for fragment_index in range(n_fragments):
-        start = fragment_index * flags.frames_per_fragment
-        end = (fragment_index+1) * flags.frames_per_fragment
-        print(f"Integrating fragment {fragment_index+1:03} / {n_fragments:03}")
-        fragment = create_fragment(trajectory[start:end], color_images[start:end], depth_images[start:end],
-                intrinsics,
-                voxel_size=flags.voxel_size)
-        scene_cloud += fragment
 
-    scene_cloud = scene_cloud.voxel_down_sample(flags.voxel_size)
+    with open(os.path.join(scene.scene_path, 'camera_intrinsics.json'), 'rt') as f:
+        data = json.load(f)
+        fps = data.get('fps', 30)
+
+    view_indices = select_views(scene, fps)
+
+    scene_cloud += create_fragment(trajectory[view_indices],
+            [color_images[i] for i in view_indices],
+            [depth_images[i] for i in view_indices],
+            intrinsics,
+            voxel_size=flags.voxel_size)
+
     o3d.io.write_point_cloud(os.path.join(flags.scene, 'scene', 'cloud.ply'), scene_cloud)
 
 if __name__ == "__main__":

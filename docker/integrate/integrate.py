@@ -3,6 +3,7 @@ import os
 import numpy as np
 import open3d as o3d
 import csv
+import warnings
 from stray.scene import Scene
 from scipy.spatial.transform import Rotation
 
@@ -99,6 +100,12 @@ def main():
         print(f"Integrating {pose_id}", end='\r')
         color_image = os.path.join(scene_path, 'color', f'{pose_id}.jpg')
         depth_image = os.path.join(scene_path, 'depth', f'{pose_id}.png')
+        if not os.path.exists(color_image):
+            warnings.warn(f"Color image {pose_id}.jpg not found. Skipping frame.")
+            continue
+        if not os.path.exists(depth_image):
+            warnings.warn(f"Depth image {pose_id}.png not found. Skipping frame.")
+            continue
         rgbd_frame = read_image(color_image, depth_image)
         volume.integrate(rgbd_frame, intrinsic, np.linalg.inv(T))
 
