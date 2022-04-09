@@ -65,6 +65,8 @@ RUN pip3 install .
 RUN rm -rf /tmp/stray
 
 RUN conda clean -ya
+# Include netvlad model for retrieval based matching.
+RUN mkdir /home/user/hloc/third_party/netvlad && cd /home/user/hloc/third_party/netvlad && wget https://cvg-data.inf.ethz.ch/hloc/netvlad/Pitts30K_struct.mat -O VGG16-NetVLAD-Pitts30K.mat
 
 RUN mkdir /home/user/workspace
 WORKDIR /home/user/workspace

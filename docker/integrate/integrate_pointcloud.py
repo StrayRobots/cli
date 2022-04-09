@@ -48,14 +48,13 @@ def create_fragment(trajectory, color_images, depth_images, intrinsics, voxel_si
     depth_image = o3d.io.read_image(depth_images[0])
     intrinsics_scaled = scale_intrinsics(intrinsics, *depth_image.get_max_bound())
     rgbd = read_image(color_images[0], depth_images[0])
-    for i, (pose, color, depth) in enumerate(zip(trajectory, color_images, depth_images)):
+    for i, (T_WC, color, depth) in enumerate(zip(trajectory, color_images, depth_images)):
         if not os.path.exists(color) or not os.path.exists(depth):
             continue
         print(f"reading frame {i}", end='\r')
         assert filename(color) == filename(depth)
         rgbd = read_image(color, depth)
-        pointcloud = o3d.geometry.PointCloud.create_from_rgbd_image(rgbd, intrinsics_scaled, extrinsic=np.linalg.inv(pose))
-        fragment += pointcloud
+        fragment += o3d.geometry.PointCloud.create_from_rgbd_image(rgbd, intrinsics_scaled, extrinsic=np.linalg.inv(T_WC))
 
     return fragment.voxel_down_sample(voxel_size)
 

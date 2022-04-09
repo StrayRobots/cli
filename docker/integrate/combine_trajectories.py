@@ -6,6 +6,7 @@ import pycolmap
 import cv2
 from stray import linalg
 from scipy.spatial.transform import Rotation
+import open3d as o3d
 import copy
 from stray.scene import Scene
 import csv
@@ -15,6 +16,7 @@ def read_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('scene')
     parser.add_argument('--colmap-dir', required=True)
+    parser.add_argument('--debug', action='store_true')
     return parser.parse_args()
 
 def write_trajectory(poses, flags):
@@ -138,14 +140,15 @@ class ScaleEstimator:
                 best_set = scales[inliers]
                 best_inlier_count = inlier_count
         print(f"Scale estimation inlier count: {best_inlier_count} / {scales.size}")
-        return best_set.mean()
-
-
-
-        lower_percentile = np.percentile(scales, 25)
-        upper_percentile = np.percentile(scales, 75)
+        lower_percentile = np.percentile(scales, 10)
+        upper_percentile = np.percentile(scales, 90)
         scales = scales[np.bitwise_and(scales > lower_percentile, scales < upper_percentile)]
         return np.mean(scales)
+
+def read_pointcloud(depth_image, intrinsic, T_WC):
+    depth = o3d.geometry.Image(cv2.imread(depth_image, -1))
+    return o3d.geometry.PointCloud.create_from_depth_image(depth, intrinsic, extrinsic=np.linalg.inv(T_WC),
+            depth_scale=1000.0)
 
 def main():
     flags = read_args()
@@ -172,6 +175,21 @@ def main():
     colmap_trajectory = [(k, T_IW @ T) for k, T in colmap_trajectory]
 
     poses_aligned = align_trajectories(vio_trajectory, colmap_trajectory)
+
+    if flags.debug:
+        from stray.debugger import VisualDebugger
+        visualizer = VisualDebugger()
+        camera = scene.camera()
+        depth_images = scene.get_depth_filepaths()
+        depth = cv2.imread(depth_images[0], -1)
+        camera = camera.scale((depth.shape[1], depth.shape[0]))
+        intrinsics = o3d.camera.PinholeCameraIntrinsic(camera.size[0], camera.size[1], camera.camera_matrix[0, 0], camera.camera_matrix[1, 1],
+                camera.camera_matrix[0, 2], camera.camera_matrix[1, 2])
+        for T_WC in vio_trajectory:
+            visualizer.add_frame(T_WC, color=(1.0, 0.0, 0.0))
+        for _, T_WC in colmap_trajectory:
+            visualizer.add_frame(T_WC, color=(0.0, 1.0, 0.0))
+        visualizer.show()
 
     write_trajectory(list(enumerate(poses_aligned)), flags)
 
