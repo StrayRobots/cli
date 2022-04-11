@@ -27,10 +27,10 @@ integrate_scene() {
     if [ "$debug" = "1" ];
     then
       python3.8 /home/user/workspace/run_sfm.py $1 --debug
-      python3.8 /home/user/workspace/combine_trajectories.py $1 --colmap-dir "/home/user/data/sfm/sfm/0"
+      python3.8 /home/user/workspace/combine_trajectories.py $1 --colmap-dir "/home/user/data/sfm/"
     else
       python3.8 /home/user/workspace/run_sfm.py $1
-      python3.8 /home/user/workspace/combine_trajectories.py $1 --colmap-dir "/tmp/sfm/sfm/0"
+      python3.8 /home/user/workspace/combine_trajectories.py $1 --colmap-dir "/tmp/sfm/"
     fi
   fi
   python3.8 /home/user/workspace/integrate.py $1 --voxel-size $voxel_size

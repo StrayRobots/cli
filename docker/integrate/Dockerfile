@@ -35,22 +35,6 @@ RUN apt-get update -y && apt-get install -y \
 
 RUN rm -rf /var/lib/apt/lists/*
 
-RUN git clone https://ceres-solver.googlesource.com/ceres-solver /tmp/ceres-solver/ && \
-  cd /tmp/ceres-solver && \
-  git checkout $(git describe --tags) && \
-  mkdir build && cd build && \
-  cmake .. -DBUILD_TESTING=OFF -DBUILD_EXAMPLES=OFF && \
-  make -j4 && \
-  make install && \
-  rm -rf /tmp/ceres-solver
-
-RUN git clone https://github.com/colmap/colmap /tmp/colmap
-RUN cd /tmp/colmap && git checkout tags/3.7 && mkdir build && cd build && \
-  cmake .. -DCMAKE_BUILD_TYPE=Release && \
-  make -j4 && \
-  make install && \
-  rm -rf /tmp/colmap
-
 # create a non-root user
 ARG USER_ID=1000
 RUN useradd -m --no-log-init --system  --uid ${USER_ID} user -g sudo
@@ -58,17 +42,31 @@ RUN echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
 USER user
 WORKDIR /home/user
 
-ENV PATH="/home/user/.local/bin:${PATH}"
-RUN wget https://bootstrap.pypa.io/get-pip.py
-RUN python3.8 get-pip.py
-RUN rm get-pip.py
+ENV NVIDIA_VISIBLE_DEVICES all
+ENV NVIDIA_DRIVER_CAPABILITIES compute,utility
+ENV CONDA_AUTO_UPDATE_CONDA=false \
+    PATH=/home/user/miniconda/bin:$PATH
 
-RUN pip3 install --user open3d==0.14.1 opencv-python scipy numpy PyYAML click trimesh requests && rm -rf /user/.cache
+RUN wget https://repo.anaconda.com/miniconda/Miniconda3-py38_4.9.2-Linux-x86_64.sh -O ~/miniconda.sh \
+  && chmod +x ~/miniconda.sh \
+  && ~/miniconda.sh -b -p ~/miniconda \
+  && rm ~/miniconda.sh
+
+RUN python -m pip install --upgrade pip
+RUN pip3 install open3d==0.14.1 opencv-python scipy numpy PyYAML click trimesh requests
+RUN conda install pytorch torchvision torchaudio cudatoolkit=11.3 -c pytorch
+
+RUN git clone --recursive https://github.com/cvg/Hierarchical-Localization /home/user/hloc
+RUN pip3 install -e /home/user/hloc
 
 COPY --chown=user:sudo stray /tmp/stray
 WORKDIR /tmp/stray
-RUN pip3.8 install .
+RUN pip3 install .
 RUN rm -rf /tmp/stray
+
+RUN conda clean -ya
+# Include netvlad model for retrieval based matching.
+RUN mkdir /home/user/hloc/third_party/netvlad && cd /home/user/hloc/third_party/netvlad && wget https://cvg-data.inf.ethz.ch/hloc/netvlad/Pitts30K_struct.mat -O VGG16-NetVLAD-Pitts30K.mat
 
 RUN mkdir /home/user/workspace
 WORKDIR /home/user/workspace
