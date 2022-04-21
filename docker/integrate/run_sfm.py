@@ -56,7 +56,7 @@ class Runner:
             self.selected_views = np.arange(len(self.scene))
         else:
             self.selected_views = np.arange(0, len(self.scene), max(int(self.fps / 4.0), 1))
-        if self.selected_views.size < 300:
+        if self.selected_views.size > 200:
             self.exhaustive = False
 
     def _run_sfm(self):
