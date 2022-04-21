@@ -17,5 +17,4 @@
   - [Integrating a Scene](./tutorials/integrating.md)
   - [Annotating a Scene](./tutorials/annotating.md)
   - [Training a model](./tutorials/training_model.md)
-- [Terms of Service](./terms/terms-of-service.md)
 - [Support](./support/index.md)
