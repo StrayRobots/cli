@@ -33,16 +33,9 @@ check_data_dir() {
     fi
 }
 
-log_event() {
-    if [ "$DO_NOT_TRACK" = "" ]; then
-        (curl --request POST --url $ANALYTICS_URL --header 'Content-Type: application/json' --data "{ \"name\": \"cli:$1\", \"version\": \"$VERSION\" }" 2> /dev/null > /dev/null &)
-    fi
-}
-
 calibration-subcommand() {
     if [ "$2" = "run" ]
     then
-        log_event "calibration-run:start"
         task=$3
         scene_dir="$(absolute_path $4)"
         shift 2
@@ -95,7 +88,6 @@ calibration-subcommand() {
     elif [ "$2" = "generate" ]; then
         target_yaml=$(absolute_path $3)
         shift 2
-        log_event "calibration-generate:start"
         if [ ! -f $target_yaml ]
         then
             echo "Target file $target_yaml does not exist."
@@ -117,19 +109,16 @@ elif [ "$1" = "studio" ]
 then
     scene_dir="$(absolute_path $2)"
     check_data_dir $scene_dir
-    log_event "studio-open:start"
     studio $scene_dir
 elif [ "$1" = "preview" ]
 then
     scene_dir="$(absolute_path $2)"
     check_data_dir $scene_dir
-    log_event "studio-preview:start"
     stray-preview $scene_dir
 elif [ "$1" = "integrate" ]
 then
     scene_dir="$(absolute_path $2)"
     check_data_dir $scene_dir
-    log_event "integrate:start"
     if [ "$PULL_IMAGES" = true ] ; then
         docker pull strayrobots/integrate:latest
     fi

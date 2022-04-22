@@ -8,6 +8,7 @@ Inputs:
 - Color images from `color`
 - Depth images from `depth`
 - Odometry from `frames.csv`
+- Camera intrinsics `camera_intrinsics.json`
 
 Outputs:
 - Scene point cloud at `scene/cloud.ply`
