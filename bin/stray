@@ -101,16 +101,7 @@ calibration-subcommand() {
     fi
 }
 
-
-if [ "$1" = "--version" ] || [ "$1" = "-v" ]
-then
-    echo "Stray Robots CLI version $VERSION"
-elif [ "$1" = "studio" ]
-then
-    scene_dir="$(absolute_path $2)"
-    check_data_dir $scene_dir
-    studio $scene_dir
-elif [ "$1" = "preview" ]
+if [ "$1" = "preview" ]
 then
     scene_dir="$(absolute_path $2)"
     check_data_dir $scene_dir

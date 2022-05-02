@@ -28,7 +28,7 @@ install_studio() {
 
 install_cli() {
   install_dir=$1
-  download "$endpoint/cli/stray" "$install_dir/bin/stray"
+  cp "$script_dir/stray" "$install_dir/bin/stray"
   chmod +x "$install_dir/bin/stray"
 }
 
