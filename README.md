@@ -6,13 +6,13 @@ Stray CLI is a tool for working with RGB-D datasets. It can import scans from [S
 
 ![Fire hydrant point cloud scanned with Stray Scanner](assets/images/fire_hydrant.jpg).
 
-The [`stray integrate`](https://docs.strayrobots.io/commands/integrate.html) can be used to compute camera poses for RGB-D scans and compute a point cloud and mesh of the scene. Check the documentation for more details.
+The [`stray integrate`](https://docs.strayrobots.io/commands/integrate.html) command can be used to compute camera poses for RGB-D scans as well as compute a point cloud and mesh of the scene. Check [the documentation](https://docs.strayrobots.io) for more details.
 
 Scenes that were collected using Stray Scanner can be imported and integrated using the following commands:
 ```
 mkdir dataset
 stray import <stray-scanner-scene> --out dataset/ # import the scene into newly created folder
-stray integrate dataset/<scene-name> # Integrate the scene
+stray integrate dataset/<scene-name> # Run mapping and build point cloud
 stray studio dataset/<scene-name> # Open the scene in Stray Studio
 ```
 
