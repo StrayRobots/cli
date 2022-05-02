@@ -4,7 +4,6 @@ set -e
 BIN_DIR="$HOME/.stray/env/bin/"
 CONTAINER_PREFIX="strayrobots/"
 ANALYTICS_URL="https://app.strayrobots.io/event"
-VERSION="1.1.0"
 PULL_IMAGES=true
 
 if [ "$STRAY_DEV" != "" ]
@@ -33,74 +32,6 @@ check_data_dir() {
     fi
 }
 
-calibration-subcommand() {
-    if [ "$2" = "run" ]
-    then
-        task=$3
-        scene_dir="$(absolute_path $4)"
-        shift 2
-        i=0
-        args=("$@")
-        for arg in "$@"
-        do
-            if [ "${args[i]}" = "--target" ]
-            then
-                target_yaml=$(absolute_path ${args[i+1]})
-            elif [ "${args[i]}" = "--imu" ]
-            then
-                imu_yaml=$(absolute_path ${args[i+1]})
-            elif [ "${args[i]}" = "--camera" ]
-            then
-                camera_yaml=$(absolute_path ${args[i+1]})
-            fi
-            i=$((i + 1))
-        done
-
-        if [ "$PULL_IMAGES" = true ] ; then
-            docker pull strayrobots/calibrate:latest
-        fi
-
-        if [ "$task" = "intrinsics" ]; then
-            if [ "$target_yaml" = "" ] || [ "$scene_dir" = "" ]; then
-                echo "Both scene and target needs to be provided."
-                echo ""
-                echo "Usage: stray calibration run intrinsics <calibration-scene> --target <target.yaml>"
-                exit 1
-            fi
-            docker run -it -v $scene_dir:/home/user/data/ \
-                -v $target_yaml:/home/user/workspace/target.yaml ${CONTAINER_PREFIX}calibrate:latest run $@
-        elif [ "$task" = "hand_eye" ]; then
-            shift 2
-            xhost + 127.0.0.1
-            nvidia-docker run -it -v $scene_dir:/home/user/data/ \
-                -e DISPLAY=$DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix:rw \
-                -v $target_yaml:/home/user/workspace/target.yaml ${CONTAINER_PREFIX}hand-eye:latest run $@
-            xhost - 127.0.0.1
-        elif [ "$task" = "imu_noise" ]; then
-            docker run -v $scene_dir:/home/user/data/ -v $target_yaml:/home/user/workspace/target.yaml \
-                -v $camera_yaml:/home/user/workspace/camera.yaml -it ${CONTAINER_PREFIX}calibrate:latest run $@
-        elif [ "$task" = "camera_imu" ]; then
-            docker run -v $scene_dir:/home/user/data/ -v $target_yaml:/home/user/workspace/target.yaml \
-                -v $imu_yaml:/home/user/workspace/imu.yaml -v $camera_yaml:/home/user/workspace/camera.yaml -it ${CONTAINER_PREFIX}calibrate:latest run $@
-        else
-            echo "Unrecognized calibration task $task. Try intrinsics or camera_imu."
-        fi
-    elif [ "$2" = "generate" ]; then
-        target_yaml=$(absolute_path $3)
-        shift 2
-        if [ ! -f $target_yaml ]
-        then
-            echo "Target file $target_yaml does not exist."
-            exit 1
-        fi
-        docker run -v `pwd`:/home/user/data/ \
-            -v $target_yaml:/home/user/workspace/target.yaml ${CONTAINER_PREFIX}calibrate:latest generate
-    else
-        "Verb $2 not supported by calibration subcommand. Try run or generate."
-        exit 1
-    fi
-}
-
 if [ "$1" = "preview" ]
 then
     scene_dir="$(absolute_path $2)"
@@ -114,9 +45,6 @@ then
         docker pull strayrobots/integrate:latest
     fi
     nvidia-docker run -it -v $scene_dir:/home/user/data ${CONTAINER_PREFIX}integrate:latest /home/user/data $@
-elif [ "$1" = "calibration" ]
-then
-    calibration-subcommand $@
 elif [ "$1" = "show" ]
 then
     check_python_package

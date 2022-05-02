@@ -6,7 +6,6 @@
   - [Show](./commands/show.md)
   - [Studio](./commands/studio.md)
   - [Integrate](./commands/integrate.md)
-  - [Calibration](./commands/calibration.md)
   - [Export](./commands/export.md)
 - [Data Format](./formats/data.md)
 - [Stray Scanner](./apps/scanner/index.md)
